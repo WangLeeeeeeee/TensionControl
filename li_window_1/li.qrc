@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/new/prefix1"/>
+    <qresource prefix="/li">
+        <file>li/add.png</file>
+        <file>li/exit.png</file>
+        <file>li/open.png</file>
+        <file>li/stop.png</file>
+        <file>li/mesage.png</file>
+        <file>li/save.png</file>
+        <file>li/plot.png</file>
+        <file>li/cleanport.png</file>
+        <file>li/send.png</file>
+        <file>li/robot_1.png</file>
+    </qresource>
+</RCC>
