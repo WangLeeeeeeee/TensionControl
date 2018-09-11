@@ -110,9 +110,12 @@ void GetSensordata::run()
       printf("Asynchronous finite acquisition is in progress.\n");
       ret = wfAiCtrl->Prepare();
         CheckError(ret);
+
+      Sleep(50);// every 50ms collect once
    }
    while(false);
 
+   /*
    while(1)
    {
            // Checks, if conncted
@@ -145,23 +148,6 @@ void GetSensordata::run()
             shoulder_z[receive_count_angle] = ShoulderAngle[2];
 
 
-            // Shows data
-            /*
-            qDebug()<< "elbow_x: "<<elbow_x[receive_count_angle]<<endl;
-            qDebug()<< "elbow_y: "<<elbow_y[receive_count_angle]<<endl;
-            qDebug()<< "elbow_z: "<<elbow_z[receive_count_angle]<<endl;
-            qDebug()<< "shoulder_x: "<<shoulder_x[receive_count_angle]<<endl;
-            qDebug()<< "shoulder_y: "<<shoulder_y[receive_count_angle]<<endl;
-            qDebug()<< "shoulder_z: "<<shoulder_z[receive_count_angle]<<endl;
-            qDebug()<< "elbow_x_acc: "<<elbow_x_acc[receive_count_angle]<<endl;
-            qDebug()<< "elbow_y_acc: "<<elbow_y_acc[receive_count_angle]<<endl;
-            qDebug()<< "elbow_z_acc: "<<elbow_z_acc[receive_count_angle]<<endl;
-            qDebug()<< "shoulder_x_acc: "<<shoulder_x_acc[receive_count_angle]<<endl;
-            qDebug()<< "shoulder_x_acc: "<<shoulder_x_acc[receive_count_angle]<<endl;
-            qDebug()<< "shoulder_x_acc: "<<shoulder_x_acc[receive_count_angle]<<endl;
-            qDebug()<<"receive_count_angle"<<receive_count_angle<<endl;
-            */
-
             receive_count_angle++;
             time_x_angle[receive_count_angle] = receive_count_angle * 0.05;
         }
@@ -170,6 +156,7 @@ void GetSensordata::run()
         wfAiCtrl->Start();
         Sleep(50);// every 50ms collect once
    }
+   */
 
 }
 
@@ -188,7 +175,7 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
     WaveformAiCtrl * waveformAiCtrl = NULL;
     waveformAiCtrl = (WaveformAiCtrl *)sender;
     int32 returnedCount = 0;
-    int32 getDataCount = min(USER_BUFFER_SIZE, args->Count);
+    int32 getDataCount = minize(USER_BUFFER_SIZE, args->Count);
     waveformAiCtrl->GetData(getDataCount, Data, 0, &returnedCount);
 
     // Save the data from the Data[] to tension(including tensiony, tensiony2,...,tensiony6,surface pressure)

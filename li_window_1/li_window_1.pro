@@ -11,6 +11,7 @@
 
 QT       += core gui
 QT       += serialport
+QT      += datavisualization
 
 TARGET = li_window_1  printsupport
 TEMPLATE = app
@@ -22,7 +23,9 @@ SOURCES += main.cpp\
     aboutdialog.cpp \
     getsensordata.cpp \
     motorcontrol.cpp \
-    vrdisplay.cpp
+    vrdisplay.cpp \
+    tensioncontrol.cpp \
+    linkdisplay.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -34,7 +37,9 @@ HEADERS  += mainwindow.h \
     LpmsSensorManagerI.h \
     getsensordata.h \
     motorcontrol.h \
-    vrdisplay.h
+    vrdisplay.h \
+    tensioncontrol.h \
+    linkdisplay.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui
@@ -51,9 +56,6 @@ QT  +=opengl
 QT += axcontainer
 QT  +=  printsupport
 
-LIBS += -LD:/Document_LW/UpperExtremity/QT/li_window_20180427/build-li_window_1-Desktop_Qt_5_9_1_MinGW_32bit-Debug/lib/x64/ -lLpSensor64
-LIBS += -LD:/Document_LW/UpperExtremity/QT/li_window_20180427/build-li_window_1-Desktop_Qt_5_9_1_MinGW_32bit-Debug/lib/x64/ -lLpSensorD64
-
-LIBS += \
-    ../../../../../SFSetupPath/Qt/5.9.1/msvc2015_64/lib/Qt5OpenGLd.lib
+LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1 -lLpSensor64
+LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1 -lLpSensorD64
 

@@ -10,7 +10,10 @@
 #include <qdebug.h>
 #include "motorcontrol.h"
 #include "vrdisplay.h"
+#include "tensioncontrol.h"
+#include <QtDataVisualization/Q3DSurface>
 
+using namespace QtDataVisualization;
 
 unsigned int shift_x_tension = 0;
 unsigned int shift_x_angle = 0;
@@ -20,8 +23,6 @@ unsigned int shift_x_pressure = 0;
 unsigned int RcvBufNum;
 unsigned char RcvBuf[RcvBufSize];
 bool new_flag=0;
-
-unsigned int MAXSPEED = 3247;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -35,10 +36,47 @@ MainWindow::MainWindow(QWidget *parent) :
     getsensordata = new GetSensordata;
     motorcontrol = new MotorControl;
     vrdisplay = new VRDisplay;
+    tensioncontrol = new TensionControl;
+
+
+    // 3D surface
+    Q3DScatter *graph = new Q3DScatter();
+    QWidget *container = QWidget::createWindowContainer(graph);
+
+    /*
+    if (!graph->hasContext()) {
+        QMessageBox msgBox;
+        msgBox.setText("Couldn't initialize the OpenGL context.");
+        msgBox.exec();
+        return -1;
+    }
+    */
+
+    /*
+    QSize screenSize = graph->screen()->size();
+    container->setMinimumSize(QSize(screenSize.width() / 2, screenSize.height() / 1.6));
+    container->setMaximumSize(screenSize);
+    */
+    container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    container->setFocusPolicy(Qt::StrongFocus);
+
+    QHBoxLayout *hLayout = new QHBoxLayout(ui->linkWidget);
+    QVBoxLayout *vLayout = new QVBoxLayout();
+    hLayout->addWidget(container, 1);
+    hLayout->addLayout(vLayout);
+    vLayout->setAlignment(Qt::AlignTop);
+
+    ui->linkWidget->setWindowTitle(QStringLiteral("Link model"));
+
+
+    ui->linkWidget->show();
+
+    LinkDisplay *linkdisplay = new LinkDisplay(graph);
+
 
     // Before connect object must be instantiation!!!
-    connect(this, SIGNAL(sigSerialInit()), motorcontrol, SLOT(slotSerialInit()));
-    connect(this, SIGNAL(sigSerialClose()), motorcontrol, SLOT(slotSerialClose()));
+    connect(this, SIGNAL(sigSerialInit()), tensioncontrol, SLOT(slotSerialInit()));
+    connect(this, SIGNAL(sigSerialClose()), tensioncontrol, SLOT(slotSerialClose()));
     connect(this, SIGNAL(sigBeforeTigh()), motorcontrol, SLOT(slotBeforeTigh()));
     connect(this, SIGNAL(sigQianqu()), motorcontrol, SLOT(slotQianqu()));
     connect(this, SIGNAL(sigWaizhan()), motorcontrol, SLOT(slotWaizhan()));
@@ -333,11 +371,11 @@ void MainWindow::setActionsEnable(bool status)
 //Combox
 void MainWindow::setComboxEnable(bool status)
 {
-    ui->portNameComboBox->setEnabled(status);
-    ui->baudRateCombox->setEnabled(status);
-    ui->dataBitsComboBox->setEnabled(status);
-    ui->stopBitsComboBox->setEnabled(status);
-    ui->parityComboBox->setEnabled(status);
+    //ui->portNameComboBox->setEnabled(status);
+    //ui->baudRateCombox->setEnabled(status);
+    //ui->dataBitsComboBox->setEnabled(status);
+    //ui->stopBitsComboBox->setEnabled(status);
+    //ui->parityComboBox->setEnabled(status);
 }
 
 //
@@ -387,6 +425,7 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::on_actionAdd_triggered()
 {
+    /*
 
     bool ok = false;
     QString portname;
@@ -395,7 +434,8 @@ void MainWindow::on_actionAdd_triggered()
     if(ok && !portname.isEmpty()){
         ui->portNameComboBox->addItem(portname);
         ui->statusBar->showMessage(tr(""));
-    }
+
+    }*/
 
 }
 

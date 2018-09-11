@@ -80,7 +80,6 @@ void VRDisplay::SendData(int sendvalue)
     QString negative = "ff";
     QString endofone = "a0";
     QString SendData;
-    unsigned int highByyte, lowByte;
 
     if(sendvalue < 0)
     {
@@ -91,8 +90,6 @@ void VRDisplay::SendData(int sendvalue)
     {
         vrSerial.write(QString2Hex(positive));
     }
-    highByyte = (unsigned int)(sendvalue/256);//高八位
-    lowByte = (unsigned int)(sendvalue - highByyte*256);//低八位
 
     SendData = QString::number(sendvalue);
     vrSerial.write(SendData.toLatin1());
@@ -120,7 +117,7 @@ char VRDisplay::ConvertHexChar(char ch)
 }
 
 QByteArray VRDisplay::QString2Hex(QString str)
-    {
+{
         QByteArray senddata;
         int hexdata,lowhexdata;
         int hexdatalen = 0;
@@ -151,4 +148,4 @@ QByteArray VRDisplay::QString2Hex(QString str)
         }
         senddata.resize(hexdatalen);
         return senddata;
-    }
+}

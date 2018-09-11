@@ -14,7 +14,7 @@
 
 using namespace Automation::BDaq;
 #define      deviceDescription  L"PCI-1716L,BID#0"
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#define minize(a,b)            (((a) < (b)) ? (a) : (b))
 
 // extern parameter using for plot
 extern QVector<double> elbow_x,elbow_y,elbow_z,shoulder_x,shoulder_y,shoulder_z;
@@ -30,6 +30,7 @@ extern unsigned int receive_count_tension;
 extern unsigned int receive_count_angle;
 extern unsigned int receive_count_pressure;
 
+
 class GetSensordata : public QThread
 {
     Q_OBJECT
@@ -37,12 +38,14 @@ private:
     void run();
     WaveformAiCtrl * wfAiCtrl;
     ErrorCode ret;
+    /*
     // Gets a LpmsSensorManager instance
     LpmsSensorManagerI* manager1 = LpmsSensorManagerFactory();
     LpmsSensorManagerI* manager2 = LpmsSensorManagerFactory();
     // Connects to LPMS-CU sensor with address A1234567
     LpmsSensorI* lpms1 = manager1->addSensor(DEVICE_LPMS_U, "A5022WAT");
     LpmsSensorI* lpms2 = manager2->addSensor(DEVICE_LPMS_U, "A5022WCL");
+    */
     QTimer getsensorTimer;
 
 public:

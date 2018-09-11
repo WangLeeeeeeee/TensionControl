@@ -47,16 +47,16 @@ typedef struct Angle_Control
     float Error_Integer;
 }Angle_Control;
 
-PID TENSION_PID[6]={{1,0,0,0,0},{1,0,0,0,0},{1,0,0,0,0},{1,0,0,0,0},{1,0,0,0,0},{1,0,0,0,0}};
-PID TENSION_PID_1[6]={{1.9,0,0,0,0},{1.9,0,0,0,0},{1.9,0,0,0,0},{1,0,0,0,0},{1.9,0,0,0,0},{1.9,0,0,0,0}};
-PID Angle_PID[4]={{5,0,0.5,0,0},{5,0,0.5,0,0},{5,0,0.5,0,0},{3,0,0,0,0}};
+//PID TENSION_PID[6]={{1,0,0,0,0},{1,0,0,0,0},{1,0,0,0,0},{1,0,0,0,0},{1,0,0,0,0},{1,0,0,0,0}};
+//PID TENSION_PID_1[6]={{1.9,0,0,0,0},{1.9,0,0,0,0},{1.9,0,0,0,0},{1,0,0,0,0},{1.9,0,0,0,0},{1.9,0,0,0,0}};
+//PID Angle_PID[4]={{5,0,0.5,0,0},{5,0,0.5,0,0},{5,0,0.5,0,0},{3,0,0,0,0}};
 float KP_Ten[6] = {0.5,0.5,0.5,0.5,0.5,1.5};
 Tension_Control Now_tension;
 Tension_Control Past_tension;
 Angle_Control Now_angle;
 Angle_Control Past_angle;
-float MAXSPEED=200;
-float MINSPEED=-200;
+//float MAXSPEED=200;
+//float MINSPEED=-200;
 float tension_cnt[6];
 float tension_ctrlval[6];
 float angle_cnt[4];
@@ -171,6 +171,7 @@ void MotorControl::slotUiParRec(bool TensionOrAngle, unsigned int *Data)
     }
 }
 
+/*
 void MotorControl::readMyCom1()
 {
     // do something here
@@ -243,10 +244,11 @@ void MotorControl::slotSendCommand()
         break;
 
     }
-    */
+
 
 }
-
+*/
+/*
 // Com open configure which connect with the 'open com' button
 void MotorControl::slotSerialInit()
 {
@@ -280,6 +282,7 @@ void MotorControl::slotSerialClose()
 {
     serial1.close();
 }
+*/
 
 // Get the tension data and the angle data
 void MotorControl::UpdateAllState()
@@ -297,6 +300,7 @@ void MotorControl::UpdateAllState()
     angle_cnt[3] = -1 * elbow_y[receive_count_angle-1];
 }
 
+/*
 // Calculate PID
 float MotorControl::PIDCalculate(PID *pid_tension,float ThisError)
 {
@@ -312,7 +316,9 @@ float MotorControl::PIDCalculate(PID *pid_tension,float ThisError)
 
     return temp;
 }
+*/
 
+/*
 // Control the index motor with i tension value
 void MotorControl::TensionControl(int index,float i)
 {
@@ -422,8 +428,10 @@ void MotorControl::TensionControl(int index,float i)
     serial1.write(SendData.toLatin1());
     SendData = "M\r";
     serial1.write(SendData.toLatin1());
-    */
+
 }
+*/
+
 
 void MotorControl::AngleControl(int index, float aim_angle)
 {
@@ -509,6 +517,7 @@ void MotorControl::AngleControl(int index, float aim_angle)
     }
     */
 
+    /*
     QString SendData;
     float detaR;
     UpdateAllState();
@@ -540,13 +549,12 @@ void MotorControl::AngleControl(int index, float aim_angle)
         SendData = "M\r";
         serial1.write(SendData.toLatin1());
 
-        /*
         SendData = "2LR" + QString::number(long(-detaR)) + "\r";
         serial1.write(SendData.toLatin1());
         qDebug()<<SendData<<endl;
         SendData = "M\r";
         serial1.write(SendData.toLatin1());
-        */
+
     }
     if(control_mode == 5)
     {
@@ -579,7 +587,6 @@ void MotorControl::AngleControl(int index, float aim_angle)
         SendData = "M\r";
         serial1.write(SendData.toLatin1());
     }
-    /*
     UpdateAllState();
 
     Now_angle.AngleCnt = angle_cnt[index];
@@ -614,10 +621,11 @@ void MotorControl::AngleControl(int index, float aim_angle)
         serial1.write(SendData.toLatin1());
         qDebug()<<SendData<<endl;
     }
-    */
 
+*/
 
 }
+
 
 void MotorControl::slotBeforeTigh()
 {

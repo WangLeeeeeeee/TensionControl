@@ -15,10 +15,12 @@
 #include "aboutdialog.h"
 #include "getsensordata.h"
 #include "plotcurves.h"
+#include "linkdisplay.h"
 //#include "vrdisplay.h"
 //#include "motorcontrol.h"
 class VRDisplay;
 class MotorControl;
+class TensionControl;
 //#include <QtSerialPort/QSerialPort> //put the com send data in motorcontrol
 //#include "myglwidget.h"
 
@@ -103,6 +105,7 @@ private:
     GetSensordata *getsensordata;
     MotorControl *motorcontrol;
     VRDisplay *vrdisplay;
+    TensionControl *tensioncontrol;
     Ui::MainWindow *ui;
 
 signals:

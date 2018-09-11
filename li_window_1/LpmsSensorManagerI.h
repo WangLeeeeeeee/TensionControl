@@ -48,6 +48,7 @@
 class LpmsSensorManagerI
 {
 public:
+
 	/* SensorManager destructor */
 	virtual ~LpmsSensorManagerI(void) { };
 				
@@ -92,6 +93,7 @@ public:
 	virtual void setRs232Baudrate(int i) = 0;
 };
 
+
 #ifdef _WIN32
 	#ifdef DLL_EXPORT
 		#define LPMS_API __declspec(dllexport)
@@ -111,6 +113,7 @@ public:
 
 	extern "C" LpmsSensorManagerI* LpmsSensorManagerFactory(JavaVM *thisVm, jobject bluetoothAdapter);
 #endif
+
 
 
 
