@@ -18,13 +18,14 @@ typedef struct PID
 }TensionPID;
 
 
-#define TIME_INTERVAL 20
+#define TIME_INTERVAL 1000
 
 class TensionControl:public QThread
 {
     Q_OBJECT
 public:
     explicit TensionControl(QObject *parent=0);
+    ~TensionControl();
     void TensionSet(TensionPID *pid_tension, int index, float aimTension);
 
 private:
@@ -32,12 +33,15 @@ private:
     QSerialPort serial1; // declare a serial com
     QTimer *send_timer;
     void TensionValueUpdate();
+    QMutex m_mutex;
+    bool m_quit = false;
 
 private slots:
     void slotReadMyCom();
     void slotSendCommand();
     void slotSerialInit();
     void slotSerialClose();
+    void slotSerialCtrl(uint tensionOrAngle, int* Data);
 };
 
 #endif // TENSIONCONTROL_H

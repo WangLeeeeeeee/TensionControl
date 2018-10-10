@@ -8,10 +8,15 @@
 #       Slot:       slot- like: slotSerialInit()
 #       Constant:   all big letter like: MAXSPEED
 #-------------------------------------------------
+win32 {
+    LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1/ -lLpSensor64
+    LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1/ -lLpSensorD64
+}
 
 QT       += core gui
 QT       += serialport
 QT      += datavisualization
+QT += 3dcore 3drender 3dinput 3dextras
 
 TARGET = li_window_1  printsupport
 TEMPLATE = app
@@ -25,7 +30,8 @@ SOURCES += main.cpp\
     motorcontrol.cpp \
     vrdisplay.cpp \
     tensioncontrol.cpp \
-    linkdisplay.cpp
+    linkdisplay.cpp \
+    scatterdatamodifier.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -39,7 +45,8 @@ HEADERS  += mainwindow.h \
     motorcontrol.h \
     vrdisplay.h \
     tensioncontrol.h \
-    linkdisplay.h
+    linkdisplay.h \
+    scatterdatamodifier.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui
@@ -56,6 +63,6 @@ QT  +=opengl
 QT += axcontainer
 QT  +=  printsupport
 
-LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1 -lLpSensor64
-LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1 -lLpSensorD64
+
+
 

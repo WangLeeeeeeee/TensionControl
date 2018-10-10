@@ -47,12 +47,6 @@ private slots:
     //void slotSerialInit();
     void slotBeforeTigh();
    // void slotSerialClose();
-    void slotQianqu();
-    void slotWaizhan();
-    void slotHuishou();
-    void slotHuishouWaizhan();
-    void slotJianqianqu();
-    void slotHuishouJianqianqu();
 
 
 };

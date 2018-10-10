@@ -1,8 +1,9 @@
 #include <QApplication>
 
 
+#include <QMessageBox>
+
 #include "mainwindow.h"
-//#include "myglwidget.h"
 
 
 int main(int argc, char *argv[])

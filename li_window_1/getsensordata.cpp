@@ -1,5 +1,6 @@
 #include "getsensordata.h"
 
+
 //----------------------------------------------------------------------------------
 // Receive data(including: six tension, two IMU, one surface pressure, six motor angle) count
 //----------------------------------------------------------------------------------
@@ -64,8 +65,14 @@ ImuData Lpms2_Data;
 LpmsSensorI* lpms1;
 LpmsSensorI* lpms2;
 
+bool SenFlag = 0;
+
 GetSensordata::GetSensordata(QObject *parent):QThread(parent)
 {   
+    getsensorTimer = new QTimer(this);
+    QObject::connect(getsensorTimer, SIGNAL(timeout()), this, SLOT(slotChangeSenFlag()));
+    //getsensorTimer->start(50);
+
 }
 
 //----------------------------------------------------------------------------------
@@ -111,14 +118,13 @@ void GetSensordata::run()
       ret = wfAiCtrl->Prepare();
         CheckError(ret);
 
-      Sleep(50);// every 50ms collect once
+
    }
    while(false);
 
-   /*
    while(1)
    {
-           // Checks, if conncted
+        // Checks, if conncted
         if((lpms1->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) && (lpms2->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED))
         {
             // Reset the Orientation
@@ -140,12 +146,12 @@ void GetSensordata::run()
             shoulder_z_acc[receive_count_angle] = Lpms2_Data.linAcc[2];
 
             // Save angle data
-            elbow_x[receive_count_angle] = ElbowAngle[0];
+            elbow_x[receive_count_angle] = ElbowAngle[0]-87.7;
             elbow_y[receive_count_angle] = ElbowAngle[1];
-            elbow_z[receive_count_angle] = ElbowAngle[2];
-            shoulder_x[receive_count_angle] = ShoulderAngle[0];
+            elbow_z[receive_count_angle] = ElbowAngle[2]-33;
+            shoulder_x[receive_count_angle] = ShoulderAngle[0]-87.7;
             shoulder_y[receive_count_angle] = ShoulderAngle[1];
-            shoulder_z[receive_count_angle] = ShoulderAngle[2];
+            shoulder_z[receive_count_angle] = ShoulderAngle[2]-9;
 
 
             receive_count_angle++;
@@ -156,8 +162,6 @@ void GetSensordata::run()
         wfAiCtrl->Start();
         Sleep(50);// every 50ms collect once
    }
-   */
-
 }
 
 void GetSensordata::CheckError(ErrorCode errorCode)
@@ -210,20 +214,6 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
     surpressure_shou1[receive_count_pressure]   /=      (getDataCount / 9);
     surpressure_shou2[receive_count_pressure]   /=      (getDataCount / 9);
 
-    /*
-    qDebug()<<"Tension1:"<<tension_y[receive_count_tension];
-    qDebug()<<"Tension2:"<<tension_y2[receive_count_tension];
-    qDebug()<<"Tension3:"<<tension_y3[receive_count_tension];
-    qDebug()<<"Tension4:"<<tension_y4[receive_count_tension];
-    qDebug()<<"Tension5:"<<tension_y5[receive_count_tension];
-    qDebug()<<"Tension6:"<<tension_y6[receive_count_tension];
-    qDebug()<<"elbow Surface pressure:"<<surpressure_elbow[receive_count_pressure];
-    qDebug()<<"shoulder Surface pressure:"<<surpressure_shou1[receive_count_pressure];
-    qDebug()<<"shoulder Surface pressure:"<<surpressure_shou2[receive_count_pressure];
-    qDebug()<<"receive_count_tension:"<<receive_count_tension;
-    qDebug()<<"receive_count_pressure"<<receive_count_pressure;
-    */
-
     // Change the voltage(v) to Tension(g)
     tension_y[receive_count_tension]  =   TENSION_K[0] * tension_y[receive_count_tension] + TENSION_B[0];
     tension_y2[receive_count_tension] =   TENSION_K[1] * tension_y2[receive_count_tension] + TENSION_B[1];
@@ -243,6 +233,11 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
     // Count the receive sequence
     receive_count_tension++;
     receive_count_pressure++;
+}
+
+void GetSensordata::slotChangeSenFlag()
+{
+    SenFlag = 1;
 }
 
 

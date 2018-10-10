@@ -17,12 +17,18 @@
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
+      <property name="font">
+       <font>
+        <family>Times New Roman</family>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
       <property name="currentIndex">
        <number>0</number>
       </property>
       <widget class="QWidget" name="tab_1">
        <attribute name="title">
-        <string>张力传感器</string>
+        <string>TENSION&amp;IMU</string>
        </attribute>
        <widget class="QCustomPlot" name="qCustomPlot" native="true">
         <property name="geometry">
@@ -88,10 +94,16 @@
         <property name="geometry">
          <rect>
           <x>1130</x>
-          <y>520</y>
-          <width>631</width>
-          <height>341</height>
+          <y>450</y>
+          <width>661</width>
+          <height>401</height>
          </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Times New Roman</family>
+          <pointsize>10</pointsize>
+         </font>
         </property>
         <property name="focusPolicy">
          <enum>Qt::WheelFocus</enum>
@@ -101,255 +113,247 @@
         </property>
         <widget class="QWidget" name="tab_3">
          <attribute name="title">
-          <string>外骨骼控制</string>
+          <string>CONTROL</string>
          </attribute>
          <widget class="QGroupBox" name="groupBox_2">
           <property name="geometry">
            <rect>
-            <x>20</x>
-            <y>30</y>
-            <width>591</width>
-            <height>151</height>
+            <x>10</x>
+            <y>20</y>
+            <width>311</width>
+            <height>231</height>
            </rect>
           </property>
           <property name="font">
            <font>
-            <family>宋体</family>
+            <family>Times New Roman</family>
             <pointsize>10</pointsize>
            </font>
           </property>
           <property name="title">
-           <string>绳张力设置</string>
+           <string>TENSION</string>
           </property>
           <widget class="QWidget" name="layoutWidget">
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>30</y>
-             <width>536</width>
-             <height>106</height>
+             <y>34</y>
+             <width>271</width>
+             <height>179</height>
             </rect>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_12">
+           <layout class="QVBoxLayout" name="verticalLayout">
             <item>
-             <layout class="QVBoxLayout" name="verticalLayout_2">
+             <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,6,2">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,6,2">
-                <item>
-                 <widget class="QLabel" name="label_6">
-                  <property name="font">
-                   <font>
-                    <family>宋体</family>
-                    <pointsize>10</pointsize>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>T1</string>
-                  </property>
-                  <property name="textFormat">
-                   <enum>Qt::AutoText</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider">
-                  <property name="focusPolicy">
-                   <enum>Qt::NoFocus</enum>
-                  </property>
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,6,2">
-                <item>
-                 <widget class="QLabel" name="label_8">
-                  <property name="font">
-                   <font>
-                    <family>宋体</family>
-                    <pointsize>10</pointsize>
-                    <weight>50</weight>
-                    <bold>false</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>T3</string>
-                  </property>
-                  <property name="textFormat">
-                   <enum>Qt::AutoText</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider3">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit3"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,6,2">
-                <property name="topMargin">
-                 <number>4</number>
+               <widget class="QLabel" name="label_6">
+                <property name="font">
+                 <font>
+                  <family>Times New Roman</family>
+                  <pointsize>10</pointsize>
+                 </font>
                 </property>
-                <item>
-                 <widget class="QLabel" name="label_10">
-                  <property name="font">
-                   <font>
-                    <family>宋体</family>
-                    <pointsize>10</pointsize>
-                    <weight>50</weight>
-                    <bold>false</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>T5</string>
-                  </property>
-                  <property name="textFormat">
-                   <enum>Qt::AutoText</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider5">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit5"/>
-                </item>
-               </layout>
+                <property name="text">
+                 <string>T1</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::AutoText</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="horizontalSlider">
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sendMsgLineEdit"/>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QVBoxLayout" name="verticalLayout">
+             <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,6,2">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,6,2">
-                <item>
-                 <widget class="QLabel" name="label_7">
-                  <property name="font">
-                   <font>
-                    <family>宋体</family>
-                    <pointsize>10</pointsize>
-                    <weight>50</weight>
-                    <bold>false</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>T2</string>
-                  </property>
-                  <property name="textFormat">
-                   <enum>Qt::AutoText</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider2">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit2"/>
-                </item>
-               </layout>
+               <widget class="QLabel" name="label_7">
+                <property name="font">
+                 <font>
+                  <family>Times New Roman</family>
+                  <pointsize>10</pointsize>
+                  <weight>50</weight>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>T2</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::AutoText</enum>
+                </property>
+               </widget>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,6,2">
-                <item>
-                 <widget class="QLabel" name="label_9">
-                  <property name="font">
-                   <font>
-                    <family>宋体</family>
-                    <pointsize>10</pointsize>
-                    <weight>50</weight>
-                    <bold>false</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>T4</string>
-                  </property>
-                  <property name="textFormat">
-                   <enum>Qt::AutoText</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider4">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit4"/>
-                </item>
-               </layout>
+               <widget class="QSlider" name="horizontalSlider2">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,6,2">
-                <item>
-                 <widget class="QLabel" name="label_11">
-                  <property name="font">
-                   <font>
-                    <family>宋体</family>
-                    <pointsize>10</pointsize>
-                    <weight>50</weight>
-                    <bold>false</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>T6</string>
-                  </property>
-                  <property name="textFormat">
-                   <enum>Qt::AutoText</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider6">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit6"/>
-                </item>
-               </layout>
+               <widget class="QLineEdit" name="sendMsgLineEdit2"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,6,2">
+              <item>
+               <widget class="QLabel" name="label_8">
+                <property name="font">
+                 <font>
+                  <family>Times New Roman</family>
+                  <pointsize>10</pointsize>
+                  <weight>50</weight>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>T3</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::AutoText</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="horizontalSlider3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sendMsgLineEdit3"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,6,2">
+              <item>
+               <widget class="QLabel" name="label_9">
+                <property name="font">
+                 <font>
+                  <family>Times New Roman</family>
+                  <pointsize>10</pointsize>
+                  <weight>50</weight>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>T4</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::AutoText</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="horizontalSlider4">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sendMsgLineEdit4"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,6,2">
+              <property name="topMargin">
+               <number>4</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_10">
+                <property name="font">
+                 <font>
+                  <family>Times New Roman</family>
+                  <pointsize>10</pointsize>
+                  <weight>50</weight>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>T5</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::AutoText</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="horizontalSlider5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sendMsgLineEdit5"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,6,2">
+              <item>
+               <widget class="QLabel" name="label_11">
+                <property name="font">
+                 <font>
+                  <family>Times New Roman</family>
+                  <pointsize>10</pointsize>
+                  <weight>50</weight>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>T6</string>
+                </property>
+                <property name="textFormat">
+                 <enum>Qt::AutoText</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="horizontalSlider6">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sendMsgLineEdit6"/>
               </item>
              </layout>
             </item>
@@ -359,132 +363,197 @@
          <widget class="QGroupBox" name="groupBox_3">
           <property name="geometry">
            <rect>
-            <x>20</x>
-            <y>190</y>
-            <width>591</width>
-            <height>111</height>
+            <x>330</x>
+            <y>20</y>
+            <width>311</width>
+            <height>171</height>
            </rect>
           </property>
           <property name="font">
            <font>
-            <family>宋体</family>
+            <family>Times New Roman</family>
             <pointsize>10</pointsize>
            </font>
           </property>
           <property name="title">
-           <string>关节角控制</string>
+           <string>JOINT</string>
           </property>
           <widget class="QWidget" name="layoutWidget">
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>20</y>
-             <width>551</width>
-             <height>70</height>
+             <y>22</y>
+             <width>271</width>
+             <height>141</height>
             </rect>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_3">
+           <layout class="QVBoxLayout" name="verticalLayout_2">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_13">
+             <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="2,6,2">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="2,6,2">
-                <item>
-                 <widget class="QLabel" name="label_20">
-                  <property name="text">
-                   <string>Shoul_x</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider7">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit7"/>
-                </item>
-               </layout>
+               <widget class="QLabel" name="label_20">
+                <property name="text">
+                 <string>SHOUL_X</string>
+                </property>
+               </widget>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="2,6,2">
-                <item>
-                 <widget class="QLabel" name="label_21">
-                  <property name="text">
-                   <string>Shoul_y</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider8">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit8"/>
-                </item>
-               </layout>
+               <widget class="QSlider" name="horizontalSlider7">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sendMsgLineEdit7"/>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_14">
+             <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="2,6,2">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="2,6,2">
-                <item>
-                 <widget class="QLabel" name="label_23">
-                  <property name="text">
-                   <string>Elbow_z</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider10">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit10"/>
-                </item>
-               </layout>
+               <widget class="QLabel" name="label_21">
+                <property name="text">
+                 <string>SHOUL_Y</string>
+                </property>
+               </widget>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="2,6,2">
-                <item>
-                 <widget class="QLabel" name="label_22">
-                  <property name="text">
-                   <string>Shoul_z</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QSlider" name="horizontalSlider9">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="tickPosition">
-                   <enum>QSlider::NoTicks</enum>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="sendMsgLineEdit9"/>
-                </item>
-               </layout>
+               <widget class="QSlider" name="horizontalSlider8">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sendMsgLineEdit8"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="2,6,2">
+              <item>
+               <widget class="QLabel" name="label_22">
+                <property name="text">
+                 <string>SHOUL_Z</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="horizontalSlider9">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sendMsgLineEdit9"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="2,6,2">
+              <item>
+               <widget class="QLabel" name="label_23">
+                <property name="text">
+                 <string>ELBOW_Y</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="horizontalSlider10">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::NoTicks</enum>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="sendMsgLineEdit10"/>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="geometry">
+           <rect>
+            <x>330</x>
+            <y>210</y>
+            <width>291</width>
+            <height>111</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <family>Times New Roman</family>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="title">
+           <string>POSITION</string>
+          </property>
+          <widget class="QWidget" name="layoutWidget">
+           <property name="geometry">
+            <rect>
+             <x>30</x>
+             <y>20</y>
+             <width>121</width>
+             <height>83</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_3">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,5">
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>X</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="PosXlineEdit"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="1,5">
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>Y</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="PosYlineEdit"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="1,5">
+              <item>
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Z</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="PosZlineEdit"/>
               </item>
              </layout>
             </item>
@@ -494,28 +563,48 @@
          <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
-            <x>470</x>
-            <y>10</y>
-            <width>130</width>
-            <height>20</height>
+            <x>10</x>
+            <y>260</y>
+            <width>231</width>
+            <height>21</height>
            </rect>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_11">
            <item>
             <widget class="QRadioButton" name="cabel_RadioButton">
              <property name="text">
-              <string>绳张力</string>
+              <string>TENSION</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QRadioButton" name="joint_RadioButton">
              <property name="text">
-              <string>关节角</string>
+              <string>JOINT</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="Position_RadioButton">
+             <property name="text">
+              <string>POSITION</string>
              </property>
             </widget>
            </item>
           </layout>
+         </widget>
+         <widget class="QPushButton" name="sendmsgButton">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>290</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>SEND</string>
+          </property>
          </widget>
         </widget>
        </widget>
@@ -539,216 +628,82 @@
          </rect>
         </property>
        </widget>
-       <widget class="QPushButton" name="sendmsgButton">
-        <property name="geometry">
-         <rect>
-          <x>480</x>
-          <y>730</y>
-          <width>101</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>确定</string>
-        </property>
-        <property name="icon">
-         <iconset resource="li.qrc">
-          <normaloff>:/li/li/send.png</normaloff>:/li/li/send.png</iconset>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="VRDisplay">
-        <property name="geometry">
-         <rect>
-          <x>480</x>
-          <y>770</y>
-          <width>101</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>VR</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="dataGetButton">
-        <property name="geometry">
-         <rect>
-          <x>600</x>
-          <y>730</y>
-          <width>111</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>DataGetStart</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="dataStopGetButton">
-        <property name="geometry">
-         <rect>
-          <x>600</x>
-          <y>770</y>
-          <width>111</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>DataGetStop</string>
-        </property>
-       </widget>
        <widget class="QPushButton" name="pushButton">
         <property name="geometry">
          <rect>
-          <x>730</x>
-          <y>730</y>
+          <x>10</x>
+          <y>710</y>
           <width>111</width>
           <height>31</height>
          </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>Times New Roman</family>
+          <pointsize>10</pointsize>
+         </font>
         </property>
         <property name="text">
          <string>BeforeTighten</string>
         </property>
        </widget>
-       <widget class="QPushButton" name="pushButton_3">
-        <property name="geometry">
-         <rect>
-          <x>850</x>
-          <y>840</y>
-          <width>71</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>肘前屈</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_2">
-        <property name="geometry">
-         <rect>
-          <x>850</x>
-          <y>790</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>外展</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_6">
-        <property name="geometry">
-         <rect>
-          <x>990</x>
-          <y>790</y>
-          <width>71</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>肩前屈</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_4">
-        <property name="geometry">
-         <rect>
-          <x>930</x>
-          <y>840</y>
-          <width>81</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>肘前屈回收</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_5">
-        <property name="geometry">
-         <rect>
-          <x>920</x>
-          <y>790</y>
-          <width>61</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>外展回收</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_7">
-        <property name="geometry">
-         <rect>
-          <x>1020</x>
-          <y>840</y>
-          <width>81</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>肩前屈回收</string>
-        </property>
-       </widget>
-       <widget class="QWidget" name="linkWidget" native="true">
+       <widget class="QTabWidget" name="tabWidget_3">
         <property name="geometry">
          <rect>
           <x>1140</x>
           <y>10</y>
-          <width>611</width>
-          <height>471</height>
-         </rect>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QWidget" name="tab_2">
-       <attribute name="title">
-        <string>IMU传感器</string>
-       </attribute>
-       <widget class="QLabel" name="label_18">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>100</y>
-          <width>41</width>
-          <height>16</height>
+          <width>621</width>
+          <height>411</height>
          </rect>
         </property>
         <property name="font">
          <font>
-          <family>3ds Light</family>
+          <family>Times New Roman</family>
           <pointsize>10</pointsize>
          </font>
         </property>
-        <property name="text">
-         <string>elbow</string>
+        <property name="currentIndex">
+         <number>0</number>
         </property>
-        <property name="wordWrap">
-         <bool>false</bool>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_19">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>300</y>
-          <width>51</width>
-          <height>20</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>3ds Light</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>shoulder</string>
-        </property>
-        <property name="wordWrap">
-         <bool>false</bool>
-        </property>
+        <widget class="QWidget" name="tab">
+         <attribute name="title">
+          <string>LINKDISPLAY</string>
+         </attribute>
+         <widget class="QWidget" name="linkWidget" native="true">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>20</y>
+            <width>431</width>
+            <height>341</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="VRDisplay">
+          <property name="geometry">
+           <rect>
+            <x>470</x>
+            <y>20</y>
+            <width>101</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <family>Times New Roman</family>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>VRDISPLAY</string>
+          </property>
+         </widget>
+        </widget>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
-        <string>电机编码器</string>
+        <string>ENCONDER</string>
        </attribute>
        <widget class="QCustomPlot" name="Motor1Plot" native="true">
         <property name="geometry">
@@ -927,7 +882,7 @@
       </widget>
       <widget class="QWidget" name="tab_5">
        <attribute name="title">
-        <string>sur_pressure</string>
+        <string>PRESSURE</string>
        </attribute>
        <widget class="QCustomPlot" name="elbpresPlot" native="true">
         <property name="geometry">
@@ -1011,22 +966,28 @@
     <property name="title">
      <string>操作(&amp;N)</string>
     </property>
-    <addaction name="actionAdd"/>
+    <addaction name="actionStartMeasure"/>
     <addaction name="actionOpen"/>
     <addaction name="actionClose"/>
     <addaction name="actionSave"/>
     <addaction name="actionExit"/>
+    <addaction name="actionStopMeasure"/>
    </widget>
    <widget class="QMenu" name="menu_I">
     <property name="title">
      <string>说明(&amp;I)</string>
     </property>
-    <addaction name="actionInfor"/>
    </widget>
    <addaction name="menu_N"/>
    <addaction name="menu_I"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
    <property name="toolButtonStyle">
     <enum>Qt::ToolButtonTextBesideIcon</enum>
    </property>
@@ -1038,87 +999,95 @@
    </attribute>
    <addaction name="actionOpen"/>
    <addaction name="actionClose"/>
-   <addaction name="actionAdd"/>
+   <addaction name="actionStartMeasure"/>
+   <addaction name="actionStopMeasure"/>
    <addaction name="actionSave"/>
    <addaction name="actionExit"/>
    <addaction name="actionClean"/>
-   <addaction name="actionInfor"/>
-   <addaction name="Openglaction"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="actionAdd">
+  <action name="actionStartMeasure">
    <property name="icon">
     <iconset resource="li.qrc">
-     <normaloff>:/li/li/add.png</normaloff>:/li/li/add.png</iconset>
+     <normaloff>:/li/li/play_24x32.png</normaloff>:/li/li/play_24x32.png</iconset>
    </property>
    <property name="text">
-    <string>添加串口</string>
+    <string>StartMeasure</string>
+   </property>
+   <property name="font">
+    <font>
+     <family>Times New Roman</family>
+     <pointsize>10</pointsize>
+    </font>
    </property>
   </action>
   <action name="actionOpen">
    <property name="icon">
     <iconset resource="li.qrc">
-     <normaloff>:/li/li/open.png</normaloff>:/li/li/open.png</iconset>
+     <normaloff>:/li/li/bolt_32x32.png</normaloff>:/li/li/bolt_32x32.png</iconset>
    </property>
    <property name="text">
-    <string>打开串口</string>
+    <string>OpenCom</string>
+   </property>
+   <property name="toolTip">
+    <string>OpenCom</string>
    </property>
   </action>
   <action name="actionClose">
    <property name="icon">
     <iconset resource="li.qrc">
-     <normaloff>:/li/li/stop.png</normaloff>:/li/li/stop.png</iconset>
+     <normaloff>:/li/li/x_28x28.png</normaloff>:/li/li/x_28x28.png</iconset>
    </property>
    <property name="text">
-    <string>关闭串口</string>
+    <string>CloseCom</string>
+   </property>
+   <property name="toolTip">
+    <string>CloseCom</string>
    </property>
   </action>
   <action name="actionExit">
    <property name="icon">
     <iconset resource="li.qrc">
-     <normaloff>:/li/li/exit.png</normaloff>:/li/li/exit.png</iconset>
+     <normaloff>:/li/li/x_alt_32x32.png</normaloff>:/li/li/x_alt_32x32.png</iconset>
    </property>
    <property name="text">
-    <string>退出程序</string>
+    <string>Exit</string>
    </property>
-  </action>
-  <action name="actionInfor">
-   <property name="icon">
-    <iconset resource="li.qrc">
-     <normaloff>:/li/li/mesage.png</normaloff>:/li/li/mesage.png</iconset>
-   </property>
-   <property name="text">
-    <string>使用说明</string>
+   <property name="toolTip">
+    <string>Exit</string>
    </property>
   </action>
   <action name="actionSave">
    <property name="icon">
     <iconset resource="li.qrc">
-     <normaloff>:/li/li/save.png</normaloff>:/li/li/save.png</iconset>
+     <normaloff>:/li/li/layers_32x28.png</normaloff>:/li/li/layers_32x28.png</iconset>
    </property>
    <property name="text">
-    <string>保存数据</string>
+    <string>SaveData</string>
+   </property>
+   <property name="toolTip">
+    <string>SaveData</string>
    </property>
   </action>
   <action name="actionClean">
    <property name="icon">
     <iconset resource="li.qrc">
-     <normaloff>:/li/li/cleanport.png</normaloff>:/li/li/cleanport.png</iconset>
+     <normaloff>:/li/li/loop_alt2_32x28.png</normaloff>:/li/li/loop_alt2_32x28.png</iconset>
    </property>
    <property name="text">
-    <string>清空数据</string>
+    <string>ClearGraph</string>
    </property>
    <property name="toolTip">
-    <string>清空数据</string>
+    <string>ClearGraph</string>
    </property>
   </action>
-  <action name="Openglaction">
+  <action name="actionStopMeasure">
    <property name="icon">
     <iconset resource="li.qrc">
-     <normaloff>:/li/li/plot.png</normaloff>:/li/li/plot.png</iconset>
+     <normaloff>:/li/li/pause_24x32.png</normaloff>:/li/li/pause_24x32.png</iconset>
    </property>
    <property name="text">
-    <string>图形界面</string>
+    <string>StopMeasure</string>
    </property>
   </action>
  </widget>

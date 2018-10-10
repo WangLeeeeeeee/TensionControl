@@ -38,21 +38,26 @@ private:
     void run();
     WaveformAiCtrl * wfAiCtrl;
     ErrorCode ret;
-    /*
+
     // Gets a LpmsSensorManager instance
     LpmsSensorManagerI* manager1 = LpmsSensorManagerFactory();
     LpmsSensorManagerI* manager2 = LpmsSensorManagerFactory();
     // Connects to LPMS-CU sensor with address A1234567
     LpmsSensorI* lpms1 = manager1->addSensor(DEVICE_LPMS_U, "A5022WAT");
     LpmsSensorI* lpms2 = manager2->addSensor(DEVICE_LPMS_U, "A5022WCL");
-    */
-    QTimer getsensorTimer;
+
+
+
+    QTimer *getsensorTimer;
 
 public:
     explicit GetSensordata(QObject *parent = 0);
     // a static function cannot call a nonstatic member function
     static void BDAQCALL OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * userParam);
     void CheckError(ErrorCode errorCode);
+
+private slots:
+    void slotChangeSenFlag();
 
 };
 

@@ -11,5 +11,26 @@
         <file>li/cleanport.png</file>
         <file>li/send.png</file>
         <file>li/robot_1.png</file>
+        <file>li/bars_32x32.png</file>
+        <file>li/bolt_32x32.png</file>
+        <file>li/cd_32x32.png</file>
+        <file>li/compass_32x32.png</file>
+        <file>li/denied_32x32.png</file>
+        <file>li/eyedropper_32x32.png</file>
+        <file>li/folder_stroke_32x32.png</file>
+        <file>li/fullscreen_exit_32x32.png</file>
+        <file>li/layers_32x28.png</file>
+        <file>li/loop_alt2_32x28.png</file>
+        <file>li/pause_24x32.png</file>
+        <file>li/play_24x32.png</file>
+        <file>li/plus_32x32.png</file>
+        <file>li/rss_alt_32x32.png</file>
+        <file>li/share_32x32.png</file>
+        <file>li/stop_32x32.png</file>
+        <file>li/sun_fill_32x32.png</file>
+        <file>li/target_32x32.png</file>
+        <file>li/user_24x32.png</file>
+        <file>li/x_28x28.png</file>
+        <file>li/x_alt_32x32.png</file>
     </qresource>
 </RCC>

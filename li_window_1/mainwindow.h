@@ -31,7 +31,7 @@ class TensionControl;
 //#define TIMER_INTERVAL 10
 
 // set the plot interval
-#define TIME_PLOT_INTERVAL 100
+#define TIME_PLOT_INTERVAL 1000
 
 
 namespace Ui {
@@ -50,18 +50,13 @@ public:
 
 protected:
     void setActionsEnable(bool status);
-    void setComboxEnable(bool status);
     
 private slots:
     void on_actionOpen_triggered();
     void on_actionClose_triggered();
-    void on_actionInfor_triggered();
     void on_actionExit_triggered();
-    void on_actionAdd_triggered();
     void on_actionSave_triggered();
     void on_actionClean_triggered();
-    void on_sendmsgButton_clicked();
-    //void readMyCom();
     void plot();
     void setLine1EditValue();
     void setLine2EditValue();
@@ -75,27 +70,15 @@ private slots:
     void setLine10EditValue();
     void Plot_Init();
 
-    void on_Openglaction_triggered();
-
-    void on_dataGetButton_clicked();
-
-    void on_dataStopGetButton_clicked();
-
     void on_pushButton_clicked();
 
-    void on_pushButton_2_clicked();
-
-    void on_pushButton_3_clicked();
-
-    void on_pushButton_4_clicked();
-
-    void on_pushButton_5_clicked();
-
-    void on_pushButton_6_clicked();
-
-    void on_pushButton_7_clicked();
-
     void on_VRDisplay_clicked();
+
+    void on_sendmsgButton_clicked();
+
+    void on_actionStartMeasure_triggered();
+
+    void on_actionStopMeasure_triggered();
 
 private:
     aboutdialog aboutdlg;
@@ -108,17 +91,16 @@ private:
     TensionControl *tensioncontrol;
     Ui::MainWindow *ui;
 
+    // 3D surface
+    Q3DScatter *graph = new Q3DScatter();
+    QWidget *container = QWidget::createWindowContainer(graph);
+    LinkDisplay *linkdisplay = new LinkDisplay(graph);
+
 signals:
     void sigSerialInit();
     void sigSerialClose();
     void sigBeforeTigh();
-    void sigQianqu();
-    void sigWaizhan();
-    void sigSerialCtrl(bool TensionOrAngle, unsigned int *Data);
-    void sigHuishou();
-    void sigHuishouWaizhan();
-    void sigJianqianqu();
-    void sigHuishouJianqianqu();
+    void sigSerialCtrl(unsigned int TensionOrAngle,int *Data);
     void sigVRSerialOpen();
 };
 

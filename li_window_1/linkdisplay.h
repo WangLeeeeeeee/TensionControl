@@ -1,12 +1,6 @@
 #ifndef LINKDISPLAY_H
 #define LINKDISPLAY_H
 
-
-#include <QtDataVisualization/Q3DSurface>
-#include <QtDataVisualization/QSurfaceDataProxy>
-#include <QtDataVisualization/QHeightMapSurfaceDataProxy>
-#include <QtDataVisualization/QSurface3DSeries>
-
 #include <QtDataVisualization/q3dscatter.h>
 #include <QtDataVisualization/qabstract3dseries.h>
 //#include "getsensordata.h"
@@ -23,6 +17,7 @@ public:
     ~LinkDisplay();
 
     void buildLink();
+    void adjustPos(double sh_x, double sh_y, double sh_z, double el_x, double el_y, double el_z);
 
 private:
     QVector3D randVector();

@@ -11,9 +11,7 @@
 #include "motorcontrol.h"
 #include "vrdisplay.h"
 #include "tensioncontrol.h"
-#include <QtDataVisualization/Q3DSurface>
 
-using namespace QtDataVisualization;
 
 unsigned int shift_x_tension = 0;
 unsigned int shift_x_angle = 0;
@@ -40,8 +38,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     // 3D surface
-    Q3DScatter *graph = new Q3DScatter();
-    QWidget *container = QWidget::createWindowContainer(graph);
+    //Q3DScatter *graph = new Q3DScatter();
+    //QWidget *container = QWidget::createWindowContainer(graph);
 
     /*
     if (!graph->hasContext()) {
@@ -68,23 +66,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->linkWidget->setWindowTitle(QStringLiteral("Link model"));
 
-
     ui->linkWidget->show();
-
-    LinkDisplay *linkdisplay = new LinkDisplay(graph);
-
 
     // Before connect object must be instantiation!!!
     connect(this, SIGNAL(sigSerialInit()), tensioncontrol, SLOT(slotSerialInit()));
     connect(this, SIGNAL(sigSerialClose()), tensioncontrol, SLOT(slotSerialClose()));
+    connect(this, SIGNAL(sigSerialCtrl(uint, int*)), tensioncontrol, SLOT(slotSerialCtrl(uint, int*)));
     connect(this, SIGNAL(sigBeforeTigh()), motorcontrol, SLOT(slotBeforeTigh()));
-    connect(this, SIGNAL(sigQianqu()), motorcontrol, SLOT(slotQianqu()));
-    connect(this, SIGNAL(sigWaizhan()), motorcontrol, SLOT(slotWaizhan()));
-    connect(this, SIGNAL(sigHuishou()), motorcontrol, SLOT(slotHuishou()));
-    connect(this, SIGNAL(sigHuishouWaizhan()), motorcontrol, SLOT(slotHuishouWaizhan()));
-    connect(this, SIGNAL(sigJianqianqu()), motorcontrol, SLOT(slotJianqianqu()));
-    connect(this, SIGNAL(sigHuishouJianqianqu()), motorcontrol, SLOT(slotHuishouJianqianqu()));
-    connect(this, SIGNAL(sigSerialCtrl(bool,uint*)), motorcontrol, SLOT(slotUiParRec(bool,uint*)));
     connect(this,SIGNAL(sigVRSerialOpen()), vrdisplay, SLOT(slotVRSerialOpen()));
 }
 
@@ -99,6 +87,11 @@ MainWindow::~MainWindow()
     motorcontrol->wait();
     delete motorcontrol;
     motorcontrol = 0;
+
+    tensioncontrol->terminate();
+    tensioncontrol->wait();
+    delete tensioncontrol;
+    tensioncontrol = 0;
 
     delete ui;
 }
@@ -261,8 +254,6 @@ void MainWindow::startInit()
 {
     setActionsEnable(false);
     ui->actionExit->setEnabled(true);
-    ui->actionAdd->setEnabled(true);
-    ui->actionInfor->setEnabled(true);
 
     ui->horizontalSlider->setMinimum(100);
     ui->horizontalSlider->setMaximum(2000);
@@ -282,17 +273,17 @@ void MainWindow::startInit()
     ui->horizontalSlider6->setMinimum(100);
     ui->horizontalSlider6->setMaximum(2000);
 
-    ui->horizontalSlider7->setMinimum(-30);
-    ui->horizontalSlider7->setMaximum(30);
+    ui->horizontalSlider7->setMinimum(0);
+    ui->horizontalSlider7->setMaximum(90);
 
-    ui->horizontalSlider8->setMinimum(-30);
-    ui->horizontalSlider8->setMaximum(30);
+    ui->horizontalSlider8->setMinimum(0);
+    ui->horizontalSlider8->setMaximum(90);
 
-    ui->horizontalSlider9->setMinimum(-30);
-    ui->horizontalSlider9->setMaximum(30);
+    ui->horizontalSlider9->setMinimum(-60);
+    ui->horizontalSlider9->setMaximum(60);
 
-    ui->horizontalSlider10->setMinimum(-60);
-    ui->horizontalSlider10->setMaximum(60);
+    ui->horizontalSlider10->setMinimum(0);
+    ui->horizontalSlider10->setMaximum(120);
 
     //
     ui->horizontalLayout->setStretchFactor(ui->label_6,2);
@@ -368,23 +359,12 @@ void MainWindow::setActionsEnable(bool status)
     ui->actionSave->setEnabled(status);
 }
 
-//Combox
-void MainWindow::setComboxEnable(bool status)
-{
-    //ui->portNameComboBox->setEnabled(status);
-    //ui->baudRateCombox->setEnabled(status);
-    //ui->dataBitsComboBox->setEnabled(status);
-    //ui->stopBitsComboBox->setEnabled(status);
-    //ui->parityComboBox->setEnabled(status);
-}
-
 //
 void MainWindow::on_actionOpen_triggered()
 {
     emit sigSerialInit();
-    setComboxEnable(false);
+    //tensioncontrol->start();
     ui->actionOpen->setEnabled(false);
-    ui->actionAdd->setEnabled(false);
 
     setActionsEnable(true);
 }
@@ -394,10 +374,8 @@ void MainWindow::on_actionClose_triggered()
 {
     //plot_timer->stop();
     //serial.close();
-    setComboxEnable(true);
 
     ui->actionOpen->setEnabled(true);
-    ui->actionAdd->setEnabled(true);
 
     setActionsEnable(false);
 
@@ -409,34 +387,10 @@ void MainWindow::on_actionClose_triggered()
     emit sigSerialClose();
 }
 
-//
-void MainWindow::on_actionInfor_triggered()
-{
-    ui->statusBar->showMessage(tr(""));
-    aboutdlg.show();
-    aboutdlg.setWindowTitle(tr(""));
-}
-
 
 void MainWindow::on_actionExit_triggered()
 {
     this->close();
-}
-
-void MainWindow::on_actionAdd_triggered()
-{
-    /*
-
-    bool ok = false;
-    QString portname;
-
-    portname = QInputDialog::getText(this,tr(""),tr(" "),QLineEdit::Normal,0,&ok);
-    if(ok && !portname.isEmpty()){
-        ui->portNameComboBox->addItem(portname);
-        ui->statusBar->showMessage(tr(""));
-
-    }*/
-
 }
 
 //save to excel file
@@ -630,6 +584,7 @@ void MainWindow::on_actionSave_triggered()
     QAxObject *user_range5 = pSheet->querySubObject("Range(const QString&)",RangeStr);
     user_range5->setProperty("Value",res_5);
     vars.clear();
+
 
     for(i=0; i<receive_count_angle; i++)
     {
@@ -874,44 +829,14 @@ void MainWindow::on_actionClean_triggered()
     ui->statusBar->showMessage(tr("data cleaned"));
 }
 
-
-void MainWindow::on_sendmsgButton_clicked()
-{
-    bool TensionOrAngle=0;
-    unsigned int sendData[6];
-    if(ui->joint_RadioButton->isChecked())
-    {
-        TensionOrAngle = 1;
-        sendData[0] = ui->sendMsgLineEdit7->text().toUInt();
-        sendData[1] = ui->sendMsgLineEdit8->text().toUInt();
-        sendData[2] = ui->sendMsgLineEdit9->text().toUInt();
-        sendData[3] = ui->sendMsgLineEdit10->text().toUInt();
-        sendData[4] = 0;
-        sendData[5] = 0;
-        emit sigSerialCtrl(TensionOrAngle, sendData);
-        motorcontrol->start();
-    }
-    else if(ui->cabel_RadioButton->isChecked())
-    {
-        TensionOrAngle = 0;
-        sendData[0] = ui->sendMsgLineEdit->text().toUInt();
-        sendData[1] = ui->sendMsgLineEdit2->text().toUInt();
-        sendData[2] = ui->sendMsgLineEdit3->text().toUInt();
-        sendData[3] = ui->sendMsgLineEdit4->text().toUInt();
-        sendData[4] = ui->sendMsgLineEdit5->text().toUInt();
-        sendData[5] = ui->sendMsgLineEdit6->text().toUInt();
-        emit sigSerialCtrl(TensionOrAngle, sendData);
-        //motorcontrol->start();
-    }
-    else
-    {
-        QMessageBox::critical(this,tr("wrong operation"),tr("choose Tension control or Joint control first!!!"),QMessageBox::Ok);
-        return;
-    }
-}
-
 void MainWindow::plot()
 {
+    linkdisplay->adjustPos(shoulder_x[receive_count_angle-1]*3.14/180,
+            shoulder_y[receive_count_angle-1]*3.14/180,
+            shoulder_z[receive_count_angle-1]*3.14/180,
+            elbow_x[receive_count_angle-1]*3.14/180,
+            elbow_y[receive_count_angle-1]*3.14/180,
+            elbow_z[receive_count_angle-1]*3.14/180);
 
     //  Six tension value figure
     if(receive_count_tension > 1)
@@ -1111,18 +1036,62 @@ void MainWindow::setLine10EditValue()
     ui->sendMsgLineEdit10->setText(str);
 }
 
-//openggl
-void MainWindow::on_Openglaction_triggered()
+
+void MainWindow::on_pushButton_clicked()
 {
-//    MyGLWidget *w1;
-//    w1 = new MyGLWidget();
-//    w1->resize(400,300);
-//    w1->initTimer();
-//    w1->show();
+    // 预紧信号发送
+    emit sigBeforeTigh();
 }
 
+void MainWindow::on_VRDisplay_clicked()
+{
+    emit sigVRSerialOpen();
+}
 
-void MainWindow::on_dataGetButton_clicked()
+void MainWindow::on_sendmsgButton_clicked()
+{
+    uint TensionOrAngle=0;
+    int sendData[6];
+    if(ui->joint_RadioButton->isChecked())
+    {
+        TensionOrAngle = 1;
+        sendData[0] = ui->sendMsgLineEdit7->text().toInt();
+        sendData[1] = ui->sendMsgLineEdit8->text().toInt();
+        sendData[2] = ui->sendMsgLineEdit9->text().toInt();
+        sendData[3] = ui->sendMsgLineEdit10->text().toUInt();
+        sendData[4] = 0;
+        sendData[5] = 0;
+        emit sigSerialCtrl(TensionOrAngle, sendData);
+        //motorcontrol->start();
+    }
+    else if(ui->cabel_RadioButton->isChecked())
+    {
+        TensionOrAngle = 0;
+        sendData[0] = ui->sendMsgLineEdit->text().toInt();
+        sendData[1] = ui->sendMsgLineEdit2->text().toInt();
+        sendData[2] = ui->sendMsgLineEdit3->text().toInt();
+        sendData[3] = ui->sendMsgLineEdit4->text().toInt();
+        sendData[4] = ui->sendMsgLineEdit5->text().toInt();
+        sendData[5] = ui->sendMsgLineEdit6->text().toInt();
+        emit sigSerialCtrl(TensionOrAngle, sendData);
+        //motorcontrol->start();
+    }
+    else if(ui->Position_RadioButton->isChecked())
+    {
+        TensionOrAngle = 2;
+        sendData[0] = ui->PosXlineEdit->text().toInt();
+        sendData[1] = ui->PosYlineEdit->text().toInt();
+        sendData[2] = ui->PosZlineEdit->text().toInt();
+        emit sigSerialCtrl(TensionOrAngle, sendData);
+    }
+    else
+    {
+        QMessageBox::critical(this,tr("wrong operation"),tr("choose one category first!!!"),QMessageBox::Ok);
+        return;
+    }
+}
+
+void MainWindow::on_actionStartMeasure_triggered()
 {
     receive_count_tension = 0;
     receive_count_angle = 0;
@@ -1131,63 +1100,10 @@ void MainWindow::on_dataGetButton_clicked()
     plot_timer->start(plot_timerdly);
 }
 
-// stop getdatasensor Thread
-void MainWindow::on_dataStopGetButton_clicked()
+void MainWindow::on_actionStopMeasure_triggered()
 {
     getsensordata->terminate();
     getsensordata->wait();
     ui->actionSave->setEnabled(true);
     plot_timer->stop();
-}
-
-/*
-void MainWindow::readMyCom()
-{
-    QByteArray temp = serial.readAll();
-    if(temp == "OK\r\n")
-    {
-
-    }
-}
-*/
-
-void MainWindow::on_pushButton_clicked()
-{
-    // 预紧信号发送
-    emit sigBeforeTigh();
-}
-
-void MainWindow::on_pushButton_2_clicked()
-{
-    emit sigWaizhan();
-}
-
-void MainWindow::on_pushButton_3_clicked()
-{
-    emit sigQianqu();
-}
-
-void MainWindow::on_pushButton_4_clicked()
-{
-    emit sigHuishou();
-}
-
-void MainWindow::on_pushButton_5_clicked()
-{
-    emit sigHuishouWaizhan();
-}
-
-void MainWindow::on_pushButton_6_clicked()
-{
-    emit sigJianqianqu();
-}
-
-void MainWindow::on_pushButton_7_clicked()
-{
-    emit sigHuishouJianqianqu();
-}
-
-void MainWindow::on_VRDisplay_clicked()
-{
-    emit sigVRSerialOpen();
 }
