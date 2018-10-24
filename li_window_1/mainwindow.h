@@ -31,7 +31,7 @@ class TensionControl;
 //#define TIMER_INTERVAL 10
 
 // set the plot interval
-#define TIME_PLOT_INTERVAL 1000
+#define TIME_PLOT_INTERVAL 100
 
 
 namespace Ui {

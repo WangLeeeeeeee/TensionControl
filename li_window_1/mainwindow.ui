@@ -24,7 +24,7 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_1">
        <attribute name="title">
@@ -35,8 +35,8 @@
          <rect>
           <x>10</x>
           <y>10</y>
-          <width>541</width>
-          <height>161</height>
+          <width>540</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
@@ -45,8 +45,8 @@
          <rect>
           <x>570</x>
           <y>10</y>
-          <width>541</width>
-          <height>161</height>
+          <width>540</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
@@ -54,9 +54,9 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>180</y>
-          <width>541</width>
-          <height>161</height>
+          <y>260</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
@@ -64,9 +64,9 @@
         <property name="geometry">
          <rect>
           <x>570</x>
-          <y>180</y>
-          <width>541</width>
-          <height>161</height>
+          <y>260</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
@@ -74,9 +74,9 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>350</y>
-          <width>541</width>
-          <height>161</height>
+          <y>510</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
@@ -84,9 +84,9 @@
         <property name="geometry">
          <rect>
           <x>570</x>
-          <y>350</y>
-          <width>541</width>
-          <height>161</height>
+          <y>510</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
@@ -95,8 +95,8 @@
          <rect>
           <x>1130</x>
           <y>450</y>
-          <width>661</width>
-          <height>401</height>
+          <width>671</width>
+          <height>441</height>
          </rect>
         </property>
         <property name="font">
@@ -119,9 +119,9 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>20</y>
-            <width>311</width>
-            <height>231</height>
+            <y>10</y>
+            <width>271</width>
+            <height>221</height>
            </rect>
           </property>
           <property name="font">
@@ -137,14 +137,14 @@
            <property name="geometry">
             <rect>
              <x>20</x>
-             <y>34</y>
-             <width>271</width>
+             <y>30</y>
+             <width>241</width>
              <height>179</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,8,2">
               <item>
                <widget class="QLabel" name="label_6">
                 <property name="font">
@@ -180,7 +180,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,8,2">
               <item>
                <widget class="QLabel" name="label_7">
                 <property name="font">
@@ -215,7 +215,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,8,2">
               <item>
                <widget class="QLabel" name="label_8">
                 <property name="font">
@@ -250,7 +250,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,8,2">
               <item>
                <widget class="QLabel" name="label_9">
                 <property name="font">
@@ -285,7 +285,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,8,2">
               <property name="topMargin">
                <number>4</number>
               </property>
@@ -323,7 +323,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,8,2">
               <item>
                <widget class="QLabel" name="label_11">
                 <property name="font">
@@ -360,13 +360,99 @@
            </layout>
           </widget>
          </widget>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="geometry">
+           <rect>
+            <x>290</x>
+            <y>100</y>
+            <width>151</width>
+            <height>131</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <family>Times New Roman</family>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="title">
+           <string>POSITION</string>
+          </property>
+          <widget class="QWidget" name="layoutWidget">
+           <property name="geometry">
+            <rect>
+             <x>21</x>
+             <y>31</y>
+             <width>91</width>
+             <height>83</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,3">
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>X</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="PosXlineEdit"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="1,3">
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>Y</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="PosYlineEdit"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="1,3">
+              <item>
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Z</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="PosZlineEdit"/>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+         <widget class="QPushButton" name="sendmsgButton">
+          <property name="geometry">
+           <rect>
+            <x>440</x>
+            <y>360</y>
+            <width>71</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>SEND</string>
+          </property>
+         </widget>
          <widget class="QGroupBox" name="groupBox_3">
           <property name="geometry">
            <rect>
-            <x>330</x>
-            <y>20</y>
-            <width>311</width>
-            <height>171</height>
+            <x>10</x>
+            <y>240</y>
+            <width>411</width>
+            <height>151</height>
            </rect>
           </property>
           <property name="font">
@@ -381,15 +467,15 @@
           <widget class="QWidget" name="layoutWidget">
            <property name="geometry">
             <rect>
-             <x>20</x>
-             <y>22</y>
+             <x>10</x>
+             <y>25</y>
              <width>271</width>
-             <height>141</height>
+             <height>116</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_2">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="2,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="2,10,1">
               <item>
                <widget class="QLabel" name="label_20">
                 <property name="text">
@@ -413,7 +499,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="2,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="2,10,1">
               <item>
                <widget class="QLabel" name="label_21">
                 <property name="text">
@@ -437,7 +523,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="2,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="2,10,1">
               <item>
                <widget class="QLabel" name="label_22">
                 <property name="text">
@@ -461,7 +547,7 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="2,6,2">
+             <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="2,10,1">
               <item>
                <widget class="QLabel" name="label_23">
                 <property name="text">
@@ -486,86 +572,67 @@
             </item>
            </layout>
           </widget>
-         </widget>
-         <widget class="QGroupBox" name="groupBox">
-          <property name="geometry">
-           <rect>
-            <x>330</x>
-            <y>210</y>
-            <width>291</width>
-            <height>111</height>
-           </rect>
-          </property>
-          <property name="font">
-           <font>
-            <family>Times New Roman</family>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="title">
-           <string>POSITION</string>
-          </property>
           <widget class="QWidget" name="layoutWidget">
            <property name="geometry">
             <rect>
-             <x>30</x>
-             <y>20</y>
-             <width>121</width>
+             <x>288</x>
+             <y>26</y>
+             <width>113</width>
              <height>83</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_3">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,5">
+             <layout class="QHBoxLayout" name="horizontalLayout_15">
               <item>
-               <widget class="QLabel" name="label">
+               <widget class="QLabel" name="label_4">
                 <property name="text">
-                 <string>X</string>
+                 <string>VELOC</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="PosXlineEdit"/>
+               <widget class="QLineEdit" name="vellineEdit"/>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="1,5">
+             <layout class="QHBoxLayout" name="horizontalLayout_16">
               <item>
-               <widget class="QLabel" name="label_2">
+               <widget class="QLabel" name="label_5">
                 <property name="text">
-                 <string>Y</string>
+                 <string>ACCEL</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="PosYlineEdit"/>
+               <widget class="QLineEdit" name="acclineEdit"/>
               </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="1,5">
+             <layout class="QHBoxLayout" name="horizontalLayout_17">
               <item>
-               <widget class="QLabel" name="label_3">
+               <widget class="QLabel" name="label_12">
                 <property name="text">
-                 <string>Z</string>
+                 <string>CIRCLE</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="PosZlineEdit"/>
+               <widget class="QLineEdit" name="circlelineEdit"/>
               </item>
              </layout>
             </item>
            </layout>
           </widget>
          </widget>
-         <widget class="QWidget" name="layoutWidget">
+         <widget class="QWidget" name="">
           <property name="geometry">
            <rect>
-            <x>10</x>
-            <y>260</y>
-            <width>231</width>
+            <x>301</x>
+            <y>20</y>
+            <width>268</width>
             <height>21</height>
            </rect>
           </property>
@@ -587,52 +654,26 @@
            <item>
             <widget class="QRadioButton" name="Position_RadioButton">
              <property name="text">
-              <string>POSITION</string>
+              <string>PTP</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="Linear_RadioButton">
+             <property name="text">
+              <string>LINEAR</string>
              </property>
             </widget>
            </item>
           </layout>
          </widget>
-         <widget class="QPushButton" name="sendmsgButton">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>290</y>
-            <width>71</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>SEND</string>
-          </property>
-         </widget>
         </widget>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot7" native="true">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>520</y>
-          <width>541</width>
-          <height>181</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot8" native="true">
-        <property name="geometry">
-         <rect>
-          <x>570</x>
-          <y>520</y>
-          <width>541</width>
-          <height>181</height>
-         </rect>
-        </property>
        </widget>
        <widget class="QPushButton" name="pushButton">
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>710</y>
+          <y>790</y>
           <width>111</width>
           <height>31</height>
          </rect>
@@ -708,175 +749,121 @@
        <widget class="QCustomPlot" name="Motor1Plot" native="true">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>261</width>
-          <height>161</height>
+          <x>1150</x>
+          <y>20</y>
+          <width>300</width>
+          <height>200</height>
          </rect>
         </property>
        </widget>
        <widget class="QCustomPlot" name="Motor2Plot" native="true">
         <property name="geometry">
          <rect>
-          <x>290</x>
-          <y>10</y>
-          <width>261</width>
-          <height>161</height>
+          <x>1150</x>
+          <y>230</y>
+          <width>300</width>
+          <height>200</height>
          </rect>
         </property>
        </widget>
        <widget class="QCustomPlot" name="Motor3Plot" native="true">
         <property name="geometry">
          <rect>
-          <x>570</x>
-          <y>10</y>
-          <width>261</width>
-          <height>161</height>
+          <x>1150</x>
+          <y>440</y>
+          <width>300</width>
+          <height>200</height>
          </rect>
         </property>
        </widget>
        <widget class="QCustomPlot" name="Motor4Plot" native="true">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>210</y>
-          <width>261</width>
-          <height>161</height>
+          <x>1470</x>
+          <y>20</y>
+          <width>300</width>
+          <height>200</height>
          </rect>
         </property>
        </widget>
        <widget class="QCustomPlot" name="Motor5Plot" native="true">
         <property name="geometry">
          <rect>
-          <x>290</x>
-          <y>210</y>
-          <width>261</width>
-          <height>161</height>
+          <x>1470</x>
+          <y>230</y>
+          <width>300</width>
+          <height>200</height>
          </rect>
         </property>
        </widget>
        <widget class="QCustomPlot" name="Motor6Plot" native="true">
         <property name="geometry">
          <rect>
-          <x>570</x>
-          <y>210</y>
-          <width>261</width>
-          <height>161</height>
+          <x>1470</x>
+          <y>440</y>
+          <width>300</width>
+          <height>200</height>
          </rect>
         </property>
        </widget>
-       <widget class="QLabel" name="label_24">
+       <widget class="QCustomPlot" name="qCustomPlot7" native="true">
         <property name="geometry">
          <rect>
-          <x>100</x>
-          <y>180</y>
-          <width>51</width>
-          <height>21</height>
+          <x>20</x>
+          <y>20</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>Adobe 宋体 Std L</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>1号电机</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_25">
+       <widget class="QCustomPlot" name="qCustomPlot10" native="true">
         <property name="geometry">
          <rect>
-          <x>380</x>
-          <y>180</y>
-          <width>51</width>
-          <height>21</height>
+          <x>580</x>
+          <y>20</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>Adobe 宋体 Std L</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>2号电机</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_26">
+       <widget class="QCustomPlot" name="qCustomPlot8" native="true">
         <property name="geometry">
          <rect>
-          <x>670</x>
-          <y>180</y>
-          <width>51</width>
-          <height>21</height>
+          <x>20</x>
+          <y>270</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>Adobe 宋体 Std L</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>3号电机</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_27">
+       <widget class="QCustomPlot" name="qCustomPlot11" native="true">
         <property name="geometry">
          <rect>
-          <x>100</x>
-          <y>380</y>
-          <width>51</width>
-          <height>21</height>
+          <x>580</x>
+          <y>270</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>Adobe 宋体 Std L</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>4号电机</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_28">
+       <widget class="QCustomPlot" name="qCustomPlot9" native="true">
         <property name="geometry">
          <rect>
-          <x>380</x>
-          <y>380</y>
-          <width>51</width>
-          <height>21</height>
+          <x>20</x>
+          <y>520</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>Adobe 宋体 Std L</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>5号电机</string>
         </property>
        </widget>
-       <widget class="QLabel" name="label_29">
+       <widget class="QCustomPlot" name="qCustomPlot12" native="true">
         <property name="geometry">
          <rect>
-          <x>660</x>
-          <y>380</y>
-          <width>51</width>
-          <height>21</height>
+          <x>580</x>
+          <y>520</y>
+          <width>540</width>
+          <height>240</height>
          </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>Adobe 宋体 Std L</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>6号电机</string>
         </property>
        </widget>
       </widget>

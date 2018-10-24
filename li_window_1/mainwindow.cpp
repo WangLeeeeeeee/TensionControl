@@ -50,11 +50,11 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     */
 
-    /*
+
     QSize screenSize = graph->screen()->size();
-    container->setMinimumSize(QSize(screenSize.width() / 2, screenSize.height() / 1.6));
-    container->setMaximumSize(screenSize);
-    */
+    container->setMinimumSize(QSize(screenSize.width()/4, screenSize.height()/4));
+    container->setMaximumSize(QSize(screenSize.width(), screenSize.height()));
+
     container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     container->setFocusPolicy(Qt::StrongFocus);
 
@@ -116,6 +116,14 @@ void MainWindow::Plot_Init()
                                           QCP::iSelectLegend | QCP::iSelectPlottables);
     ui->qCustomPlot8->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
                                           QCP::iSelectLegend | QCP::iSelectPlottables);
+    ui->qCustomPlot9->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
+                                          QCP::iSelectLegend | QCP::iSelectPlottables);
+    ui->qCustomPlot10->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
+                                          QCP::iSelectLegend | QCP::iSelectPlottables);
+    ui->qCustomPlot11->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
+                                          QCP::iSelectLegend | QCP::iSelectPlottables);
+    ui->qCustomPlot12->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
+                                          QCP::iSelectLegend | QCP::iSelectPlottables);
     ui->Motor1Plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
                                           QCP::iSelectLegend | QCP::iSelectPlottables);
     ui->Motor2Plot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
@@ -133,105 +141,158 @@ void MainWindow::Plot_Init()
     ui->shopresPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
                                      QCP::iSelectLegend | QCP::iSelectPlottables);
 
+    QFont fontTick("Times New Roman", 10, 75);
+    QFont fontLabel("Times New Roman", 10, 50);
+
     ui->qCustomPlot->addGraph();
     ui->qCustomPlot->graph(0)->setPen(QPen(Qt::red));
-    ui->qCustomPlot->xAxis->setLabel("time_x(ms)");
-    ui->qCustomPlot->yAxis->setLabel("Tenison1(N)");
+    ui->qCustomPlot->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot->xAxis->setLabel("Time");
+    ui->qCustomPlot->yAxis->setLabel("Tenison1");
 
     ui->qCustomPlot2->addGraph();
     ui->qCustomPlot2->graph(0)->setPen(QPen(Qt::red));
-    ui->qCustomPlot2->xAxis->setLabel("time_x(ms)");
-    ui->qCustomPlot2->yAxis->setLabel("Tenison2(N)");
+    ui->qCustomPlot2->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot2->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot2->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot2->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot2->xAxis->setLabel("Time");
+    ui->qCustomPlot2->yAxis->setLabel("Tenison2");
 
     ui->qCustomPlot3->addGraph();
     ui->qCustomPlot3->graph(0)->setPen(QPen(Qt::red));
-    ui->qCustomPlot3->xAxis->setLabel("time_x(ms)");
-    ui->qCustomPlot3->yAxis->setLabel("Tenison3(N)");
+    ui->qCustomPlot3->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot3->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot3->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot3->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot3->xAxis->setLabel("Time");
+    ui->qCustomPlot3->yAxis->setLabel("Tenison3");
 
     ui->qCustomPlot4->addGraph();
     ui->qCustomPlot4->graph(0)->setPen(QPen(Qt::red));
-    ui->qCustomPlot4->xAxis->setLabel("time_x(ms)");
-    ui->qCustomPlot4->yAxis->setLabel("Tenison4(N)");
+    ui->qCustomPlot4->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot4->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot4->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot4->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot4->xAxis->setLabel("Time");
+    ui->qCustomPlot4->yAxis->setLabel("Tenison4");
 
     ui->qCustomPlot5->addGraph();
     ui->qCustomPlot5->graph(0)->setPen(QPen(Qt::red));
-    ui->qCustomPlot5->xAxis->setLabel("time_x(ms)");
-    ui->qCustomPlot5->yAxis->setLabel("Tenison5(N)");
+    ui->qCustomPlot5->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot5->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot5->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot5->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot5->xAxis->setLabel("Time");
+    ui->qCustomPlot5->yAxis->setLabel("Tenison5");
 
     ui->qCustomPlot6->addGraph();
     ui->qCustomPlot6->graph(0)->setPen(QPen(Qt::red));
-    ui->qCustomPlot6->xAxis->setLabel("time_x(ms)");
-    ui->qCustomPlot6->yAxis->setLabel("Tenison6(N)");
-
-    ui->qCustomPlot7->legend->setVisible(true);
-    ui->qCustomPlot7->xAxis->setLabel("time_x(ms)");
-    ui->qCustomPlot7->yAxis->setLabel("elbow_angle()");
+    ui->qCustomPlot6->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot6->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot6->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot6->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot6->xAxis->setLabel("Time");
+    ui->qCustomPlot6->yAxis->setLabel("Tenison6");
 
     ui->qCustomPlot7->addGraph();
     ui->qCustomPlot7->graph(0)->setPen(QPen(Qt::red));
-    ui->qCustomPlot7->graph(0)->setName("elbow_x");
-
-    ui->qCustomPlot7->addGraph();
-    ui->qCustomPlot7->graph(1)->setPen(QPen(Qt::green));
-    ui->qCustomPlot7->graph(1)->setName("elbow_y");
-
-    ui->qCustomPlot7->addGraph();
-    ui->qCustomPlot7->graph(2)->setPen(QPen(Qt::blue));
-    ui->qCustomPlot7->graph(2)->setName("elbow_z");
-
-    ui->qCustomPlot8->legend->setVisible(true);
-    ui->qCustomPlot8->xAxis->setLabel("time_x(ms)");
-    ui->qCustomPlot8->yAxis->setLabel("shoulder_angle()");
+    ui->qCustomPlot7->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot7->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot7->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot7->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot7->xAxis->setLabel("Time");
+    ui->qCustomPlot7->yAxis->setLabel("ElbowX");
 
     ui->qCustomPlot8->addGraph();
     ui->qCustomPlot8->graph(0)->setPen(QPen(Qt::red));
-    ui->qCustomPlot8->graph(0)->setName("shoulder_x");
+    ui->qCustomPlot8->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot8->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot8->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot8->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot8->xAxis->setLabel("Time");
+    ui->qCustomPlot8->yAxis->setLabel("ElbowY");
 
-    ui->qCustomPlot8->addGraph();
-    ui->qCustomPlot8->graph(1)->setPen(QPen(Qt::green));
-    ui->qCustomPlot8->graph(1)->setName("shoulder_y");
+    ui->qCustomPlot9->addGraph();
+    ui->qCustomPlot9->graph(0)->setPen(QPen(Qt::red));
+    ui->qCustomPlot9->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot9->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot9->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot9->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot9->xAxis->setLabel("Time");
+    ui->qCustomPlot9->yAxis->setLabel("ElbowZ");
 
-    ui->qCustomPlot8->addGraph();
-    ui->qCustomPlot8->graph(2)->setPen(QPen(Qt::blue));
-    ui->qCustomPlot8->graph(2)->setName("shoulder_z");
+    ui->qCustomPlot10->addGraph();
+    ui->qCustomPlot10->graph(0)->setPen(QPen(Qt::red));
+    ui->qCustomPlot10->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot10->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot10->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot10->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot10->xAxis->setLabel("Time");
+    ui->qCustomPlot10->yAxis->setLabel("ShoulderX");
+
+    ui->qCustomPlot11->addGraph();
+    ui->qCustomPlot11->graph(0)->setPen(QPen(Qt::red));
+    ui->qCustomPlot11->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot11->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot11->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot11->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot11->xAxis->setLabel("Time");
+    ui->qCustomPlot11->yAxis->setLabel("ShoulderY");
+
+    ui->qCustomPlot12->addGraph();
+    ui->qCustomPlot12->graph(0)->setPen(QPen(Qt::red));
+    ui->qCustomPlot12->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot12->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot12->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot12->yAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot12->xAxis->setLabel("Time");
+    ui->qCustomPlot12->yAxis->setLabel("ShoulderZ");
 
     ui->Motor1Plot->addGraph();
     ui->Motor1Plot->graph(0)->setPen(QPen(Qt::red));
-    ui->Motor1Plot->xAxis->setLabel("time_x(ms)");
-    ui->Motor1Plot->yAxis->setLabel("angle()");
+    ui->qCustomPlot12->xAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot12->yAxis->setTickLabelFont(fontTick);
+    ui->qCustomPlot12->xAxis->setLabelFont(fontLabel);
+    ui->qCustomPlot12->yAxis->setLabelFont(fontLabel);
+    ui->Motor1Plot->xAxis->setLabel("Time");
+    ui->Motor1Plot->yAxis->setLabel("angle");
 
     ui->Motor2Plot->addGraph();
     ui->Motor2Plot->graph(0)->setPen(QPen(Qt::red));
-    ui->Motor2Plot->xAxis->setLabel("time_x(ms)");
-    ui->Motor2Plot->yAxis->setLabel("angle()");
+    ui->Motor2Plot->xAxis->setLabel("Time");
+    ui->Motor2Plot->yAxis->setLabel("angle");
 
     ui->Motor3Plot->addGraph();
     ui->Motor3Plot->graph(0)->setPen(QPen(Qt::red));
-    ui->Motor3Plot->xAxis->setLabel("time_x(ms)");
-    ui->Motor3Plot->yAxis->setLabel("angle()");
+    ui->Motor3Plot->xAxis->setLabel("Time");
+    ui->Motor3Plot->yAxis->setLabel("angle");
 
     ui->Motor4Plot->addGraph();
     ui->Motor4Plot->graph(0)->setPen(QPen(Qt::red));
-    ui->Motor4Plot->xAxis->setLabel("time_x(ms)");
-    ui->Motor4Plot->yAxis->setLabel("angle()");
+    ui->Motor4Plot->xAxis->setLabel("Time");
+    ui->Motor4Plot->yAxis->setLabel("angle");
 
     ui->Motor5Plot->addGraph();
     ui->Motor5Plot->graph(0)->setPen(QPen(Qt::red));
-    ui->Motor5Plot->xAxis->setLabel("time_x(ms)");
-    ui->Motor5Plot->yAxis->setLabel("angle()");
+    ui->Motor5Plot->xAxis->setLabel("Time");
+    ui->Motor5Plot->yAxis->setLabel("angle");
 
     ui->Motor6Plot->addGraph();
     ui->Motor6Plot->graph(0)->setPen(QPen(Qt::red));
-    ui->Motor6Plot->xAxis->setLabel("time_x(ms)");
-    ui->Motor6Plot->yAxis->setLabel("angle()");
+    ui->Motor6Plot->xAxis->setLabel("Time");
+    ui->Motor6Plot->yAxis->setLabel("angle");
 
     ui->elbpresPlot->addGraph();
     ui->elbpresPlot->graph(0)->setPen(QPen(Qt::red));
-    ui->elbpresPlot->xAxis->setLabel("time_x(ms)");
+    ui->elbpresPlot->xAxis->setLabel("Time");
     ui->elbpresPlot->yAxis->setLabel("elbow_press");
 
     ui->shopresPlot->legend->setVisible(true);
-    ui->shopresPlot->xAxis->setLabel("time_x(ms)");
+    ui->shopresPlot->xAxis->setLabel("time");
     ui->shopresPlot->yAxis->setLabel("shou_press()");
 
     ui->shopresPlot->addGraph();
@@ -800,6 +861,18 @@ void MainWindow::on_actionClean_triggered()
     ui->qCustomPlot8->clearGraphs();
     ui->qCustomPlot8->replot();
 
+    ui->qCustomPlot9->clearGraphs();
+    ui->qCustomPlot9->replot();
+
+    ui->qCustomPlot10->clearGraphs();
+    ui->qCustomPlot10->replot();
+
+    ui->qCustomPlot11->clearGraphs();
+    ui->qCustomPlot11->replot();
+
+    ui->qCustomPlot12->clearGraphs();
+    ui->qCustomPlot12->replot();
+
     ui->Motor1Plot->clearGraphs();
     ui->Motor1Plot->replot();
 
@@ -890,28 +963,39 @@ void MainWindow::plot()
     // Elbow and Shoulder angle figure
     ui->qCustomPlot7->graph(0)->setData(time_x_angle,elbow_x);
     ui->qCustomPlot7->graph(0)->setPen(pen);
-    pen.setBrush(Qt::green);
-    ui->qCustomPlot7->graph(1)->setData(time_x_angle,elbow_y);
-    ui->qCustomPlot7->graph(1)->setPen(pen);
-    pen.setBrush(Qt::blue);
-    ui->qCustomPlot7->graph(2)->setData(time_x_angle,elbow_z);
-    ui->qCustomPlot7->graph(2)->setPen(pen);
     ui->qCustomPlot7->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
     ui->qCustomPlot7->yAxis->setRange(-120,120);
     ui->qCustomPlot7->replot();
 
-    pen.setBrush(Qt::red);
-    ui->qCustomPlot8->graph(0)->setData(time_x_angle,shoulder_x);
+    ui->qCustomPlot8->graph(0)->setData(time_x_angle,elbow_y);
     ui->qCustomPlot8->graph(0)->setPen(pen);
-    pen.setBrush(Qt::green);
-    ui->qCustomPlot8->graph(1)->setData(time_x_angle,shoulder_y);
-    ui->qCustomPlot8->graph(1)->setPen(pen);
-    pen.setBrush(Qt::blue);
-    ui->qCustomPlot8->graph(2)->setData(time_x_angle,shoulder_z);
-    ui->qCustomPlot8->graph(2)->setPen(pen);
     ui->qCustomPlot8->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
     ui->qCustomPlot8->yAxis->setRange(-120,120);
     ui->qCustomPlot8->replot();
+
+    ui->qCustomPlot9->graph(0)->setData(time_x_angle,elbow_z);
+    ui->qCustomPlot9->graph(0)->setPen(pen);
+    ui->qCustomPlot9->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot9->yAxis->setRange(-120,120);
+    ui->qCustomPlot9->replot();
+
+    ui->qCustomPlot10->graph(0)->setData(time_x_angle,shoulder_x);
+    ui->qCustomPlot10->graph(0)->setPen(pen);
+    ui->qCustomPlot10->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot10->yAxis->setRange(-120,120);
+    ui->qCustomPlot10->replot();
+
+    ui->qCustomPlot11->graph(0)->setData(time_x_angle,shoulder_y);
+    ui->qCustomPlot11->graph(0)->setPen(pen);
+    ui->qCustomPlot11->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot11->yAxis->setRange(-120,120);
+    ui->qCustomPlot11->replot();
+
+    ui->qCustomPlot12->graph(0)->setData(time_x_angle,shoulder_z);
+    ui->qCustomPlot12->graph(0)->setPen(pen);
+    ui->qCustomPlot12->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot12->yAxis->setRange(-120,120);
+    ui->qCustomPlot12->replot();
 
     // Elbow surface pressure figure
     ui->elbpresPlot->graph(0)->setData(time_x_surpressure,surpressure_elbow);
@@ -1051,7 +1135,8 @@ void MainWindow::on_VRDisplay_clicked()
 void MainWindow::on_sendmsgButton_clicked()
 {
     uint TensionOrAngle=0;
-    int sendData[6];
+    int sendData[10];
+    // JOINNT CONTROL MODE
     if(ui->joint_RadioButton->isChecked())
     {
         TensionOrAngle = 1;
@@ -1059,11 +1144,13 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[1] = ui->sendMsgLineEdit8->text().toInt();
         sendData[2] = ui->sendMsgLineEdit9->text().toInt();
         sendData[3] = ui->sendMsgLineEdit10->text().toUInt();
-        sendData[4] = 0;
-        sendData[5] = 0;
+        sendData[4] = ui->vellineEdit->text().toUInt();
+        sendData[5] = ui->acclineEdit->text().toUInt();
+        sendData[6] = ui->circlelineEdit->text().toUInt();
         emit sigSerialCtrl(TensionOrAngle, sendData);
         //motorcontrol->start();
     }
+    // CABEL TENSION MODE
     else if(ui->cabel_RadioButton->isChecked())
     {
         TensionOrAngle = 0;
@@ -1076,12 +1163,20 @@ void MainWindow::on_sendmsgButton_clicked()
         emit sigSerialCtrl(TensionOrAngle, sendData);
         //motorcontrol->start();
     }
+    // PTP CONTROL MODE
     else if(ui->Position_RadioButton->isChecked())
     {
         TensionOrAngle = 2;
         sendData[0] = ui->PosXlineEdit->text().toInt();
         sendData[1] = ui->PosYlineEdit->text().toInt();
         sendData[2] = ui->PosZlineEdit->text().toInt();
+        sendData[3] = ui->vellineEdit->text().toUInt();
+        sendData[4] = ui->acclineEdit->text().toUInt();
+        emit sigSerialCtrl(TensionOrAngle, sendData);
+    }
+    else if(ui->Linear_RadioButton->isChecked())
+    {
+        TensionOrAngle = 3;
         emit sigSerialCtrl(TensionOrAngle, sendData);
     }
     else

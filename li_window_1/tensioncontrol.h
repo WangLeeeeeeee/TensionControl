@@ -32,7 +32,11 @@ private:
     void run();
     QSerialPort serial1; // declare a serial com
     QTimer *send_timer;
+    QTimer *cycleJointTimer;
+    QTimer *linearControlTimer;
     void TensionValueUpdate();
+    void CalculateCabelLen(uint i, float* cableLen, float* tempAngle);
+    void SendAimCircle(float* aimCircle, int setVel, int setAcc);
     QMutex m_mutex;
     bool m_quit = false;
 
@@ -42,6 +46,8 @@ private slots:
     void slotSerialInit();
     void slotSerialClose();
     void slotSerialCtrl(uint tensionOrAngle, int* Data);
+    void slotCirculJoint();
+    void slotLinearControl();
 };
 
 #endif // TENSIONCONTROL_H

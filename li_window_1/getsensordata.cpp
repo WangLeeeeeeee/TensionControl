@@ -67,6 +67,10 @@ LpmsSensorI* lpms2;
 
 bool SenFlag = 0;
 
+bool recordflag = 0;
+double elbowXinit,elbowYinit,elbowZinit;
+double shoulderXinit,shoulderYinit,shoulderZinit;
+
 GetSensordata::GetSensordata(QObject *parent):QThread(parent)
 {   
     getsensorTimer = new QTimer(this);
@@ -145,17 +149,30 @@ void GetSensordata::run()
             shoulder_y_acc[receive_count_angle] = Lpms2_Data.linAcc[1];
             shoulder_z_acc[receive_count_angle] = Lpms2_Data.linAcc[2];
 
-            // Save angle data
-            elbow_x[receive_count_angle] = ElbowAngle[0]-87.7;
-            elbow_y[receive_count_angle] = ElbowAngle[1];
-            elbow_z[receive_count_angle] = ElbowAngle[2]-33;
-            shoulder_x[receive_count_angle] = ShoulderAngle[0]-87.7;
-            shoulder_y[receive_count_angle] = ShoulderAngle[1];
-            shoulder_z[receive_count_angle] = ShoulderAngle[2]-9;
+            // Recors the first data
+            if(recordflag == 0)
+            {
+                recordflag = 1;
+                elbowXinit = ElbowAngle[0];
+                elbowYinit = ElbowAngle[1];
+                elbowZinit = ElbowAngle[2];
+                shoulderXinit = ShoulderAngle[0];
+                shoulderYinit = ShoulderAngle[1];
+                shoulderZinit = ShoulderAngle[2];
+            }
+            else
+            {
+                // Save angle data
+                elbow_x[receive_count_angle] = ElbowAngle[0]-elbowXinit;
+                elbow_y[receive_count_angle] = ElbowAngle[1]-elbowYinit;
+                elbow_z[receive_count_angle] = ElbowAngle[2]-elbowZinit;
+                shoulder_x[receive_count_angle] = ShoulderAngle[0]-shoulderXinit;
+                shoulder_y[receive_count_angle] = ShoulderAngle[1]-shoulderYinit;
+                shoulder_z[receive_count_angle] = ShoulderAngle[2]-shoulderZinit;
 
-
-            receive_count_angle++;
-            time_x_angle[receive_count_angle] = receive_count_angle * 0.05;
+                receive_count_angle++;
+                time_x_angle[receive_count_angle] = receive_count_angle * 0.05;
+            }
         }
 
         // Step 6: The device is acquiring data.
