@@ -45,7 +45,7 @@ private slots:
     //void readMyCom1();
    // void slotSendCommand();
     //void slotSerialInit();
-    void slotBeforeTigh();
+    //void slotBeforeTigh();
    // void slotSerialClose();
 
 

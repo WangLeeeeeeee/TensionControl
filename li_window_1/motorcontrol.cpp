@@ -626,10 +626,11 @@ void MotorControl::AngleControl(int index, float aim_angle)
 
 }
 
-
+/*
 void MotorControl::slotBeforeTigh()
 {
     control_mode = 1;
     for(int i=0; i<6; i++)
         tension_ctrlval[i] = 200;
 }
+*/

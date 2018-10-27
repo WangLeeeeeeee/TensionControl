@@ -24,11 +24,11 @@
        </font>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_1">
        <attribute name="title">
-        <string>TENSION&amp;IMU</string>
+        <string>TENSION</string>
        </attribute>
        <widget class="QCustomPlot" name="qCustomPlot" native="true">
         <property name="geometry">
@@ -627,7 +627,7 @@
            </layout>
           </widget>
          </widget>
-         <widget class="QWidget" name="">
+         <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
             <x>301</x>
@@ -667,26 +667,26 @@
            </item>
           </layout>
          </widget>
+         <widget class="QPushButton" name="BeforeTightenButton">
+          <property name="geometry">
+           <rect>
+            <x>520</x>
+            <y>360</y>
+            <width>111</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <family>Times New Roman</family>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>BeforeTighten</string>
+          </property>
+         </widget>
         </widget>
-       </widget>
-       <widget class="QPushButton" name="pushButton">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>790</y>
-          <width>111</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>Times New Roman</family>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>BeforeTighten</string>
-        </property>
        </widget>
        <widget class="QTabWidget" name="tabWidget_3">
         <property name="geometry">
@@ -751,8 +751,8 @@
          <rect>
           <x>1150</x>
           <y>20</y>
-          <width>300</width>
-          <height>200</height>
+          <width>315</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
@@ -760,9 +760,9 @@
         <property name="geometry">
          <rect>
           <x>1150</x>
-          <y>230</y>
-          <width>300</width>
-          <height>200</height>
+          <y>270</y>
+          <width>315</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
@@ -770,39 +770,39 @@
         <property name="geometry">
          <rect>
           <x>1150</x>
-          <y>440</y>
-          <width>300</width>
-          <height>200</height>
+          <y>530</y>
+          <width>315</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
        <widget class="QCustomPlot" name="Motor4Plot" native="true">
         <property name="geometry">
          <rect>
-          <x>1470</x>
+          <x>1490</x>
           <y>20</y>
-          <width>300</width>
-          <height>200</height>
+          <width>315</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
        <widget class="QCustomPlot" name="Motor5Plot" native="true">
         <property name="geometry">
          <rect>
-          <x>1470</x>
-          <y>230</y>
-          <width>300</width>
-          <height>200</height>
+          <x>1490</x>
+          <y>270</y>
+          <width>315</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>
        <widget class="QCustomPlot" name="Motor6Plot" native="true">
         <property name="geometry">
          <rect>
-          <x>1470</x>
-          <y>440</y>
-          <width>300</width>
-          <height>200</height>
+          <x>1490</x>
+          <y>530</y>
+          <width>315</width>
+          <height>240</height>
          </rect>
         </property>
        </widget>

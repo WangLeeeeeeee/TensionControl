@@ -1,7 +1,7 @@
 #include "tensioncontrol.h"
 
 float TensionSensor[6];
-TensionPID tension_pid[6] = {{1,0,0,0,0,0,0},{1,0,0,0,0,0,0},{1,0,0,0,0,0,0},{1,0,0,0,0,0,0},{1,0,0,0,0,0,0},{1.8,0,0,0,0,0,0}};
+TensionPID tension_pid[6] = {{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0}};
 float Testq1[101] = {0,	0,	0.001,	0.041,	0.002,	0.196,	0.23,	0.256,	0.198,	0.159,	0.171,	0.15,	0.149,
                      0.148,	0.147,	0.147,	0.146,	0.146,	0.145,	0.145,	0.145,	0.144,	0.144,	0.144,	0.143,
                      0.143,	0.143,	0.142,	0.142,	0.142,	0.141,	0.141,	0.14,	0.14,	0.14,	0.139,	0.139,
@@ -10,7 +10,7 @@ float Testq1[101] = {0,	0,	0.001,	0.041,	0.002,	0.196,	0.23,	0.256,	0.198,	0.159
                      0.113,	0.111,	0.109,	0.107,	0.105,	0.103,	0.1,	0.098,	0.095,	0.092,	0.089,	0.086,
                      0.083,	0.08,	0.076,	0.073,	0.069,	0.065,	0.06,	0.056,	0.052,	0.047,	0.043,	0.039,
                      0.035,	0.031,	0.027,	0.024,	0.02,	0.017,	0.014,	0.011,	0.009,	0.006,	0.005,	0.003,
-                     0.002,	0.001,	0,	0,};
+                     0.002,	0.001,	0,	0};
 float Testq2[101] = {0,	0,	0.001,	0.002,	0.003,	0.004,	0.006,	0.008,	0.008,	0.01,	0.013,	0.014,	0.017,
                      0.02,	0.023,	0.026,	0.03,	0.034,	0.038,	0.042,	0.047,	0.052,	0.057,	0.062,	0.067,
                      0.072,	0.078,	0.083,	0.088,	0.094,	0.099,	0.105,	0.11,	0.116,	0.121,	0.127,	0.132,
@@ -19,7 +19,7 @@ float Testq2[101] = {0,	0,	0.001,	0.002,	0.003,	0.004,	0.006,	0.008,	0.008,	0.01
                      0.29,	0.297,	0.304,	0.312,	0.319,	0.327,	0.334,	0.342,	0.35,	0.358,	0.365,	0.374,
                      0.382,	0.39,	0.398,	0.407,	0.415,	0.424,	0.432,	0.441,	0.448,	0.456,	0.463,	0.47,
                      0.476,	0.482,	0.488,	0.493,	0.498,	0.503,	0.507,	0.51,	0.513,	0.516,	0.519,	0.521,
-                     0.522,	0.523,	0.524,	0.524,};
+                     0.522,	0.523,	0.524,	0.524};
 float Testq3[101] = {0,	0,	0.001,	0.001,	0.002,	0.003,	0.004,	0.005,	0.007,	0.009,	0.011,	0.014,	0.017,
                      0.019,	0.023,	0.026,	0.029,	0.033,	0.037,	0.042,	0.046,	0.051,	0.056,	0.061,	0.066,
                      0.071,	0.077,	0.082,	0.087,	0.092,	0.097,	0.103,	0.108,	0.113,	0.119,	0.124,	0.129,
@@ -28,7 +28,7 @@ float Testq3[101] = {0,	0,	0.001,	0.001,	0.002,	0.003,	0.004,	0.005,	0.007,	0.00
                      0.276,	0.283,	0.289,	0.296,	0.303,	0.31,	0.317,	0.325,	0.332,	0.34,	0.347,	0.355,
                      0.363,	0.371,	0.38,	0.388,	0.397,	0.406,	0.415,	0.424,	0.432,	0.441,	0.449,	0.456,
                      0.464,	0.471,	0.478,	0.484,	0.49,	0.496,	0.501,	0.506,	0.51,	0.513,	0.516,	0.519,
-                     0.521,	0.522,	0.523,	0.524,};
+                     0.521,	0.522,	0.523,	0.524};
 float Testq4[101] = {0,	0,	-0.001,	-0.001,	0,	0.003,	0.004,	0.005,	0.013,	0.016,	0.017,	0.024,	0.029,	0.034,
                      0.04,	0.045,	0.052,	0.058,	0.065,	0.073,	0.081,	0.089,	0.097,	0.106,	0.115,	0.123,	0.132,
                      0.141,	0.149,	0.158,	0.166,	0.175,	0.183,	0.192,	0.2,	0.209,	0.217,	0.225,	0.233,	0.241,
@@ -36,13 +36,9 @@ float Testq4[101] = {0,	0,	-0.001,	-0.001,	0,	0.003,	0.004,	0.005,	0.013,	0.016,
                      0.349,	0.356,	0.363,	0.37,	0.377,	0.383,	0.39,	0.396,	0.403,	0.409,	0.415,	0.421,	0.427,
                      0.433,	0.439,	0.445,	0.45,	0.455,	0.46,	0.465,	0.47,	0.475,	0.48,	0.484,	0.488,	0.492,
                      0.496,	0.5,	0.503,	0.506,	0.508,	0.51,	0.512,	0.514,	0.516,	0.517,	0.518,	0.519,	0.52,
-                     0.521,	0.522,	0.522,	0.523,	0.523,	0.523,	0.523,	0.524,	0.524,};
+                     0.521,	0.522,	0.522,	0.523,	0.523,	0.523,	0.523,	0.524,	0.524};
 unsigned int linearCount = 0; // 读取角度位置数
 unsigned int lineCycleCount = 0; //直线来回走
-
-
-//float MAXSPEED=600;
-//float MINSPEED=-600;
 
 float MAXSPEED=3000;
 float MINSPEED=-3000;
@@ -57,6 +53,9 @@ int cycleCount = 0;
 int setCir;
 float aimCircle[6];
 int setAcc,setVel;
+
+// record if the latest 10 times tension data is below one number
+bool tensionLowFlag[6];
 
 TensionControl::TensionControl(QObject *parent):QThread(parent)
 {
@@ -80,55 +79,84 @@ void TensionControl::run()
 
 void TensionControl::TensionValueUpdate()
 {
-    TensionSensor[0] = tension_y[receive_count_tension-1];
-    TensionSensor[1] = tension_y2[receive_count_tension-1];
-    TensionSensor[2] = tension_y3[receive_count_tension-1];
-    TensionSensor[3] = tension_y4[receive_count_tension-1];
-    TensionSensor[4] = tension_y5[receive_count_tension-1];
-    TensionSensor[5] = tension_y6[receive_count_tension-1];
+    for(int i=0; i<10; i++)
+    {
+        if(tension_y[receive_count_tension-i] > 60)
+            tensionLowFlag[0] = 1;
+        if(tension_y2[receive_count_tension-i] > 60)
+            tensionLowFlag[1] = 1;
+        if(tension_y3[receive_count_tension-i] > 60)
+            tensionLowFlag[2] = 1;
+        if(tension_y4[receive_count_tension-i] > 60)
+            tensionLowFlag[3] = 1;
+        if(tension_y5[receive_count_tension-i] > 60)
+            tensionLowFlag[4] = 1;
+        if(tension_y6[receive_count_tension-i] > 60)
+            tensionLowFlag[5] = 1;
+    }
+    for(int i=0; i<10; i++)
+    {
+        TensionSensor[0] += tension_y[receive_count_tension-i];
+        TensionSensor[1] += tension_y2[receive_count_tension-i];
+        TensionSensor[2] += tension_y3[receive_count_tension-i];
+        TensionSensor[3] += tension_y4[receive_count_tension-i];
+        TensionSensor[4] += tension_y5[receive_count_tension-i];
+        TensionSensor[5] += tension_y6[receive_count_tension-i];
+    }
+    TensionSensor[0] /= 10;
+    TensionSensor[1] /= 10;
+    TensionSensor[2] /= 10;
+    TensionSensor[3] /= 10;
+    TensionSensor[4] /= 10;
+    TensionSensor[5] /= 10;
 }
 
 
-void TensionControl::TensionSet(TensionPID *pid_tension, int index, float aimTension)
+void TensionControl::TensionSet()
 {
     TensionValueUpdate();
 
     QString SendData;
 
-    pid_tension->Error = aimTension - TensionSensor[index];
-
-
-    if((pid_tension->Error > 100) || (pid_tension->Error < -100))
+    for(int i=0; i<6; i++)
     {
-        pid_tension->integral += pid_tension->Error;
-        pid_tension->velocity = pid_tension->KP*pid_tension->Error + pid_tension->KI*pid_tension->integral + pid_tension->KD*(pid_tension->Error-pid_tension->LastError);
-        pid_tension->LastError = pid_tension->Error;
-    }
-    else
-        pid_tension->velocity = 0;
+        tension_pid[i].Error = AimTension[i] - TensionSensor[i];
+        if((tension_pid[i].Error > 50) || (tension_pid[i].Error < -50))
+        {
+            tension_pid[i].integral += tension_pid[i].Error;
+            tension_pid[i].velocity = tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
+            tension_pid[i].LastError = tension_pid[i].Error;
 
-    if(pid_tension->velocity > MAXSPEED)
-        pid_tension->velocity = MAXSPEED;
-    if(pid_tension->velocity < MINSPEED)
-        pid_tension->velocity = MINSPEED;
+            // 如果连续10组拉力值小于一定值代表绳索处于持续放松状态
+            if(tensionLowFlag[i] == 0)
+                tension_pid[i].velocity = 400;
+        }
+        else
+        {
+            tension_pid[i].velocity = 0;
+        }
 
-    for(int i=0; i<3; i++)
-    {
-        SendData = "\r";
+        if(tension_pid[i].velocity > MAXSPEED)
+            tension_pid[i].velocity = MAXSPEED;
+        if(tension_pid[i].velocity < MINSPEED)
+            tension_pid[i].velocity = MINSPEED;
+
+        //SendData = QString::number(long(i)) + "SP" + QString::number(long(1000)) + "\r";
+        //serial1.write(SendData.toLatin1());
+
+        SendData = QString::number(long(i)) + "V" + QString::number(long(tension_pid[i].velocity)) + "\r";
+        qDebug()<<SendData<<endl;
         serial1.write(SendData.toLatin1());
     }
 
-
-    SendData = QString::number(long(index)) + "V" + QString::number(long(pid_tension->velocity)) + "\r";
-    qDebug()<<SendData<<endl;
-    serial1.write(SendData.toLatin1());
-
+    for(int i=0; i<6; i++)
+        tensionLowFlag[i] = 0;
 }
 
 // Com open configure which connect with the 'open com' button
 void TensionControl::slotSerialInit()
 {
-    serial1.setPortName("COM3");
+    serial1.setPortName("COM16");
     serial1.setBaudRate(QSerialPort::Baud9600);
     serial1.setDataBits(QSerialPort::Data8);
     serial1.setStopBits(QSerialPort::OneStop);
@@ -147,24 +175,22 @@ void TensionControl::slotSerialInit()
         return;
     }
 
-    send_timer = new QTimer(this);
-    //QObject::connect(send_timer, SIGNAL(timeout()), this, SLOT(slotSendCommand()));
-    int send_interval = TIME_INTERVAL;
-    //send_timer->start(send_interval);
+    tensionCtrlTimer = new QTimer(this);
+    QObject::connect(tensionCtrlTimer, SIGNAL(timeout()), this, SLOT(TensionSet()));
 
     cycleJointTimer = new QTimer(this);
     QObject::connect(cycleJointTimer, SIGNAL(timeout()), this, SLOT(slotCirculJoint()));
 
     linearControlTimer = new QTimer(this);
     QObject::connect(linearControlTimer, SIGNAL(timeout()), this, SLOT(slotLinearControl()));
-
-
 }
 
 // Com close
 void TensionControl::slotSerialClose()
 {
-    send_timer->stop();
+    tensionCtrlTimer->stop();
+    cycleJointTimer->stop();
+    linearControlTimer->stop();
     serial1.close();
 }
 
@@ -173,61 +199,8 @@ void TensionControl::slotReadMyCom()
     // analyse receive data
 }
 
-void TensionControl::slotSendCommand()
-{
-    QString SendData;
-
-    //TensionSet(tension_pid+5, 5, 1200);
-    /*
-    if(testCount < 50)
-    {
-        AimTension[5] = 200;
-    }
-    else if(testCount < 100)
-    {
-        AimTension[5] = 1150;
-    }
-    else
-    {
-        testCount = 0;
-    }
-    TensionSet(tension_pid+5, 5, AimTension[5]);
-    qDebug()<<"now the testCount is:"<<testCount;
-    qDebug()<<"now the AimTension is:"<<AimTension[5];
-    */
-
-    /*
-    if(testCount < 4)
-    {
-        SendData = "5SP" + QString::number(long(MAXSPEED)) + "\r";
-        serial1.write(SendData.toLatin1());
-        SendData = QString::number(long(5)) + "LA" + QString::number(230000) + "\r";
-        qDebug()<<SendData<<endl;
-        serial1.write(SendData.toLatin1());
-        SendData = "M\r";
-        serial1.write(SendData.toLatin1());
-        testCount ++;
-    }
-    else if(testCount < 8)
-    {
-        SendData = "5SP" + QString::number(long(MAXSPEED)) + "\r";
-        serial1.write(SendData.toLatin1());
-        SendData = QString::number(long(5)) + "LA" + QString::number(0) + "\r";
-        qDebug()<<SendData<<endl;
-        serial1.write(SendData.toLatin1());
-        SendData = "M\r";
-        serial1.write(SendData.toLatin1());
-        testCount ++;
-        if(testCount == 8)
-            testCount = 0;
-    }
-    */
-
-}
-
 void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
 {
-    unsigned int tempTension[6];
     unsigned int tempPos[3];
     float tempAngle[4];
     float cableLen[6],cableLenDeta[6];
@@ -237,12 +210,17 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
     if(tensionOrAngle == 0)
     {
         for(int i=0; i<6; i++)
-            tempTension[i] = Data[i];
+            AimTension[i] = Data[i];
+        tensionCtrlTimer->start(100);
+        cycleJointTimer->stop();
+        linearControlTimer->stop();
     }
     // Joint angle control mode
     else if(tensionOrAngle == 1)
     {
         cycleJointTimer->start(5000);
+        tensionCtrlTimer->stop();
+        linearControlTimer->stop();
         for(int i=0; i<4; i++)
         {
             tempAngle[i] = Data[i]*3.14/180;
@@ -297,14 +275,17 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
 
         for(int i=0; i<6; i++)
         {
-            SendData = QString::number(long(i)) + "SP" + QString::number(long(4000)) + "\r";
+            SendData = QString::number(long(i)) + "SP" + QString::number(long(3000)) + "\r";
             serial1.write(SendData.toLatin1());
             SendData = QString::number(long(i)) + "AC" + QString::number(long(222)) + "\r";
             serial1.write(SendData.toLatin1());
             SendData = QString::number(long(i)) + "DEC" + QString::number(long(222)) + "\r";
             serial1.write(SendData.toLatin1());
         }
-        linearControlTimer->start(50);
+        linearControlTimer->start(45);
+        tensionCtrlTimer->stop();
+        cycleJointTimer->stop();
+
     }
 }
 
@@ -515,7 +496,7 @@ void TensionControl::slotLinearControl()
             }
             CalculateCabelLen(i,cableLen,tempAngle);
             cableLenDeta[i] = cableLen[i] - cableLenInit[i];
-            qDebug()<<"cablelendeta"<<i<<"is"<<cableLenDeta[i];
+            //qDebug()<<"cablelendeta"<<i<<"is"<<cableLenDeta[i];
             cableLenInit[i] = cableLen[i];
             aimCircle[i] = -1*cableLenDeta[i]/(2*pi*20);
             vel[i] = float(111*60*aimCircle[i])/float(inteTime); // the last speed must be zero!!!
@@ -523,14 +504,20 @@ void TensionControl::slotLinearControl()
     }
     for(int i=0; i<6; i++)
     {
-        qDebug()<<"the speed is:"<<vel[i]<<"n/min";
+        //qDebug()<<"the speed is:"<<vel[i]<<"n/min";
         SendData = QString::number(long(i)) + "V" + QString::number(long(vel[i])) + "\r";
         serial1.write(SendData.toLatin1());
+        qDebug()<<SendData<<endl;
     }
-    qDebug()<<"the lineCycleCount is"<<lineCycleCount;
-    qDebug()<<"the linearCout is"<<linearCount;
+    //qDebug()<<"the lineCycleCount is"<<lineCycleCount;
+    //qDebug()<<"the linearCout is"<<linearCount;
 }
 
+void TensionControl::slotBeforeTigh(unsigned int *Data)
+{
+    for(int i=0; i<6; i++)
+        AimTension[i] = Data[i];
+}
 
 
 

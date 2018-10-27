@@ -72,8 +72,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sigSerialInit()), tensioncontrol, SLOT(slotSerialInit()));
     connect(this, SIGNAL(sigSerialClose()), tensioncontrol, SLOT(slotSerialClose()));
     connect(this, SIGNAL(sigSerialCtrl(uint, int*)), tensioncontrol, SLOT(slotSerialCtrl(uint, int*)));
-    connect(this, SIGNAL(sigBeforeTigh()), motorcontrol, SLOT(slotBeforeTigh()));
+    connect(this, SIGNAL(sigBeforeTigh(unsigned int *)), tensioncontrol, SLOT(slotBeforeTigh(unsigned int *)));
     connect(this,SIGNAL(sigVRSerialOpen()), vrdisplay, SLOT(slotVRSerialOpen()));
+    connect(this, SIGNAL(sigMeasureStart()), getsensordata, SLOT(slotMeasureStart()));
+    connect(this, SIGNAL(sigMeasureStop()), getsensordata, SLOT(slotMeasureStop()));
+
 }
 
 MainWindow::~MainWindow()
@@ -254,46 +257,74 @@ void MainWindow::Plot_Init()
 
     ui->Motor1Plot->addGraph();
     ui->Motor1Plot->graph(0)->setPen(QPen(Qt::red));
-    ui->qCustomPlot12->xAxis->setTickLabelFont(fontTick);
-    ui->qCustomPlot12->yAxis->setTickLabelFont(fontTick);
-    ui->qCustomPlot12->xAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot12->yAxis->setLabelFont(fontLabel);
+    ui->Motor1Plot->xAxis->setTickLabelFont(fontTick);
+    ui->Motor1Plot->yAxis->setTickLabelFont(fontTick);
+    ui->Motor1Plot->xAxis->setLabelFont(fontLabel);
+    ui->Motor1Plot->yAxis->setLabelFont(fontLabel);
     ui->Motor1Plot->xAxis->setLabel("Time");
     ui->Motor1Plot->yAxis->setLabel("angle");
 
     ui->Motor2Plot->addGraph();
     ui->Motor2Plot->graph(0)->setPen(QPen(Qt::red));
+    ui->Motor2Plot->xAxis->setTickLabelFont(fontTick);
+    ui->Motor2Plot->yAxis->setTickLabelFont(fontTick);
+    ui->Motor2Plot->xAxis->setLabelFont(fontLabel);
+    ui->Motor2Plot->yAxis->setLabelFont(fontLabel);
     ui->Motor2Plot->xAxis->setLabel("Time");
     ui->Motor2Plot->yAxis->setLabel("angle");
 
     ui->Motor3Plot->addGraph();
     ui->Motor3Plot->graph(0)->setPen(QPen(Qt::red));
+    ui->Motor3Plot->xAxis->setTickLabelFont(fontTick);
+    ui->Motor3Plot->yAxis->setTickLabelFont(fontTick);
+    ui->Motor3Plot->xAxis->setLabelFont(fontLabel);
+    ui->Motor3Plot->yAxis->setLabelFont(fontLabel);
     ui->Motor3Plot->xAxis->setLabel("Time");
     ui->Motor3Plot->yAxis->setLabel("angle");
 
     ui->Motor4Plot->addGraph();
     ui->Motor4Plot->graph(0)->setPen(QPen(Qt::red));
+    ui->Motor4Plot->xAxis->setTickLabelFont(fontTick);
+    ui->Motor4Plot->yAxis->setTickLabelFont(fontTick);
+    ui->Motor4Plot->xAxis->setLabelFont(fontLabel);
+    ui->Motor4Plot->yAxis->setLabelFont(fontLabel);
     ui->Motor4Plot->xAxis->setLabel("Time");
     ui->Motor4Plot->yAxis->setLabel("angle");
 
     ui->Motor5Plot->addGraph();
     ui->Motor5Plot->graph(0)->setPen(QPen(Qt::red));
+    ui->Motor5Plot->xAxis->setTickLabelFont(fontTick);
+    ui->Motor5Plot->yAxis->setTickLabelFont(fontTick);
+    ui->Motor5Plot->xAxis->setLabelFont(fontLabel);
+    ui->Motor5Plot->yAxis->setLabelFont(fontLabel);
     ui->Motor5Plot->xAxis->setLabel("Time");
     ui->Motor5Plot->yAxis->setLabel("angle");
 
     ui->Motor6Plot->addGraph();
     ui->Motor6Plot->graph(0)->setPen(QPen(Qt::red));
+    ui->Motor6Plot->xAxis->setTickLabelFont(fontTick);
+    ui->Motor6Plot->yAxis->setTickLabelFont(fontTick);
+    ui->Motor6Plot->xAxis->setLabelFont(fontLabel);
+    ui->Motor6Plot->yAxis->setLabelFont(fontLabel);
     ui->Motor6Plot->xAxis->setLabel("Time");
     ui->Motor6Plot->yAxis->setLabel("angle");
 
     ui->elbpresPlot->addGraph();
     ui->elbpresPlot->graph(0)->setPen(QPen(Qt::red));
+    ui->elbpresPlot->xAxis->setTickLabelFont(fontTick);
+    ui->elbpresPlot->yAxis->setTickLabelFont(fontTick);
+    ui->elbpresPlot->xAxis->setLabelFont(fontLabel);
+    ui->elbpresPlot->yAxis->setLabelFont(fontLabel);
     ui->elbpresPlot->xAxis->setLabel("Time");
     ui->elbpresPlot->yAxis->setLabel("elbow_press");
 
     ui->shopresPlot->legend->setVisible(true);
     ui->shopresPlot->xAxis->setLabel("time");
     ui->shopresPlot->yAxis->setLabel("shou_press()");
+    ui->shopresPlot->xAxis->setTickLabelFont(fontTick);
+    ui->shopresPlot->yAxis->setTickLabelFont(fontTick);
+    ui->shopresPlot->xAxis->setLabelFont(fontLabel);
+    ui->shopresPlot->yAxis->setLabelFont(fontLabel);
 
     ui->shopresPlot->addGraph();
     ui->shopresPlot->graph(0)->setPen(QPen(Qt::red));
@@ -315,6 +346,7 @@ void MainWindow::startInit()
 {
     setActionsEnable(false);
     ui->actionExit->setEnabled(true);
+    ui->actionStopMeasure->setEnabled(false);
 
     ui->horizontalSlider->setMinimum(100);
     ui->horizontalSlider->setMaximum(2000);
@@ -551,23 +583,6 @@ void MainWindow::on_actionSave_triggered()
     QAxObject *cell_21 = pSheet->querySubObject("Cells(int, int)", 1, 21);
     cell_21->dynamicCall("SetValue(const QVariant&)", QVariant("shoPre2"));
 
-    QAxObject *cell_22 = pSheet->querySubObject("Cells(int,int)", 1, 22);
-    cell_22->dynamicCall("SetValue(const QVariant)", QVariant("el_x_acc"));
-
-    QAxObject *cell_23 = pSheet->querySubObject("Cells(int,int)", 1, 23);
-    cell_23->dynamicCall("SetValue(const QVariant)", QVariant("el_y_acc"));
-
-    QAxObject *cell_24 = pSheet->querySubObject("Cells(int,int)", 1, 24);
-    cell_24->dynamicCall("SetValue(const QVariant)", QVariant("el_z_acc"));
-
-    QAxObject *cell_25 = pSheet->querySubObject("Cells(int,int)", 1, 25);
-    cell_25->dynamicCall("SetValue(const QVariant)", QVariant("sh_x_acc"));
-
-    QAxObject *cell_26 = pSheet->querySubObject("Cells(int,int)", 1, 26);
-    cell_26->dynamicCall("SetValue(const QVariant)", QVariant("sh_y_acc"));
-
-    QAxObject *cell_27 = pSheet->querySubObject("Cells(int,int)", 1, 27);
-    cell_27->dynamicCall("SetValue(const QVariant)", QVariant("sh_z_acc"));
 
     // Change one-dimension to two-dimension array
     // Using QVarient in excel
@@ -719,16 +734,66 @@ void MainWindow::on_actionSave_triggered()
     user_range11->setProperty("Value",res_11);
     vars.clear();
 
+    for(i=0; i<receive_count_mocount; i++)
+    {
+        QList<QVariant> rows;
+        rows.append(Motor1Count[i]);
+        vars.append(QVariant(rows));
+    }
+    QVariant res_12(vars);
+    RangeStr = "M2:M" + QString::number(receive_count_mocount);
+    QAxObject *user_range12 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range12->setProperty("Value",res_12);
+    vars.clear();
+
+    for(i=0; i<receive_count_mocount; i++)
+    {
+        QList<QVariant> rows;
+        rows.append(Motor2Count[i]);
+        vars.append(QVariant(rows));
+    }
+    QVariant res_13(vars);
+    RangeStr = "N2:N" + QString::number(receive_count_mocount);
+    QAxObject *user_range13 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range13->setProperty("Value",res_13);
+    vars.clear();
+
+    for(i=0; i<receive_count_mocount; i++)
+    {
+        QList<QVariant> rows;
+        rows.append(Motor3Count[i]);
+        vars.append(QVariant(rows));
+    }
+    QVariant res_14(vars);
+    RangeStr = "O2:O" + QString::number(receive_count_mocount);
+    QAxObject *user_range14 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range14->setProperty("Value",res_14);
+    vars.clear();
+
+    for(i=0; i<receive_count_mocount; i++)
+    {
+        QList<QVariant> rows;
+        rows.append(Motor4Count[i]);
+        vars.append(QVariant(rows));
+    }
+    QVariant res_15(vars);
+    RangeStr = "P2:P" + QString::number(receive_count_mocount);
+    QAxObject *user_range15 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range15->setProperty("Value",res_15);
+    vars.clear();
+
+
+
     for(i=0; i<receive_count_pressure; i++)
     {
         QList<QVariant> rows;
         rows.append(surpressure_elbow[i]);
         vars.append(QVariant(rows));
     }
-    QVariant res_12(vars);
+    QVariant res_16(vars);
     RangeStr = "S2:S" + QString::number(receive_count_pressure);
-    QAxObject *user_range12 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range12->setProperty("Value",res_12);
+    QAxObject *user_range16 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range16->setProperty("Value",res_16);
     vars.clear();
 
     for(i=0; i<receive_count_pressure; i++)
@@ -737,10 +802,10 @@ void MainWindow::on_actionSave_triggered()
         rows.append(surpressure_shou1[i]);
         vars.append(QVariant(rows));
     }
-    QVariant res_13(vars);
+    QVariant res_17(vars);
     RangeStr = "T2:T" + QString::number(receive_count_pressure);
-    QAxObject *user_range13 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range13->setProperty("Value",res_13);
+    QAxObject *user_range17 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range17->setProperty("Value",res_17);
     vars.clear();
 
     for(i=0; i<receive_count_pressure; i++)
@@ -749,82 +814,10 @@ void MainWindow::on_actionSave_triggered()
         rows.append(surpressure_shou2[i]);
         vars.append(QVariant(rows));
     }
-    QVariant res_14(vars);
-    RangeStr = "U2:U" + QString::number(receive_count_pressure);
-    QAxObject *user_range14 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range14->setProperty("Value",res_14);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(elbow_x_acc[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_15(vars);
-    RangeStr = "V2:V" + QString::number(receive_count_angle);
-    QAxObject *user_range15 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range15->setProperty("Value",res_15);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(elbow_y_acc[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_16(vars);
-    RangeStr = "W2:W" + QString::number(receive_count_angle);
-    QAxObject *user_range16 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range16->setProperty("Value",res_16);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(elbow_z_acc[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_17(vars);
-    RangeStr = "X2:X" + QString::number(receive_count_angle);
-    QAxObject *user_range17 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range17->setProperty("Value",res_17);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(shoulder_x_acc[i]);
-        vars.append(QVariant(rows));
-    }
     QVariant res_18(vars);
-    RangeStr = "Y2:Y" + QString::number(receive_count_angle);
+    RangeStr = "U2:U" + QString::number(receive_count_pressure);
     QAxObject *user_range18 = pSheet->querySubObject("Range(const QString&)",RangeStr);
     user_range18->setProperty("Value",res_18);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(shoulder_y_acc[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_19(vars);
-    RangeStr = "Z2:Z" + QString::number(receive_count_angle);
-    QAxObject *user_range19 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range19->setProperty("Value",res_19);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(shoulder_z_acc[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_20(vars);
-    RangeStr = "AA2:AA" + QString::number(receive_count_angle);
-    QAxObject *user_range20 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range20->setProperty("Value",res_20);
     vars.clear();
 
     //excel
@@ -836,6 +829,7 @@ void MainWindow::on_actionSave_triggered()
 
 void MainWindow::on_actionClean_triggered()
 {
+    plot_timer->stop();
 
     ui->qCustomPlot->clearGraphs();
     ui->qCustomPlot->replot();
@@ -896,153 +890,154 @@ void MainWindow::on_actionClean_triggered()
     receive_count_tension = 0;
     receive_count_angle = 0;
     receive_count_pressure = 0;
+    receive_count_mocount = 0;
 
     for(int i=0;i<6;i++)
         max_tension[i]=0;
     ui->statusBar->showMessage(tr("data cleaned"));
+
 }
 
 void MainWindow::plot()
 {
-    linkdisplay->adjustPos(shoulder_x[receive_count_angle-1]*3.14/180,
-            shoulder_y[receive_count_angle-1]*3.14/180,
-            shoulder_z[receive_count_angle-1]*3.14/180,
-            elbow_x[receive_count_angle-1]*3.14/180,
-            elbow_y[receive_count_angle-1]*3.14/180,
-            elbow_z[receive_count_angle-1]*3.14/180);
+    linkdisplay->adjustPos(shoulder_x[receive_count_angle]*3.14/180,
+            shoulder_y[receive_count_angle]*3.14/180,
+            shoulder_z[receive_count_angle]*3.14/180,
+            elbow_x[receive_count_angle]*3.14/180,
+            elbow_y[receive_count_angle]*3.14/180,
+            elbow_z[receive_count_angle]*3.14/180);
 
-    //  Six tension value figure
-    if(receive_count_tension > 1)
-        shift_x_tension = receive_count_tension*0.05 - 0.5;
-    if(receive_count_angle > 1)
-        shift_x_angle = receive_count_angle*0.05 - 0.5;
-    if(receive_count_pressure > 1)
-        shift_x_pressure = receive_count_pressure*0.05 - 0.5;
+    //linkdisplay->adjustPos(0,0,0,0,0,3.14/3);
 
     QPen pen;
     pen.setStyle(Qt::SolidLine);
     pen.setWidth(3);
-    pen.setBrush(Qt::red);
+    pen.setBrush(Qt::blue);
 
     ui->qCustomPlot->graph(0)->setData(time_x_tension,tension_y);
     ui->qCustomPlot->graph(0)->setPen(pen);
-    ui->qCustomPlot->xAxis->setRange(shift_x_tension,(receive_count_tension-1)*0.05);
+    ui->qCustomPlot->xAxis->setRange(0,time_x_tension[receive_count_tension]);
     ui->qCustomPlot->yAxis->setRange(0,max_tension[0]*1.1);
     ui->qCustomPlot->replot();
 
     ui->qCustomPlot2->graph(0)->setData(time_x_tension,tension_y2);
     ui->qCustomPlot2->graph(0)->setPen(pen);
-    ui->qCustomPlot2->xAxis->setRange(shift_x_tension,receive_count_tension*0.05);
+    ui->qCustomPlot2->xAxis->setRange(0,time_x_tension[receive_count_tension]);
     ui->qCustomPlot2->yAxis->setRange(0,max_tension[1]*1.1);
     ui->qCustomPlot2->replot();
 
     ui->qCustomPlot3->graph(0)->setData(time_x_tension,tension_y3);
     ui->qCustomPlot3->graph(0)->setPen(pen);
-    ui->qCustomPlot3->xAxis->setRange(shift_x_tension,receive_count_tension*0.05);
+    ui->qCustomPlot3->xAxis->setRange(0,time_x_tension[receive_count_tension]);
     ui->qCustomPlot3->yAxis->setRange(0,max_tension[2]*1.1);
     ui->qCustomPlot3->replot();
 
     ui->qCustomPlot4->graph(0)->setData(time_x_tension,tension_y4);
     ui->qCustomPlot4->graph(0)->setPen(pen);
-    ui->qCustomPlot4->xAxis->setRange(shift_x_tension,receive_count_tension*0.05);
+    ui->qCustomPlot4->xAxis->setRange(0,time_x_tension[receive_count_tension]);
     ui->qCustomPlot4->yAxis->setRange(0,max_tension[3]*1.1);
     ui->qCustomPlot4->replot();
 
     ui->qCustomPlot5->graph(0)->setData(time_x_tension,tension_y5);
     ui->qCustomPlot5->graph(0)->setPen(pen);
-    ui->qCustomPlot5->xAxis->setRange(0,receive_count_tension*0.05);
+    ui->qCustomPlot5->xAxis->setRange(0,time_x_tension[receive_count_tension]);
     ui->qCustomPlot5->yAxis->setRange(0,max_tension[4]*1.1);
     ui->qCustomPlot5->replot();
 
     ui->qCustomPlot6->graph(0)->setData(time_x_tension,tension_y6);
     ui->qCustomPlot6->graph(0)->setPen(pen);
-    ui->qCustomPlot6->xAxis->setRange(0,receive_count_tension*0.05);
+    ui->qCustomPlot6->xAxis->setRange(0,time_x_tension[receive_count_tension]);
     ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
     ui->qCustomPlot6->replot();
 
     // Elbow and Shoulder angle figure
     ui->qCustomPlot7->graph(0)->setData(time_x_angle,elbow_x);
     ui->qCustomPlot7->graph(0)->setPen(pen);
-    ui->qCustomPlot7->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot7->xAxis->setRange(0,time_x_angle[receive_count_angle]);
     ui->qCustomPlot7->yAxis->setRange(-120,120);
     ui->qCustomPlot7->replot();
 
     ui->qCustomPlot8->graph(0)->setData(time_x_angle,elbow_y);
     ui->qCustomPlot8->graph(0)->setPen(pen);
-    ui->qCustomPlot8->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot8->xAxis->setRange(0,time_x_angle[receive_count_angle]);
     ui->qCustomPlot8->yAxis->setRange(-120,120);
     ui->qCustomPlot8->replot();
 
     ui->qCustomPlot9->graph(0)->setData(time_x_angle,elbow_z);
     ui->qCustomPlot9->graph(0)->setPen(pen);
-    ui->qCustomPlot9->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot9->xAxis->setRange(0,time_x_angle[receive_count_angle]);
     ui->qCustomPlot9->yAxis->setRange(-120,120);
     ui->qCustomPlot9->replot();
 
     ui->qCustomPlot10->graph(0)->setData(time_x_angle,shoulder_x);
     ui->qCustomPlot10->graph(0)->setPen(pen);
-    ui->qCustomPlot10->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot10->xAxis->setRange(0,time_x_angle[receive_count_angle]);
     ui->qCustomPlot10->yAxis->setRange(-120,120);
     ui->qCustomPlot10->replot();
 
     ui->qCustomPlot11->graph(0)->setData(time_x_angle,shoulder_y);
     ui->qCustomPlot11->graph(0)->setPen(pen);
-    ui->qCustomPlot11->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot11->xAxis->setRange(0,time_x_angle[receive_count_angle]);
     ui->qCustomPlot11->yAxis->setRange(-120,120);
     ui->qCustomPlot11->replot();
 
     ui->qCustomPlot12->graph(0)->setData(time_x_angle,shoulder_z);
     ui->qCustomPlot12->graph(0)->setPen(pen);
-    ui->qCustomPlot12->xAxis->setRange(shift_x_angle,(receive_count_angle-1)*0.05);
+    ui->qCustomPlot12->xAxis->setRange(0,time_x_angle[receive_count_angle]);
     ui->qCustomPlot12->yAxis->setRange(-120,120);
     ui->qCustomPlot12->replot();
 
     // Elbow surface pressure figure
     ui->elbpresPlot->graph(0)->setData(time_x_surpressure,surpressure_elbow);
-    ui->elbpresPlot->xAxis->setRange(shift_x_pressure,receive_count_pressure*0.05);
+    ui->elbpresPlot->xAxis->setRange(0,receive_count_pressure);
     ui->elbpresPlot->yAxis->setRange(0,5);
     ui->elbpresPlot->replot();
 
     // Shoulder surface pressure figure
     ui->shopresPlot->graph(0)->setData(time_x_surpressure,surpressure_shou1);
     ui->shopresPlot->graph(1)->setData(time_x_surpressure,surpressure_shou2);
-    ui->shopresPlot->xAxis->setRange(shift_x_pressure,receive_count_pressure*0.05);
+    ui->shopresPlot->xAxis->setRange(0,receive_count_pressure);
     ui->shopresPlot->yAxis->setRange(0,5);
     ui->shopresPlot->replot();
 
 
-//    /********1**********/
-//    ui->Motor1Plot->graph(0)->setData(time_x,motoangle_1);
-//    ui->Motor1Plot->xAxis->setRange(0,time_x[receive_count_angle]);
-//    ui->Motor1Plot->yAxis->setRange(0,max_motor_angle[0]*1.1);
-//    ui->Motor1Plot->replot(QCustomPlot::rpQueuedReplot);
+    /********1**********/
+    ui->Motor1Plot->graph(0)->setData(time_x_mocount,Motor1Count);
+    ui->Motor1Plot->graph(0)->setPen(pen);
+    ui->Motor1Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
+    ui->Motor1Plot->yAxis->setRange(min_motor_count[0],max_motor_count[0]*1.1);
+    ui->Motor1Plot->replot();
 
-//    /********2**********/
-//    ui->Motor2Plot->graph(0)->setData(time_x,motoangle_2);
-//    ui->Motor2Plot->xAxis->setRange(0,time_x[receive_count_angle]);
-//    ui->Motor2Plot->yAxis->setRange(0,max_motor_angle[1]*1.1);
-//    ui->Motor2Plot->replot(QCustomPlot::rpQueuedReplot);
+    /********2**********/
+    ui->Motor2Plot->graph(0)->setData(time_x_mocount,Motor2Count);
+    ui->Motor2Plot->graph(0)->setPen(pen);
+    ui->Motor2Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
+    ui->Motor2Plot->yAxis->setRange(min_motor_count[1],max_motor_count[1]*1.1);
+    ui->Motor2Plot->replot();
 
-//    /********3**********/
-//    ui->Motor3Plot->graph(0)->setData(time_x,motoangle_3);
-//    ui->Motor3Plot->xAxis->setRange(0,time_x[receive_count_angle]);
-//    ui->Motor3Plot->yAxis->setRange(0,max_motor_angle[2]*1.1);
-//    ui->Motor3Plot->replot(QCustomPlot::rpQueuedReplot);
+    /********3**********/
+    ui->Motor3Plot->graph(0)->setData(time_x_mocount,Motor3Count);
+    ui->Motor3Plot->graph(0)->setPen(pen);
+    ui->Motor3Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
+    ui->Motor3Plot->yAxis->setRange(min_motor_count[2],max_motor_count[2]*1.1);
+    ui->Motor3Plot->replot();
 
-//    /********4**********/
-//    ui->Motor4Plot->graph(0)->setData(time_x,motoangle_4);
-//    ui->Motor4Plot->xAxis->setRange(0,time_x[receive_count_angle]);
-//    ui->Motor4Plot->yAxis->setRange(0,max_motor_angle[3]*1.1);
-//    ui->Motor4Plot->replot(QCustomPlot::rpQueuedReplot);
+    /********4**********/
+    ui->Motor4Plot->graph(0)->setData(time_x_mocount,Motor4Count);
+    ui->Motor4Plot->graph(0)->setPen(pen);
+    ui->Motor4Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
+    ui->Motor4Plot->yAxis->setRange(min_motor_count[3],max_motor_count[3]*1.1);
+    ui->Motor4Plot->replot();
+
 
 //    /********5**********/
-//    ui->Motor5Plot->graph(0)->setData(time_x,motoangle_5);
+//    ui->Motor5Plot->graph(0)->setData(time_x_mocount,motoangle_5);
 //    ui->Motor5Plot->xAxis->setRange(0,time_x[receive_count_angle]);
 //    ui->Motor5Plot->yAxis->setRange(0,max_motor_angle[4]*1.1);
 //    ui->Motor5Plot->replot(QCustomPlot::rpQueuedReplot);
 
 //    /********6**********/
-//    ui->Motor6Plot->graph(0)->setData(time_x,motoangle_6);
+//    ui->Motor6Plot->graph(0)->setData(time_x_mocount,motoangle_6);
 //    ui->Motor6Plot->xAxis->setRange(0,time_x[receive_count_angle]);
 //    ui->Motor6Plot->yAxis->setRange(0,max_motor_angle[5]*1.1);
 //    ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
@@ -1120,13 +1115,6 @@ void MainWindow::setLine10EditValue()
     ui->sendMsgLineEdit10->setText(str);
 }
 
-
-void MainWindow::on_pushButton_clicked()
-{
-    // 预紧信号发送
-    emit sigBeforeTigh();
-}
-
 void MainWindow::on_VRDisplay_clicked()
 {
     emit sigVRSerialOpen();
@@ -1136,6 +1124,11 @@ void MainWindow::on_sendmsgButton_clicked()
 {
     uint TensionOrAngle=0;
     int sendData[10];
+    if(ui->actionOpen->isEnabled())
+    {
+        QMessageBox::critical(this,tr("wrong operation"),tr("open com first!!!"),QMessageBox::Ok);
+        return;
+    }
     // JOINNT CONTROL MODE
     if(ui->joint_RadioButton->isChecked())
     {
@@ -1191,14 +1184,38 @@ void MainWindow::on_actionStartMeasure_triggered()
     receive_count_tension = 0;
     receive_count_angle = 0;
     receive_count_pressure = 0;
-    getsensordata->start();
+    emit sigMeasureStart();
+    //getsensordata->start();
     plot_timer->start(plot_timerdly);
+    ui->actionStartMeasure->setEnabled(false);
+    ui->actionStopMeasure->setEnabled(true);
 }
 
 void MainWindow::on_actionStopMeasure_triggered()
 {
-    getsensordata->terminate();
-    getsensordata->wait();
+    //getsensordata->terminate();
+    //getsensordata->wait();
+    emit sigMeasureStop();
     ui->actionSave->setEnabled(true);
     plot_timer->stop();
+    ui->actionStopMeasure->setEnabled(false);
+    ui->actionStartMeasure->setEnabled(true);
+}
+
+void MainWindow::on_BeforeTightenButton_clicked()
+{
+    if(ui->actionOpen->isEnabled())
+    {
+        QMessageBox::critical(this,tr("wrong operation"),tr("open com first!!!"),QMessageBox::Ok);
+        return;
+    }
+    else
+    {
+        // 预紧信号发送
+        unsigned int TensionData[6];
+        for(int i=0; i<6; i++)
+            TensionData[i] = 200;
+        emit sigBeforeTigh(TensionData);
+    }
+
 }

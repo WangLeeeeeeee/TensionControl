@@ -103,9 +103,9 @@ void LinkDisplay::adjustPos(double sh_x, double sh_y, double sh_z, double el_x, 
         ptrToDataArray->setPosition(QVector3D(-posUppY,-posUppZ,-posUppX));
         ptrToDataArray++;
 
-        float posForX = (607*cos(sh_z)*cos(sh_x)*cos(sh_y - pi/2))/2 - (607*sin(sh_z)*sin(sh_x))/2 - posLenFor[i]*(cos(el_z)*(sin(sh_z)*sin(sh_x) - cos(sh_z)*cos(sh_x)*cos(sh_y - pi/2)) + cos(sh_z)*sin(el_z)*sin(sh_y - pi/2));
-        float posForY = posLenFor[i]*(cos(el_z)*(cos(sh_z)*sin(sh_x) + cos(sh_x)*cos(sh_y - pi/2)*sin(sh_z)) - sin(sh_z)*sin(el_z)*sin(sh_y - pi/2)) + (607*cos(sh_z)*sin(sh_x))/2 + (607*cos(sh_x)*cos(sh_y - pi/2)*sin(sh_z))/2;
-        float posForZ = - (607*cos(sh_x)*sin(sh_y - pi/2))/2 - posLenFor[i]*(cos(sh_y - pi/2)*sin(el_z) + cos(sh_x)*cos(el_z)*sin(sh_y - pi/2));
+        float posForX = (607*cos(sh_z)*cos(sh_x)*cos(sh_y - pi/2))/2 - (607*sin(sh_z)*sin(sh_x))/2 - posLenFor[i]*(cos(el_y)*(sin(sh_z)*sin(sh_x) - cos(sh_z)*cos(sh_x)*cos(sh_y - pi/2)) + cos(sh_z)*sin(el_y)*sin(sh_y - pi/2));
+        float posForY = posLenFor[i]*(cos(el_y)*(cos(sh_z)*sin(sh_x) + cos(sh_x)*cos(sh_y - pi/2)*sin(sh_z)) - sin(sh_z)*sin(el_y)*sin(sh_y - pi/2)) + (607*cos(sh_z)*sin(sh_x))/2 + (607*cos(sh_x)*cos(sh_y - pi/2)*sin(sh_z))/2;
+        float posForZ = - (607*cos(sh_x)*sin(sh_y - pi/2))/2 - posLenFor[i]*(cos(sh_y - pi/2)*sin(el_y) + cos(sh_x)*cos(el_y)*sin(sh_y - pi/2));
         ptrToDataArray->setPosition(QVector3D(-posForY,-posForZ,-posForX));
         ptrToDataArray++;
     }

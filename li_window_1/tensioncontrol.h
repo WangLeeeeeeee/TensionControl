@@ -26,12 +26,11 @@ class TensionControl:public QThread
 public:
     explicit TensionControl(QObject *parent=0);
     ~TensionControl();
-    void TensionSet(TensionPID *pid_tension, int index, float aimTension);
 
 private:
     void run();
     QSerialPort serial1; // declare a serial com
-    QTimer *send_timer;
+    QTimer *tensionCtrlTimer;
     QTimer *cycleJointTimer;
     QTimer *linearControlTimer;
     void TensionValueUpdate();
@@ -42,12 +41,14 @@ private:
 
 private slots:
     void slotReadMyCom();
-    void slotSendCommand();
     void slotSerialInit();
     void slotSerialClose();
     void slotSerialCtrl(uint tensionOrAngle, int* Data);
     void slotCirculJoint();
     void slotLinearControl();
+    void slotBeforeTigh(unsigned int *Data);
+    void TensionSet();
+
 };
 
 #endif // TENSIONCONTROL_H

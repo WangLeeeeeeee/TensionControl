@@ -31,7 +31,7 @@ class TensionControl;
 //#define TIMER_INTERVAL 10
 
 // set the plot interval
-#define TIME_PLOT_INTERVAL 100
+#define TIME_PLOT_INTERVAL 200
 
 
 namespace Ui {
@@ -70,8 +70,6 @@ private slots:
     void setLine10EditValue();
     void Plot_Init();
 
-    void on_pushButton_clicked();
-
     void on_VRDisplay_clicked();
 
     void on_sendmsgButton_clicked();
@@ -79,6 +77,8 @@ private slots:
     void on_actionStartMeasure_triggered();
 
     void on_actionStopMeasure_triggered();
+
+    void on_BeforeTightenButton_clicked();
 
 private:
     aboutdialog aboutdlg;
@@ -99,9 +99,11 @@ private:
 signals:
     void sigSerialInit();
     void sigSerialClose();
-    void sigBeforeTigh();
+    void sigBeforeTigh(unsigned int *Data);
     void sigSerialCtrl(unsigned int TensionOrAngle,int *Data);
     void sigVRSerialOpen();
+    void sigMeasureStart();
+    void sigMeasureStop();
 };
 
 #endif // MAINWINDOW_H

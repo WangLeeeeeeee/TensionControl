@@ -1,0 +1,15 @@
+IMU:
+ elbow_y对应肘关节前屈，前屈后减小
+ shoulder_y对应肩关节前屈，前屈后减小
+ shoulder_x对应肩关节内收外展，外展后减小
+ shoulder_z对应肩关节内旋外旋，内旋后角度增大
+QT发送给VR界面：
+ 发送：帧头：0xf0 帧尾：0xf1
+ 数据位：shoulder_x shoulder_z shoulder_y elbow_y，发送格式：0xfe/0xff（正为0xfe负为0xff）+数据（0-255）+0xa0
+VR界面：
+  right_arm_x:内收外展，内收角度减小
+  right_arm_y:肩关节内旋外旋，内旋角度增大
+  right_arm_z:肩关节前屈后伸，前屈角度增大
+  right_forearm:肘关节前屈后伸，前屈角度增大
+
+ 

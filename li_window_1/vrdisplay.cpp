@@ -15,7 +15,7 @@ void VRDisplay::run()
 
 void VRDisplay::slotVRSerialOpen()
 {
-    vrSerial.setPortName("COM10");
+    vrSerial.setPortName("COM3");
     vrSerial.setBaudRate(QSerialPort::Baud9600);
     vrSerial.setDataBits(QSerialPort::Data8);
     vrSerial.setStopBits(QSerialPort::OneStop);
@@ -52,19 +52,19 @@ void VRDisplay::slotSendVRdata()
         vrSerial.write(QString2Hex(head));
     }
 
-    sendValue = -(shoulder_x[receive_count_angle-1]-67)+115.2;//shoulder waizhan
+    sendValue = shoulder_x[receive_count_angle];//shoulder waizhan
     SendData(sendValue);
     qDebug()<<"shoulder_z:"<<sendValue<<endl;
 
-    sendValue = shoulder_z[receive_count_angle-1]+45+172.36;//shoulder neixuan
+    sendValue = shoulder_z[receive_count_angle];//shoulder neixuan
     SendData(sendValue);
     qDebug()<<"shoulder_x:"<<sendValue<<endl;
 
-    sendValue = -(shoulder_y[receive_count_angle-1]+5.13)+180;//shoulder qianqu
+    sendValue = shoulder_y[receive_count_angle];//shoulder qianqu
     SendData(sendValue);
     qDebug()<<"shoulder_y:"<<sendValue<<endl;
 
-    sendValue = -(elbow_y[receive_count_angle-1]+8.15);//elbow qianqu
+    sendValue = elbow_y[receive_count_angle];//elbow qianqu
     SendData(sendValue);
     qDebug()<<"elbow_y:"<<sendValue<<endl;
 
