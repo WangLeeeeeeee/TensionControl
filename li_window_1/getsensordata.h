@@ -42,11 +42,11 @@ private:
     ErrorCode ret;
 
     // Gets a LpmsSensorManager instance
-    //LpmsSensorManagerI* manager1 = LpmsSensorManagerFactory();
-    //LpmsSensorManagerI* manager2 = LpmsSensorManagerFactory();
+    LpmsSensorManagerI* manager1 = LpmsSensorManagerFactory();
+    LpmsSensorManagerI* manager2 = LpmsSensorManagerFactory();
     // Connects to LPMS-CU sensor with address A1234567
-    //LpmsSensorI* lpms1 = manager1->addSensor(DEVICE_LPMS_U, "A5022WAT");
-    //LpmsSensorI* lpms2 = manager2->addSensor(DEVICE_LPMS_U, "A5022WCL");
+    LpmsSensorI* lpms1 = manager1->addSensor(DEVICE_LPMS_U, "A5022WAT");
+    LpmsSensorI* lpms2 = manager2->addSensor(DEVICE_LPMS_U, "A5022WCL");
 
     QTimer *getsensorTimer;
     void delay(int mseconds);
@@ -61,8 +61,6 @@ public:
 
 private slots:
     void slotChangeSenFlag();
-    void slotMeasureStart();
-    void slotMeasureStop();
 
 };
 

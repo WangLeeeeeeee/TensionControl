@@ -75,8 +75,8 @@ double shoulderXinit,shoulderYinit,shoulderZinit;
 
 GetSensordata::GetSensordata(QObject *parent):QThread(parent)
 {   
-    udCounterCtrl = UdCounterCtrl::Create();
-    WaveformAiCtrl * wfAiCtrl = WaveformAiCtrl::Create();
+    //udCounterCtrl = UdCounterCtrl::Create();
+    //WaveformAiCtrl * wfAiCtrl = WaveformAiCtrl::Create();
     getsensorTimer = new QTimer(this);
     //QObject::connect(getsensorTimer, SIGNAL(timeout()), this, SLOT(slotChangeSenFlag()));
     //getsensorTimer->start(50);
@@ -87,190 +87,183 @@ GetSensordata::GetSensordata(QObject *parent):QThread(parent)
 //
 void GetSensordata::run()
 {
-    //qDebug()<<"GetSensordata Thread is running"<<endl;
+    qDebug()<<"GetSensordata Thread is running"<<endl;
 
-//    ErrorCode ret = Success;
+    ErrorCode ret = Success;
 
-//    // PCI-1784 initialize
-//    // Step 1: Create a 'UdCounterCtrl' for UpDown Counter function.
-//   //UdCounterCtrl* udCounterCtrl = UdCounterCtrl::Create();
+    // PCI-1784 initialize
+    // Step 1: Create a 'UdCounterCtrl' for UpDown Counter function.
+   UdCounterCtrl* udCounterCtrl = UdCounterCtrl::Create();
 
-//    do
-//    {
-//         //Attention do not use the data collect card by two device once!!!
-//        // Step 2: Select a device by device number or device description and specify the access mode.
-//        // in this example we use ModeWrite mode so that we can fully control the device, including configuring, sampling, etc.
-//        DeviceInformation devInfo1(deviceDescription1);
-//        ret = udCounterCtrl->setSelectedDevice(devInfo1);
-//        CheckError(ret);
+    do
+    {
+         //Attention do not use the data collect card by two device once!!!
+        // Step 2: Select a device by device number or device description and specify the access mode.
+        // in this example we use ModeWrite mode so that we can fully control the device, including configuring, sampling, etc.
+        DeviceInformation devInfo1(deviceDescription1);
+        ret = udCounterCtrl->setSelectedDevice(devInfo1);
+        CheckError(ret);
 
-//        // Step 3: Set necessary parameters
-//        ret = udCounterCtrl->setChannelStart(udchannelStart);
-//        CheckError(ret);
-//        ret = udCounterCtrl->setChannelCount(udchannelCount);
-//        CheckError(ret);
+        // Step 3: Set necessary parameters
+        ret = udCounterCtrl->setChannelStart(udchannelStart);
+        CheckError(ret);
+        ret = udCounterCtrl->setChannelCount(udchannelCount);
+        CheckError(ret);
 
-//        // Step 4: Set counting type for UpDown Counter
-//        Array<UdChannel>*udChannel = udCounterCtrl->getChannels();
-//        for(int i = udchannelStart; i < udchannelStart + udchannelCount; i++)
-//        {
-//           ret = udChannel->getItem(i).setCountingType(PulseDirection);
-//           CheckError(ret);
-//        }
+        // Step 4: Set counting type for UpDown Counter
+        Array<UdChannel>*udChannel = udCounterCtrl->getChannels();
+        for(int i = udchannelStart; i < udchannelStart + udchannelCount; i++)
+        {
+           ret = udChannel->getItem(i).setCountingType(PulseDirection);
+           CheckError(ret);
+        }
 
-//        Motor1Count[0] = 0;
-//        Motor2Count[0] = 0;
-//        Motor3Count[0] = 0;
-//        Motor4Count[0] = 0;
-//        time_x_mocount[0] = 0;
+        Motor1Count[0] = 0;
+        Motor2Count[0] = 0;
+        Motor3Count[0] = 0;
+        Motor4Count[0] = 0;
+        time_x_mocount[0] = 0;
 
-//        surpressure_elbow[0] = 0;
-//        surpressure_shou1[0] = 0;
-//        surpressure_shou2[0] = 0;
-//        time_x_surpressure[0] = 0;
+        surpressure_elbow[0] = 0;
+        surpressure_shou1[0] = 0;
+        surpressure_shou2[0] = 0;
+        time_x_surpressure[0] = 0;
 
 
-//    }
-//    while(false);
+    }
+    while(false);
 
-//    // PCI-1716 initialize
-//    // Step 1: Create a 'WaveformAiCtrl' for buffered AI function.
-//    WaveformAiCtrl * wfAiCtrl = WaveformAiCtrl::Create();
+    // PCI-1716 initialize
+    // Step 1: Create a 'WaveformAiCtrl' for buffered AI function.
+    WaveformAiCtrl * wfAiCtrl = WaveformAiCtrl::Create();
 
-//     // Step 2: Set the notification event Handler by which we can known the state of operation effectively.
-//    wfAiCtrl->addStoppedHandler(OnStoppedEvent, NULL);
+     // Step 2: Set the notification event Handler by which we can known the state of operation effectively.
+    wfAiCtrl->addStoppedHandler(OnStoppedEvent, NULL);
 
-//    do
-//    {
-//        // Step 3: Select a device by device number or device description and specify the access mode.
-//        // in this example we use ModeWrite mode so that we can fully control the device, including configuring, sampling, etc.
-//        DeviceInformation devInfo(deviceDescription);
-//        ret = wfAiCtrl->setSelectedDevice(devInfo);
-//        CheckError(ret);
+    do
+    {
+        // Step 3: Select a device by device number or device description and specify the access mode.
+        // in this example we use ModeWrite mode so that we can fully control the device, including configuring, sampling, etc.
+        DeviceInformation devInfo(deviceDescription);
+        ret = wfAiCtrl->setSelectedDevice(devInfo);
+        CheckError(ret);
 
-//        // Step 4: Set necessary parameters for Buffered AI operation,
-//      Conversion* conversion = wfAiCtrl->getConversion();
-//      ret = conversion->setChannelStart(startChannel);
-//      CheckError(ret);
-//      ret = conversion->setChannelCount(channelCount);
-//      CheckError(ret);
-//      ret = conversion->setClockRate(clockRate);
-//      CheckError(ret);
-//        Record* record = wfAiCtrl->getRecord();
-//      ret = record->setSectionLength(sectionLength);
-//      CheckError(ret);
-//      ret = record->setSectionCount(sectionCount);//The sectionCount is nonzero value, which means 'One Buffered' mode.
-//      CheckError(ret);
+        // Step 4: Set necessary parameters for Buffered AI operation,
+      Conversion* conversion = wfAiCtrl->getConversion();
+      ret = conversion->setChannelStart(startChannel);
+      CheckError(ret);
+      ret = conversion->setChannelCount(channelCount);
+      CheckError(ret);
+      ret = conversion->setClockRate(clockRate);
+      CheckError(ret);
+        Record* record = wfAiCtrl->getRecord();
+      ret = record->setSectionLength(sectionLength);
+      CheckError(ret);
+      ret = record->setSectionCount(sectionCount);//The sectionCount is nonzero value, which means 'One Buffered' mode.
+      CheckError(ret);
 
-//      // Step 5: start Asynchronous Buffered AI, 'Asynchronous' means the method returns immediately
-//      // after the acquisition has been started. The StoppedHandler's 'StoppedEvent' method will be called
-//      // after the acquisition is completed.
-//      printf("Asynchronous finite acquisition is in progress.\n");
-//      ret = wfAiCtrl->Prepare();
-//        CheckError(ret);
+      // Step 5: start Asynchronous Buffered AI, 'Asynchronous' means the method returns immediately
+      // after the acquisition has been started. The StoppedHandler's 'StoppedEvent' method will be called
+      // after the acquisition is completed.
+      printf("Asynchronous finite acquisition is in progress.\n");
+      ret = wfAiCtrl->Prepare();
+        CheckError(ret);
 
-//      tension_y[0] = 0;
-//      tension_y2[0] = 0;
-//      tension_y3[0] = 0;
-//      tension_y4[0] = 0;
-//      tension_y5[0] = 0;
-//      tension_y6[0] = 0;
-//      time_x_tension[0] = 0;
+      tension_y[0] = 0;
+      tension_y2[0] = 0;
+      tension_y3[0] = 0;
+      tension_y4[0] = 0;
+      tension_y5[0] = 0;
+      tension_y6[0] = 0;
+      time_x_tension[0] = 0;
 
-//      elbow_x[0] = 0;
-//      elbow_y[0] = 0;
-//      elbow_z[0] = 0;
-//      shoulder_x[0] = 0;
-//      shoulder_y[0] = 0;
-//      shoulder_z[0] = 0;
-//      time_x_angle[0] = 0;
+      elbow_x[0] = 0;
+      elbow_y[0] = 0;
+      elbow_z[0] = 0;
+      shoulder_x[0] = 0;
+      shoulder_y[0] = 0;
+      shoulder_z[0] = 0;
+      time_x_angle[0] = 0;
 
-//      getsensorTimer = new QTimer(this);
-//      QObject::connect(getsensorTimer, SIGNAL(timeout()), this, SLOT(slotChangeSenFlag()));
+   }
+   while(false);
 
-//      getsensorTimer->start(50);
 
-//   }
-//   while(false);
+   while(1)
+   {
+        // Checks, if conncted
+        if((lpms1->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) && (lpms2->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED))
+        {
+            // Reset the Orientation
+            //lpms1->resetOrientationOffset();
+            //lpms2->resetOrientationOffset();
 
-//   while(1)
-//   {
-//        // Checks, if conncted
-//        if((lpms1->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) && (lpms2->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED))
-//        {
-//            // Reset the Orientation
-//            //lpms1->resetOrientationOffset();
-//            //lpms2->resetOrientationOffset();
+            // Read the euler angle
+            lpms1->getEulerAngle(ElbowAngle);
+            lpms2->getEulerAngle(ShoulderAngle);
+            Lpms1_Data = lpms1->getCurrentData();
+            Lpms2_Data = lpms2->getCurrentData();
 
-//            // Read the euler angle
-//            lpms1->getEulerAngle(ElbowAngle);
-//            lpms2->getEulerAngle(ShoulderAngle);
-//            Lpms1_Data = lpms1->getCurrentData();
-//            Lpms2_Data = lpms2->getCurrentData();
+            // Recors the first data
+            if(recordflag < 4)
+            {
+                recordflag++;
+                elbowXinit += ElbowAngle[0];
+                elbowYinit += ElbowAngle[1];
+                elbowZinit += ElbowAngle[2];
+                shoulderXinit += ShoulderAngle[0];
+                shoulderYinit += ShoulderAngle[1];
+                shoulderZinit += ShoulderAngle[2];
+            }
+            else
+            {
+                receive_count_angle++;
+                elbow_x[receive_count_angle] = ElbowAngle[0]-elbowXinit/4;
+                elbow_y[receive_count_angle] = ElbowAngle[1]-elbowYinit/4;
+                elbow_z[receive_count_angle] = ElbowAngle[2]-elbowZinit/4;
+                shoulder_x[receive_count_angle] = ShoulderAngle[0]-shoulderXinit/4;
+                shoulder_y[receive_count_angle] = ShoulderAngle[1]-shoulderYinit/4;
+                shoulder_z[receive_count_angle] = ShoulderAngle[2]-shoulderZinit/4;
+                time_x_angle[receive_count_angle] = receive_count_angle;
+            }
+        }
 
-//            // Recors the first data
-//            if(recordflag < 4)
-//            {
-//                recordflag++;
-//                elbowXinit += ElbowAngle[0];
-//                elbowYinit += ElbowAngle[1];
-//                elbowZinit += ElbowAngle[2];
-//                shoulderXinit += ShoulderAngle[0];
-//                shoulderYinit += ShoulderAngle[1];
-//                shoulderZinit += ShoulderAngle[2];
-//            }
-//            else
-//            {
-//                receive_count_angle++;
-//                elbow_x[receive_count_angle] = ElbowAngle[0]-elbowXinit/4;
-//                elbow_y[receive_count_angle] = ElbowAngle[1]-elbowYinit/4;
-//                elbow_z[receive_count_angle] = ElbowAngle[2]-elbowZinit/4;
-//                shoulder_x[receive_count_angle] = ShoulderAngle[0]-shoulderXinit/4;
-//                shoulder_y[receive_count_angle] = ShoulderAngle[1]-shoulderYinit/4;
-//                shoulder_z[receive_count_angle] = ShoulderAngle[2]-shoulderZinit/4;
-//                time_x_angle[receive_count_angle] = receive_count_angle;
-//            }
-//        }
+        // Step 6: The device is acquiring data.
+        wfAiCtrl->Start();
 
-//        // Step 6: The device is acquiring data.
-//        wfAiCtrl->Start();
+        // Step 5: Start UpDown Counter
+        ret= udCounterCtrl->setEnabled(true);
 
-//        // Step 5: Start UpDown Counter
-//        ret= udCounterCtrl->setEnabled(true);
+        msleep(10);// every 10ms collect once
 
-//        //msleep(25);// every 50ms collect once
-//        QElapsedTimer t;
-//        t.start();
-//        while(t.elapsed()<50);
+        int32 udCount[4];
+        ret = udCounterCtrl->Read(4,udCount);
+        receive_count_mocount ++;
+        Motor1Count[receive_count_mocount] = Motor1Count[receive_count_mocount-1] + udCount[0];
+        Motor2Count[receive_count_mocount] = Motor2Count[receive_count_mocount-1] + udCount[1];
+        Motor3Count[receive_count_mocount] = Motor3Count[receive_count_mocount-1] + udCount[2];
+        Motor4Count[receive_count_mocount] = Motor4Count[receive_count_mocount-1] + udCount[3];
 
-//        int32 udCount[4];
-//        ret = udCounterCtrl->Read(4,udCount);
-//        receive_count_mocount ++;
-//        Motor1Count[receive_count_mocount] = Motor1Count[receive_count_mocount-1] + udCount[0];
-//        Motor2Count[receive_count_mocount] = Motor2Count[receive_count_mocount-1] + udCount[1];
-//        Motor3Count[receive_count_mocount] = Motor3Count[receive_count_mocount-1] + udCount[2];
-//        Motor4Count[receive_count_mocount] = Motor4Count[receive_count_mocount-1] + udCount[3];
+        // Find the maxium of motor encorder count to set the range of the customplot
+        max_motor_count[0] = (max_motor_count[0] > Motor1Count[receive_count_mocount]) ? max_motor_count[0] : Motor1Count[receive_count_mocount];
+        max_motor_count[1] = (max_motor_count[1] > Motor2Count[receive_count_mocount]) ? max_motor_count[1] : Motor2Count[receive_count_mocount];
+        max_motor_count[2] = (max_motor_count[2] > Motor3Count[receive_count_mocount]) ? max_motor_count[2] : Motor3Count[receive_count_mocount];
+        max_motor_count[3] = (max_motor_count[3] > Motor4Count[receive_count_mocount]) ? max_motor_count[3] : Motor4Count[receive_count_mocount];
 
-//        // Find the maxium of motor encorder count to set the range of the customplot
-//        max_motor_count[0] = (max_motor_count[0] > Motor1Count[receive_count_mocount]) ? max_motor_count[0] : Motor1Count[receive_count_mocount];
-//        max_motor_count[1] = (max_motor_count[1] > Motor2Count[receive_count_mocount]) ? max_motor_count[1] : Motor2Count[receive_count_mocount];
-//        max_motor_count[2] = (max_motor_count[2] > Motor3Count[receive_count_mocount]) ? max_motor_count[2] : Motor3Count[receive_count_mocount];
-//        max_motor_count[3] = (max_motor_count[3] > Motor4Count[receive_count_mocount]) ? max_motor_count[3] : Motor4Count[receive_count_mocount];
+        // Find the minium of motor encorder count to set the range of the customplot
+        min_motor_count[0] = (min_motor_count[0] < Motor1Count[receive_count_mocount]) ? min_motor_count[0] : Motor1Count[receive_count_mocount];
+        min_motor_count[1] = (min_motor_count[1] < Motor2Count[receive_count_mocount]) ? min_motor_count[1] : Motor2Count[receive_count_mocount];
+        min_motor_count[2] = (min_motor_count[2] < Motor3Count[receive_count_mocount]) ? min_motor_count[2] : Motor3Count[receive_count_mocount];
+        min_motor_count[3] = (min_motor_count[3] < Motor4Count[receive_count_mocount]) ? min_motor_count[3] : Motor4Count[receive_count_mocount];
 
-//        // Find the minium of motor encorder count to set the range of the customplot
-//        min_motor_count[0] = (min_motor_count[0] < Motor1Count[receive_count_mocount]) ? min_motor_count[0] : Motor1Count[receive_count_mocount];
-//        min_motor_count[1] = (min_motor_count[1] < Motor2Count[receive_count_mocount]) ? min_motor_count[1] : Motor2Count[receive_count_mocount];
-//        min_motor_count[2] = (min_motor_count[2] < Motor3Count[receive_count_mocount]) ? min_motor_count[2] : Motor3Count[receive_count_mocount];
-//        min_motor_count[3] = (min_motor_count[3] < Motor4Count[receive_count_mocount]) ? min_motor_count[3] : Motor4Count[receive_count_mocount];
-
-//        time_x_mocount[receive_count_mocount] = receive_count_mocount;
-//        udCounterCtrl->setEnabled(false);
+        time_x_mocount[receive_count_mocount] = receive_count_mocount;
+        udCounterCtrl->setEnabled(false);
 //        qDebug()<<"timex_mocount is:"<<time_x_mocount[receive_count_mocount];
 //        qDebug()<<"time_x_angle is:"<<time_x_angle[receive_count_angle];
 //        qDebug()<<"time_x_tension is:"<<time_x_tension[receive_count_tension];
 //        qDebug()<<"time_x_surpressure is:"<<time_x_surpressure[receive_count_pressure];
 //        qDebug()<<"udCount0 is:"<<udCount[0];
-//   }
+   }
 }
 
 void GetSensordata::CheckError(ErrorCode errorCode)
@@ -355,6 +348,14 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
     surpressure_shou1[receive_count_pressure]   /=      (getDataCount / channelCount);
     surpressure_shou2[receive_count_pressure]   /=      (getDataCount / channelCount);
 
+
+    if((surpressure_elbow[receive_count_pressure]>5)||(surpressure_elbow[receive_count_pressure]<-5))
+        surpressure_elbow[receive_count_pressure] = surpressure_elbow[receive_count_pressure-1];
+    if((surpressure_shou1[receive_count_pressure]>5)||(surpressure_shou1[receive_count_pressure]<-5))
+        surpressure_shou1[receive_count_pressure] = surpressure_shou1[receive_count_pressure-1];
+    if((surpressure_shou2[receive_count_pressure]>5)||(surpressure_shou2[receive_count_pressure]<-5))
+        surpressure_shou2[receive_count_pressure] = surpressure_shou2[receive_count_pressure-1];
+
     // Change the voltage(v) to Tension(g)
     tension_y[receive_count_tension]  =   TENSION_K[0] * tension_y[receive_count_tension] + TENSION_B[0];
     tension_y2[receive_count_tension] =   TENSION_K[1] * tension_y2[receive_count_tension] + TENSION_B[1];
@@ -362,6 +363,29 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
     tension_y4[receive_count_tension] =   TENSION_K[3] * tension_y4[receive_count_tension] + TENSION_B[3];
     tension_y5[receive_count_tension] =   TENSION_K[4] * tension_y5[receive_count_tension] + TENSION_B[4];
     tension_y6[receive_count_tension] =   TENSION_K[5] * tension_y6[receive_count_tension] + TENSION_B[5];
+
+    // judge if the voltage whether is in the normal range.
+    if((tension_y[receive_count_tension]>5000)||(tension_y[receive_count_tension]<-5000))
+        tension_y[receive_count_tension] = tension_y[receive_count_tension-1];
+    if((tension_y2[receive_count_tension]>5000)||(tension_y2[receive_count_tension]<-5000))
+        tension_y2[receive_count_tension] = tension_y2[receive_count_tension-1];
+    if((tension_y3[receive_count_tension]>5000)||(tension_y3[receive_count_tension]<-5000))
+        tension_y3[receive_count_tension] = tension_y3[receive_count_tension-1];
+    if((tension_y4[receive_count_tension]>5000)||(tension_y4[receive_count_tension]<-5000))
+        tension_y4[receive_count_tension] = tension_y4[receive_count_tension-1];
+    if((tension_y5[receive_count_tension]>5000)||(tension_y5[receive_count_tension]<-5000))
+        tension_y5[receive_count_tension] = tension_y5[receive_count_tension-1];
+    if((tension_y6[receive_count_tension]>5000)||(tension_y6[receive_count_tension]<-5000))
+        tension_y6[receive_count_tension] = tension_y6[receive_count_tension-1];
+
+//    qDebug()<<"tensiony:"<<tension_y[receive_count_tension];
+//    if(tension_y[receive_count_tension]>50)
+//        qDebug()<<"unnormal data";
+//    qDebug()<<"tensiony2:"<<tension_y2[receive_count_tension];
+//    qDebug()<<"tensiony3:"<<tension_y3[receive_count_tension];
+//    qDebug()<<"tensiony4:"<<tension_y4[receive_count_tension];
+//    qDebug()<<"tensiony5:"<<tension_y5[receive_count_tension];
+//    qDebug()<<"tensiony6:"<<tension_y6[receive_count_tension];
 
     // Find the maxium of tension to set the range of the customplot
     max_tension[0] = (max_tension[0] > tension_y[receive_count_tension])  ? max_tension[0] : tension_y[receive_count_tension];
@@ -371,75 +395,16 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
     max_tension[4] = (max_tension[4] > tension_y5[receive_count_tension]) ? max_tension[4] : tension_y5[receive_count_tension];
     max_tension[5] = (max_tension[5] > tension_y6[receive_count_tension]) ? max_tension[5] : tension_y6[receive_count_tension];
 
+//    for(int i=0; i<6; i++)
+//    {
+//        if(max_tension[i] > 1000)
+//            qDebug()<<"wow, it's out of the normal range:"<<receive_count_tension;
+//    }
+
 }
 
 void GetSensordata::slotChangeSenFlag()
 {
-    qDebug()<<"enter the time out";
-    // Checks, if conncted
-    /*
-    if((lpms1->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) && (lpms2->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED))
-    {
-
-        // Read the euler angle
-        lpms1->getEulerAngle(ElbowAngle);
-        lpms2->getEulerAngle(ShoulderAngle);
-        Lpms1_Data = lpms1->getCurrentData();
-        Lpms2_Data = lpms2->getCurrentData();
-
-        // Recors the first data
-        if(recordflag < 4)
-        {
-            recordflag++;
-            elbowXinit += ElbowAngle[0];
-            elbowYinit += ElbowAngle[1];
-            elbowZinit += ElbowAngle[2];
-            shoulderXinit += ShoulderAngle[0];
-            shoulderYinit += ShoulderAngle[1];
-            shoulderZinit += ShoulderAngle[2];
-        }
-        else
-        {
-            receive_count_angle++;
-            elbow_x[receive_count_angle] = ElbowAngle[0]-elbowXinit/4;
-            elbow_y[receive_count_angle] = ElbowAngle[1]-elbowYinit/4;
-            elbow_z[receive_count_angle] = ElbowAngle[2]-elbowZinit/4;
-            shoulder_x[receive_count_angle] = ShoulderAngle[0]-shoulderXinit/4;
-            shoulder_y[receive_count_angle] = ShoulderAngle[1]-shoulderYinit/4;
-            shoulder_z[receive_count_angle] = ShoulderAngle[2]-shoulderZinit/4;
-            time_x_angle[receive_count_angle] = receive_count_angle;
-        }
-    }
-    */
-
-    // Step 6: The device is acquiring data.
-    wfAiCtrl->Start();
-
-    // Step 5: Start UpDown Counter
-    ret= udCounterCtrl->setEnabled(true);
-
-    int32 udCount[4];
-    ret = udCounterCtrl->Read(4,udCount);
-    receive_count_mocount ++;
-    Motor1Count[receive_count_mocount] = Motor1Count[receive_count_mocount-1] + udCount[0];
-    Motor2Count[receive_count_mocount] = Motor2Count[receive_count_mocount-1] + udCount[1];
-    Motor3Count[receive_count_mocount] = Motor3Count[receive_count_mocount-1] + udCount[2];
-    Motor4Count[receive_count_mocount] = Motor4Count[receive_count_mocount-1] + udCount[3];
-
-    // Find the maxium of motor encorder count to set the range of the customplot
-    max_motor_count[0] = (max_motor_count[0] > Motor1Count[receive_count_mocount]) ? max_motor_count[0] : Motor1Count[receive_count_mocount];
-    max_motor_count[1] = (max_motor_count[1] > Motor2Count[receive_count_mocount]) ? max_motor_count[1] : Motor2Count[receive_count_mocount];
-    max_motor_count[2] = (max_motor_count[2] > Motor3Count[receive_count_mocount]) ? max_motor_count[2] : Motor3Count[receive_count_mocount];
-    max_motor_count[3] = (max_motor_count[3] > Motor4Count[receive_count_mocount]) ? max_motor_count[3] : Motor4Count[receive_count_mocount];
-
-    // Find the minium of motor encorder count to set the range of the customplot
-    min_motor_count[0] = (min_motor_count[0] < Motor1Count[receive_count_mocount]) ? min_motor_count[0] : Motor1Count[receive_count_mocount];
-    min_motor_count[1] = (min_motor_count[1] < Motor2Count[receive_count_mocount]) ? min_motor_count[1] : Motor2Count[receive_count_mocount];
-    min_motor_count[2] = (min_motor_count[2] < Motor3Count[receive_count_mocount]) ? min_motor_count[2] : Motor3Count[receive_count_mocount];
-    min_motor_count[3] = (min_motor_count[3] < Motor4Count[receive_count_mocount]) ? min_motor_count[3] : Motor4Count[receive_count_mocount];
-
-    time_x_mocount[receive_count_mocount] = receive_count_mocount;
-    udCounterCtrl->setEnabled(false);
 }
 
 void GetSensordata::delay(int mseconds)
@@ -449,118 +414,3 @@ void GetSensordata::delay(int mseconds)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
-// start measure
-void GetSensordata::slotMeasureStart()
-{
-    ErrorCode ret = Success;
-    qDebug()<<"measure start";
-
-    // PCI-1784 initialize
-    // Step 1: Create a 'UdCounterCtrl' for UpDown Counter function.
-   //UdCounterCtrl* udCounterCtrl = UdCounterCtrl::Create();
-
-    do
-    {
-         //Attention do not use the data collect card by two device once!!!
-        // Step 2: Select a device by device number or device description and specify the access mode.
-        // in this example we use ModeWrite mode so that we can fully control the device, including configuring, sampling, etc.
-        DeviceInformation devInfo1(deviceDescription1);
-        ret = udCounterCtrl->setSelectedDevice(devInfo1);
-        CheckError(ret);
-
-        // Step 3: Set necessary parameters
-        ret = udCounterCtrl->setChannelStart(udchannelStart);
-        CheckError(ret);
-        ret = udCounterCtrl->setChannelCount(udchannelCount);
-        CheckError(ret);
-
-        // Step 4: Set counting type for UpDown Counter
-        Array<UdChannel>*udChannel = udCounterCtrl->getChannels();
-        for(int i = udchannelStart; i < udchannelStart + udchannelCount; i++)
-        {
-           ret = udChannel->getItem(i).setCountingType(PulseDirection);
-           CheckError(ret);
-        }
-
-        Motor1Count[0] = 0;
-        Motor2Count[0] = 0;
-        Motor3Count[0] = 0;
-        Motor4Count[0] = 0;
-        time_x_mocount[0] = 0;
-
-        surpressure_elbow[0] = 0;
-        surpressure_shou1[0] = 0;
-        surpressure_shou2[0] = 0;
-        time_x_surpressure[0] = 0;
-
-
-    }
-    while(false);
-
-    // PCI-1716 initialize
-    // Step 1: Create a 'WaveformAiCtrl' for buffered AI function.
-    //WaveformAiCtrl * wfAiCtrl = WaveformAiCtrl::Create();
-
-     // Step 2: Set the notification event Handler by which we can known the state of operation effectively.
-    wfAiCtrl->addStoppedHandler(OnStoppedEvent, NULL);
-
-    do
-    {
-        // Step 3: Select a device by device number or device description and specify the access mode.
-        // in this example we use ModeWrite mode so that we can fully control the device, including configuring, sampling, etc.
-        DeviceInformation devInfo(deviceDescription);
-        ret = wfAiCtrl->setSelectedDevice(devInfo);
-        CheckError(ret);
-
-        // Step 4: Set necessary parameters for Buffered AI operation,
-      Conversion* conversion = wfAiCtrl->getConversion();
-      ret = conversion->setChannelStart(startChannel);
-      CheckError(ret);
-      ret = conversion->setChannelCount(channelCount);
-      CheckError(ret);
-      ret = conversion->setClockRate(clockRate);
-      CheckError(ret);
-        Record* record = wfAiCtrl->getRecord();
-      ret = record->setSectionLength(sectionLength);
-      CheckError(ret);
-      ret = record->setSectionCount(sectionCount);//The sectionCount is nonzero value, which means 'One Buffered' mode.
-      CheckError(ret);
-
-      // Step 5: start Asynchronous Buffered AI, 'Asynchronous' means the method returns immediately
-      // after the acquisition has been started. The StoppedHandler's 'StoppedEvent' method will be called
-      // after the acquisition is completed.
-      printf("Asynchronous finite acquisition is in progress.\n");
-      ret = wfAiCtrl->Prepare();
-        CheckError(ret);
-
-      tension_y[0] = 0;
-      tension_y2[0] = 0;
-      tension_y3[0] = 0;
-      tension_y4[0] = 0;
-      tension_y5[0] = 0;
-      tension_y6[0] = 0;
-      time_x_tension[0] = 0;
-
-      elbow_x[0] = 0;
-      elbow_y[0] = 0;
-      elbow_z[0] = 0;
-      shoulder_x[0] = 0;
-      shoulder_y[0] = 0;
-      shoulder_z[0] = 0;
-      time_x_angle[0] = 0;
-
-      //getsensorTimer = new QTimer(this);
-      QObject::connect(getsensorTimer, SIGNAL(timeout()), this, SLOT(slotChangeSenFlag()));
-
-      getsensorTimer->start(50);
-      qDebug()<<"open the timer";
-
-   }
-   while(false);
-}
-
-// stop measure
-void GetSensordata::slotMeasureStop()
-{
-    getsensorTimer->stop();
-}

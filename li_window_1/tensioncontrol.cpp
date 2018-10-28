@@ -127,7 +127,7 @@ void TensionControl::TensionSet()
             tension_pid[i].velocity = tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
             tension_pid[i].LastError = tension_pid[i].Error;
 
-            // 如果连续10组拉力值小于一定值代表绳索处于持续放松状态
+            // ten array oftension is below one set value means it is totally loose, so speed up to make cable tense.
             if(tensionLowFlag[i] == 0)
                 tension_pid[i].velocity = 400;
         }
@@ -285,7 +285,7 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
         linearControlTimer->start(45);
         tensionCtrlTimer->stop();
         cycleJointTimer->stop();
-
+        emit sigStopplot();
     }
 }
 
@@ -472,7 +472,10 @@ void TensionControl::slotLinearControl()
             linearCount = 0;
             lineCycleCount++;
             if(lineCycleCount == 6)
+            {
                 linearControlTimer->stop();
+                emit sigStartplot();
+            }
         }
         else if(linearCount > 100)
         {

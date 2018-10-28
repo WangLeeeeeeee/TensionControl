@@ -48,6 +48,9 @@ private slots:
     void slotLinearControl();
     void slotBeforeTigh(unsigned int *Data);
     void TensionSet();
+signals:
+    void sigStopplot();
+    void sigStartplot();
 
 };
 

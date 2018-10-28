@@ -69,6 +69,8 @@ private slots:
     void setLine9EditValue();
     void setLine10EditValue();
     void Plot_Init();
+    void slotStopplot();
+    void slotStartplot();
 
     void on_VRDisplay_clicked();
 
@@ -102,8 +104,6 @@ signals:
     void sigBeforeTigh(unsigned int *Data);
     void sigSerialCtrl(unsigned int TensionOrAngle,int *Data);
     void sigVRSerialOpen();
-    void sigMeasureStart();
-    void sigMeasureStop();
 };
 
 #endif // MAINWINDOW_H

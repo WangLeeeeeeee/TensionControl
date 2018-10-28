@@ -74,8 +74,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sigSerialCtrl(uint, int*)), tensioncontrol, SLOT(slotSerialCtrl(uint, int*)));
     connect(this, SIGNAL(sigBeforeTigh(unsigned int *)), tensioncontrol, SLOT(slotBeforeTigh(unsigned int *)));
     connect(this,SIGNAL(sigVRSerialOpen()), vrdisplay, SLOT(slotVRSerialOpen()));
-    connect(this, SIGNAL(sigMeasureStart()), getsensordata, SLOT(slotMeasureStart()));
-    connect(this, SIGNAL(sigMeasureStop()), getsensordata, SLOT(slotMeasureStop()));
+    connect(tensioncontrol, SIGNAL(sigStopplot()), this, SLOT(slotStopplot()));
+    connect(tensioncontrol, SIGNAL(sigStartplot()), this, SLOT(slotStartplot()));
 
 }
 
@@ -1181,11 +1181,11 @@ void MainWindow::on_sendmsgButton_clicked()
 
 void MainWindow::on_actionStartMeasure_triggered()
 {
-    receive_count_tension = 0;
-    receive_count_angle = 0;
-    receive_count_pressure = 0;
-    emit sigMeasureStart();
-    //getsensordata->start();
+//    receive_count_tension = 0;
+//    receive_count_angle = 0;
+//    receive_count_pressure = 0;
+//    receive_count_mocount = 0;
+    getsensordata->start();
     plot_timer->start(plot_timerdly);
     ui->actionStartMeasure->setEnabled(false);
     ui->actionStopMeasure->setEnabled(true);
@@ -1193,9 +1193,8 @@ void MainWindow::on_actionStartMeasure_triggered()
 
 void MainWindow::on_actionStopMeasure_triggered()
 {
-    //getsensordata->terminate();
-    //getsensordata->wait();
-    emit sigMeasureStop();
+    getsensordata->terminate();
+    getsensordata->wait();
     ui->actionSave->setEnabled(true);
     plot_timer->stop();
     ui->actionStopMeasure->setEnabled(false);
@@ -1218,4 +1217,16 @@ void MainWindow::on_BeforeTightenButton_clicked()
         emit sigBeforeTigh(TensionData);
     }
 
+}
+
+void MainWindow::slotStopplot()
+{
+    // stop the plot
+    plot_timer->stop();
+}
+
+void MainWindow::slotStartplot()
+{
+    // start the plot
+    plot_timer->start();
 }
