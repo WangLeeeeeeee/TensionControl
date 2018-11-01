@@ -13,15 +13,16 @@
 #include "LpmsSensorManagerI.h"
 
 using namespace Automation::BDaq;
-#define      deviceDescription  L"PCI-1716L,BID#0"
+#define     deviceDescription  L"PCI-1716L,BID#0"
 #define     deviceDescription1 L"PCI-1784,BID#0"
+#define     deviceDescription2 L"PCI-1784,BID#9"
 #define minize(a,b)            (((a) < (b)) ? (a) : (b))
 
 // extern parameter using for plot
 extern QVector<double> elbow_x,elbow_y,elbow_z,shoulder_x,shoulder_y,shoulder_z;
 extern QVector<double> tension_y,tension_y2,tension_y3;
 extern QVector<double> tension_y4,tension_y5,tension_y6;
-extern QVector<double> Motor1Count,Motor2Count,Motor3Count,Motor4Count;
+extern QVector<double> Motor1Count,Motor2Count,Motor3Count,Motor4Count,Motor5Count,Motor6Count;
 extern QVector<double> surpressure_elbow,surpressure_shou1,surpressure_shou2;
 extern QVector<double> time_x_tension,time_x_angle,time_x_surpressure,time_x_mocount;
 extern double max_tension[];
@@ -51,6 +52,7 @@ private:
     QTimer *getsensorTimer;
     void delay(int mseconds);
     UdCounterCtrl* udCounterCtrl;
+    UdCounterCtrl* udCounterCtrl1;
     //WaveformAiCtrl * wfAiCtrl;
 
 public:

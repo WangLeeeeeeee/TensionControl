@@ -1,7 +1,7 @@
 #include "tensioncontrol.h"
 
 float TensionSensor[6];
-TensionPID tension_pid[6] = {{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0},{0.3,0,0,0,0,0,0}};
+TensionPID tension_pid[6] = {{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0}};
 float Testq1[101] = {0,	0,	0.001,	0.041,	0.002,	0.196,	0.23,	0.256,	0.198,	0.159,	0.171,	0.15,	0.149,
                      0.148,	0.147,	0.147,	0.146,	0.146,	0.145,	0.145,	0.145,	0.144,	0.144,	0.144,	0.143,
                      0.143,	0.143,	0.142,	0.142,	0.142,	0.141,	0.141,	0.14,	0.14,	0.14,	0.139,	0.139,
@@ -40,8 +40,8 @@ float Testq4[101] = {0,	0,	-0.001,	-0.001,	0,	0.003,	0.004,	0.005,	0.013,	0.016,
 unsigned int linearCount = 0; // 读取角度位置数
 unsigned int lineCycleCount = 0; //直线来回走
 
-float MAXSPEED=3000;
-float MINSPEED=-3000;
+float MAXSPEED=1000;
+float MINSPEED=-1000;
 
 float AimTension[6] = {0,0,0,0,0,0};
 
@@ -53,9 +53,20 @@ int cycleCount = 0;
 int setCir;
 float aimCircle[6];
 int setAcc,setVel;
+float tempAngle[4];
 
 // record if the latest 10 times tension data is below one number
 bool tensionLowFlag[6];
+
+//--------------------------------------------------
+// Record the teach data of motor count and IMU data
+//--------------------------------------------------
+unsigned int length = 131072;
+QVector<double> MoRecord1(length),MoRecord2(length),MoRecord3(length),MoRecord4(length),MoRecord5(length),MoRecord6(length);
+QVector<double> elbowxRecord(length),elbowyRecord(length),elbowzRecord(length);
+QVector<double> shouxRecord(length),shouyRecord(length),shouzRecord(length);
+unsigned int teachRecordCout = 0;
+unsigned int replayCount = 0;
 
 TensionControl::TensionControl(QObject *parent):QThread(parent)
 {
@@ -129,7 +140,7 @@ void TensionControl::TensionSet()
 
             // ten array oftension is below one set value means it is totally loose, so speed up to make cable tense.
             if(tensionLowFlag[i] == 0)
-                tension_pid[i].velocity = 400;
+                tension_pid[i].velocity = 600;
         }
         else
         {
@@ -156,7 +167,7 @@ void TensionControl::TensionSet()
 // Com open configure which connect with the 'open com' button
 void TensionControl::slotSerialInit()
 {
-    serial1.setPortName("COM16");
+    serial1.setPortName("COM13");
     serial1.setBaudRate(QSerialPort::Baud9600);
     serial1.setDataBits(QSerialPort::Data8);
     serial1.setStopBits(QSerialPort::OneStop);
@@ -183,6 +194,15 @@ void TensionControl::slotSerialInit()
 
     linearControlTimer = new QTimer(this);
     QObject::connect(linearControlTimer, SIGNAL(timeout()), this, SLOT(slotLinearControl()));
+
+    teachTimer = new QTimer(this);
+    QObject::connect(teachTimer, SIGNAL(timeout()), this, SLOT(TeachRecord()));
+
+    replayTimer = new QTimer(this);
+    QObject::connect(replayTimer, SIGNAL(timeout()), this, SLOT(replayTeach()));
+
+    torqueTimer = new QTimer(this);
+    QObject::connect(torqueTimer, SIGNAL(timeout()), this, SLOT(torqueControl()));
 }
 
 // Com close
@@ -191,6 +211,8 @@ void TensionControl::slotSerialClose()
     tensionCtrlTimer->stop();
     cycleJointTimer->stop();
     linearControlTimer->stop();
+    teachTimer->stop();
+    replayTimer->stop();
     serial1.close();
 }
 
@@ -202,7 +224,6 @@ void TensionControl::slotReadMyCom()
 void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
 {
     unsigned int tempPos[3];
-    float tempAngle[4];
     float cableLen[6],cableLenDeta[6];
     QString SendData;
 
@@ -214,6 +235,9 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
         tensionCtrlTimer->start(100);
         cycleJointTimer->stop();
         linearControlTimer->stop();
+        replayTimer->stop();
+        //teachTimer->stop();
+        emit sigStopplot();
     }
     // Joint angle control mode
     else if(tensionOrAngle == 1)
@@ -221,10 +245,12 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
         cycleJointTimer->start(5000);
         tensionCtrlTimer->stop();
         linearControlTimer->stop();
+        teachTimer->stop();
+        replayTimer->stop();
         for(int i=0; i<4; i++)
         {
             tempAngle[i] = Data[i]*3.14/180;
-            qDebug()<<tempAngle[i];
+            //qDebug()<<tempAngle[i];
         }
         setVel = Data[4];
         setAcc = Data[5];
@@ -266,7 +292,7 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
         SendAimCircle(aimCircle,setVel,setAcc);
     }
     // LINEAR CONTROL MODE
-    else
+    else if(tensionOrAngle == 3)
     {
         lineCycleCount = 0;
         // set the q1 equal zero(it should be as testq1)
@@ -285,7 +311,20 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
         linearControlTimer->start(45);
         tensionCtrlTimer->stop();
         cycleJointTimer->stop();
+        teachTimer->stop();
+        replayTimer->stop();
         emit sigStopplot();
+    }
+    // TORQUE CONTROL MODE
+    else
+    {
+        //emit sigStopplot();
+        for(int i=0; i<4; i++)
+        {
+            tempAngle[i] = Data[i];
+            //qDebug()<<tempAngle[i];
+        }
+        torqueTimer->start(100);
     }
 }
 
@@ -520,6 +559,85 @@ void TensionControl::slotBeforeTigh(unsigned int *Data)
 {
     for(int i=0; i<6; i++)
         AimTension[i] = Data[i];
+}
+
+void TensionControl::slotTeachStart()
+{
+    //tensionCtrlTimer->stop();
+    cycleJointTimer->stop();
+    linearControlTimer->stop();
+    teachTimer->start(100);
+    //emit sigStopplot();
+}
+
+void TensionControl::slotTeachStop()
+{
+    teachTimer->stop();
+    tensionCtrlTimer->stop();
+    emit sigStartplot();
+}
+
+void TensionControl::TeachRecord()
+{
+    MoRecord1[teachRecordCout] = Motor1Count[receive_count_mocount];
+    MoRecord2[teachRecordCout] = Motor2Count[receive_count_mocount];
+    MoRecord3[teachRecordCout] = Motor3Count[receive_count_mocount];
+    MoRecord4[teachRecordCout] = Motor4Count[receive_count_mocount];
+    MoRecord5[teachRecordCout] = Motor5Count[receive_count_mocount];
+    MoRecord6[teachRecordCout] = Motor6Count[receive_count_mocount];
+    elbowxRecord[teachRecordCout] = elbow_x[receive_count_angle];
+    elbowyRecord[teachRecordCout] = elbow_y[receive_count_angle];
+    elbowzRecord[teachRecordCout] = elbow_z[receive_count_angle];
+    shoulder_x[teachRecordCout] = shoulder_x[receive_count_angle];
+    shoulder_y[teachRecordCout] = shoulder_y[receive_count_angle];
+    shoulder_z[teachRecordCout] = shoulder_z[receive_count_angle];
+    teachRecordCout++;
+    qDebug()<<"there are"<<teachRecordCout<<"are recorded.";
+}
+
+void TensionControl::slotReplayTeach()
+{
+    replayTimer->start(100);
+    emit sigStopplot();
+}
+
+void TensionControl::replayTeach()
+{
+    QString SendData;
+    float vel[6];
+    if(replayCount<teachRecordCout)
+    {
+        vel[0] = (MoRecord1[replayCount+1]-MoRecord1[replayCount])*10*60/512;
+        vel[1] = (MoRecord2[replayCount+1]-MoRecord2[replayCount])*10*60/512;
+        vel[2] = (MoRecord3[replayCount+1]-MoRecord3[replayCount])*10*60/512;
+        vel[3] = (MoRecord4[replayCount+1]-MoRecord4[replayCount])*10*60/512;
+        vel[4] = (MoRecord5[replayCount+1]-MoRecord5[replayCount])*10*60/512;
+        vel[5] = (MoRecord6[replayCount+1]-MoRecord6[replayCount])*10*60/512;
+        qDebug()<<"the speed is:"<<vel[5]<<"n/min";
+        for(int i=0; i<6; i++)
+        {
+            SendData = QString::number(long(i)) + "V" + QString::number(long(vel[i])) + "\r";
+            //serial1.write(SendData.toLatin1());
+            qDebug()<<SendData<<endl;
+        }
+        replayCount++;
+    }
+    emit sigStartplot();
+}
+
+void TensionControl::torqueControl()
+{
+    float kp;
+    kp=0.6;
+    // just the elbow control for test
+    for(int i=0; i<5; i++)
+    {
+        AimTension[i] = 100;
+    }
+    AimTension[5] = AimTension[5] + kp*(tempAngle[3] + elbow_y[receive_count_angle]);
+    qDebug()<<"now the elbow angle is:"<<elbow_y[receive_count_angle];
+    qDebug()<<"aimtension5 is:"<<AimTension[5]<<endl;
+    TensionSet();
 }
 
 

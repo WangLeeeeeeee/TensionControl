@@ -627,12 +627,70 @@
            </layout>
           </widget>
          </widget>
-         <widget class="QWidget" name="layoutWidget">
+         <widget class="QPushButton" name="BeforeTightenButton">
           <property name="geometry">
            <rect>
-            <x>301</x>
-            <y>20</y>
-            <width>268</width>
+            <x>520</x>
+            <y>360</y>
+            <width>111</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <family>Times New Roman</family>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>BeforeTighten</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="TeachButton">
+          <property name="geometry">
+           <rect>
+            <x>440</x>
+            <y>320</y>
+            <width>75</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>TEACH</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="StopteachButton">
+          <property name="geometry">
+           <rect>
+            <x>520</x>
+            <y>320</y>
+            <width>91</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>STOPTEACH</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="ReplayButton">
+          <property name="geometry">
+           <rect>
+            <x>440</x>
+            <y>280</y>
+            <width>101</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>REPLAYTEACH</string>
+          </property>
+         </widget>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>302</x>
+            <y>21</y>
+            <width>347</width>
             <height>21</height>
            </rect>
           </property>
@@ -665,26 +723,14 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QRadioButton" name="torque_RadioButton">
+             <property name="text">
+              <string>TORQUE</string>
+             </property>
+            </widget>
+           </item>
           </layout>
-         </widget>
-         <widget class="QPushButton" name="BeforeTightenButton">
-          <property name="geometry">
-           <rect>
-            <x>520</x>
-            <y>360</y>
-            <width>111</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="font">
-           <font>
-            <family>Times New Roman</family>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>BeforeTighten</string>
-          </property>
          </widget>
         </widget>
        </widget>

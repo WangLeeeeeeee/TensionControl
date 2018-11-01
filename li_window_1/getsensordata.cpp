@@ -22,10 +22,10 @@ QVector<double> tension_y4(Datalength),tension_y5(Datalength),tension_y6(Datalen
 QVector<double> surpressure_elbow(Datalength),surpressure_shou1(Datalength),surpressure_shou2(Datalength);
 QVector<double> elbow_x(Datalength),elbow_y(Datalength),elbow_z(Datalength);
 QVector<double> shoulder_x(Datalength),shoulder_y(Datalength),shoulder_z(Datalength);
-QVector<double> Motor1Count(Datalength),Motor2Count(Datalength),Motor3Count(Datalength),Motor4Count(Datalength);
+QVector<double> Motor1Count(Datalength),Motor2Count(Datalength),Motor3Count(Datalength),Motor4Count(Datalength),Motor5Count(Datalength),Motor6Count(Datalength);
 double max_tension[6] = {0, 0, 0, 0, 0, 0};
-double max_motor_count[4]={0, 0, 0, 0};
-double min_motor_count[4] = {0, 0, 0, 0};
+double max_motor_count[6]={0, 0, 0, 0, 0, 0};
+double min_motor_count[6] = {0, 0, 0, 0, 0, 0};
 
 //----------------------------------------------------------------------------------
 // Tension calibration parameter
@@ -73,8 +73,9 @@ unsigned int recordflag = 0;
 double elbowXinit,elbowYinit,elbowZinit;
 double shoulderXinit,shoulderYinit,shoulderZinit;
 
+
 GetSensordata::GetSensordata(QObject *parent):QThread(parent)
-{   
+{
     //udCounterCtrl = UdCounterCtrl::Create();
     //WaveformAiCtrl * wfAiCtrl = WaveformAiCtrl::Create();
     getsensorTimer = new QTimer(this);
@@ -94,6 +95,7 @@ void GetSensordata::run()
     // PCI-1784 initialize
     // Step 1: Create a 'UdCounterCtrl' for UpDown Counter function.
    UdCounterCtrl* udCounterCtrl = UdCounterCtrl::Create();
+   UdCounterCtrl* udCounterCtrl1 = UdCounterCtrl::Create();
 
     do
     {
@@ -101,13 +103,20 @@ void GetSensordata::run()
         // Step 2: Select a device by device number or device description and specify the access mode.
         // in this example we use ModeWrite mode so that we can fully control the device, including configuring, sampling, etc.
         DeviceInformation devInfo1(deviceDescription1);
+        DeviceInformation devInfo2(deviceDescription2);
         ret = udCounterCtrl->setSelectedDevice(devInfo1);
+        CheckError(ret);
+        ret = udCounterCtrl1->setSelectedDevice(devInfo2);
         CheckError(ret);
 
         // Step 3: Set necessary parameters
         ret = udCounterCtrl->setChannelStart(udchannelStart);
         CheckError(ret);
         ret = udCounterCtrl->setChannelCount(udchannelCount);
+        CheckError(ret);
+        ret = udCounterCtrl1->setChannelStart(udchannelStart);
+        CheckError(ret);
+        ret = udCounterCtrl1->setChannelCount(udchannelCount);
         CheckError(ret);
 
         // Step 4: Set counting type for UpDown Counter
@@ -117,11 +126,19 @@ void GetSensordata::run()
            ret = udChannel->getItem(i).setCountingType(PulseDirection);
            CheckError(ret);
         }
+        Array<UdChannel>*udChannel1 = udCounterCtrl1->getChannels();
+        for(int i = udchannelStart; i < udchannelStart + udchannelCount; i++)
+        {
+           ret = udChannel1->getItem(i).setCountingType(PulseDirection);
+           CheckError(ret);
+        }
 
         Motor1Count[0] = 0;
         Motor2Count[0] = 0;
         Motor3Count[0] = 0;
         Motor4Count[0] = 0;
+        Motor5Count[0] = 0;
+        Motor6Count[0] = 0;
         time_x_mocount[0] = 0;
 
         surpressure_elbow[0] = 0;
@@ -236,25 +253,32 @@ void GetSensordata::run()
 
         msleep(10);// every 10ms collect once
 
-        int32 udCount[4];
+        int32 udCount[4],udCount1[4];
         ret = udCounterCtrl->Read(4,udCount);
+        ret = udCounterCtrl1->Read(4,udCount1);
         receive_count_mocount ++;
         Motor1Count[receive_count_mocount] = Motor1Count[receive_count_mocount-1] + udCount[0];
         Motor2Count[receive_count_mocount] = Motor2Count[receive_count_mocount-1] + udCount[1];
         Motor3Count[receive_count_mocount] = Motor3Count[receive_count_mocount-1] + udCount[2];
         Motor4Count[receive_count_mocount] = Motor4Count[receive_count_mocount-1] + udCount[3];
+        Motor5Count[receive_count_mocount] = Motor5Count[receive_count_mocount-1] + udCount1[0];
+        Motor6Count[receive_count_mocount] = Motor6Count[receive_count_mocount-1] + udCount1[1];
 
         // Find the maxium of motor encorder count to set the range of the customplot
         max_motor_count[0] = (max_motor_count[0] > Motor1Count[receive_count_mocount]) ? max_motor_count[0] : Motor1Count[receive_count_mocount];
         max_motor_count[1] = (max_motor_count[1] > Motor2Count[receive_count_mocount]) ? max_motor_count[1] : Motor2Count[receive_count_mocount];
         max_motor_count[2] = (max_motor_count[2] > Motor3Count[receive_count_mocount]) ? max_motor_count[2] : Motor3Count[receive_count_mocount];
         max_motor_count[3] = (max_motor_count[3] > Motor4Count[receive_count_mocount]) ? max_motor_count[3] : Motor4Count[receive_count_mocount];
+        max_motor_count[4] = (max_motor_count[4] > Motor5Count[receive_count_mocount]) ? max_motor_count[4] : Motor5Count[receive_count_mocount];
+        max_motor_count[5] = (max_motor_count[5] > Motor6Count[receive_count_mocount]) ? max_motor_count[5] : Motor6Count[receive_count_mocount];
 
         // Find the minium of motor encorder count to set the range of the customplot
         min_motor_count[0] = (min_motor_count[0] < Motor1Count[receive_count_mocount]) ? min_motor_count[0] : Motor1Count[receive_count_mocount];
         min_motor_count[1] = (min_motor_count[1] < Motor2Count[receive_count_mocount]) ? min_motor_count[1] : Motor2Count[receive_count_mocount];
         min_motor_count[2] = (min_motor_count[2] < Motor3Count[receive_count_mocount]) ? min_motor_count[2] : Motor3Count[receive_count_mocount];
         min_motor_count[3] = (min_motor_count[3] < Motor4Count[receive_count_mocount]) ? min_motor_count[3] : Motor4Count[receive_count_mocount];
+        min_motor_count[4] = (min_motor_count[4] < Motor5Count[receive_count_mocount]) ? min_motor_count[4] : Motor5Count[receive_count_mocount];
+        min_motor_count[5] = (min_motor_count[5] < Motor6Count[receive_count_mocount]) ? min_motor_count[5] : Motor6Count[receive_count_mocount];
 
         time_x_mocount[receive_count_mocount] = receive_count_mocount;
         udCounterCtrl->setEnabled(false);

@@ -76,6 +76,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this,SIGNAL(sigVRSerialOpen()), vrdisplay, SLOT(slotVRSerialOpen()));
     connect(tensioncontrol, SIGNAL(sigStopplot()), this, SLOT(slotStopplot()));
     connect(tensioncontrol, SIGNAL(sigStartplot()), this, SLOT(slotStartplot()));
+    connect(this, SIGNAL(sigTeach()), tensioncontrol, SLOT(slotTeachStart()));
+    connect(this, SIGNAL(sigStopTeach()), tensioncontrol, SLOT(slotTeachStop()));
+    connect(this, SIGNAL(sigReplay()), tensioncontrol, SLOT(slotReplayTeach()));
 
 }
 
@@ -782,7 +785,29 @@ void MainWindow::on_actionSave_triggered()
     user_range15->setProperty("Value",res_15);
     vars.clear();
 
+    for(i=0; i<receive_count_mocount; i++)
+    {
+        QList<QVariant> rows;
+        rows.append(Motor5Count[i]);
+        vars.append(QVariant(rows));
+    }
+    QVariant res_16(vars);
+    RangeStr = "Q2:Q" + QString::number(receive_count_mocount);
+    QAxObject *user_range16 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range16->setProperty("Value",res_16);
+    vars.clear();
 
+    for(i=0; i<receive_count_mocount; i++)
+    {
+        QList<QVariant> rows;
+        rows.append(Motor6Count[i]);
+        vars.append(QVariant(rows));
+    }
+    QVariant res_17(vars);
+    RangeStr = "R2:R" + QString::number(receive_count_mocount);
+    QAxObject *user_range17 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range17->setProperty("Value",res_17);
+    vars.clear();
 
     for(i=0; i<receive_count_pressure; i++)
     {
@@ -790,10 +815,10 @@ void MainWindow::on_actionSave_triggered()
         rows.append(surpressure_elbow[i]);
         vars.append(QVariant(rows));
     }
-    QVariant res_16(vars);
+    QVariant res_18(vars);
     RangeStr = "S2:S" + QString::number(receive_count_pressure);
-    QAxObject *user_range16 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range16->setProperty("Value",res_16);
+    QAxObject *user_range18 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range18->setProperty("Value",res_18);
     vars.clear();
 
     for(i=0; i<receive_count_pressure; i++)
@@ -802,10 +827,10 @@ void MainWindow::on_actionSave_triggered()
         rows.append(surpressure_shou1[i]);
         vars.append(QVariant(rows));
     }
-    QVariant res_17(vars);
+    QVariant res_19(vars);
     RangeStr = "T2:T" + QString::number(receive_count_pressure);
-    QAxObject *user_range17 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range17->setProperty("Value",res_17);
+    QAxObject *user_range19 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range19->setProperty("Value",res_19);
     vars.clear();
 
     for(i=0; i<receive_count_pressure; i++)
@@ -814,10 +839,10 @@ void MainWindow::on_actionSave_triggered()
         rows.append(surpressure_shou2[i]);
         vars.append(QVariant(rows));
     }
-    QVariant res_18(vars);
+    QVariant res_20(vars);
     RangeStr = "U2:U" + QString::number(receive_count_pressure);
-    QAxObject *user_range18 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range18->setProperty("Value",res_18);
+    QAxObject *user_range20 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range20->setProperty("Value",res_20);
     vars.clear();
 
     //excel
@@ -1030,17 +1055,19 @@ void MainWindow::plot()
     ui->Motor4Plot->replot();
 
 
-//    /********5**********/
-//    ui->Motor5Plot->graph(0)->setData(time_x_mocount,motoangle_5);
-//    ui->Motor5Plot->xAxis->setRange(0,time_x[receive_count_angle]);
-//    ui->Motor5Plot->yAxis->setRange(0,max_motor_angle[4]*1.1);
-//    ui->Motor5Plot->replot(QCustomPlot::rpQueuedReplot);
+    /********5**********/
+    ui->Motor5Plot->graph(0)->setData(time_x_mocount,Motor5Count);
+    ui->Motor5Plot->graph(0)->setPen(pen);
+    ui->Motor5Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
+    ui->Motor5Plot->yAxis->setRange(min_motor_count[4],max_motor_count[4]*1.1);
+    ui->Motor5Plot->replot(QCustomPlot::rpQueuedReplot);
 
-//    /********6**********/
-//    ui->Motor6Plot->graph(0)->setData(time_x_mocount,motoangle_6);
-//    ui->Motor6Plot->xAxis->setRange(0,time_x[receive_count_angle]);
-//    ui->Motor6Plot->yAxis->setRange(0,max_motor_angle[5]*1.1);
-//    ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
+    /********6**********/
+    ui->Motor6Plot->graph(0)->setData(time_x_mocount,Motor6Count);
+    ui->Motor6Plot->graph(0)->setPen(pen);
+    ui->Motor6Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
+    ui->Motor6Plot->yAxis->setRange(min_motor_count[5],max_motor_count[5]*1.1);
+    ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 /*****************************/
@@ -1167,9 +1194,19 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[4] = ui->acclineEdit->text().toUInt();
         emit sigSerialCtrl(TensionOrAngle, sendData);
     }
+    // LINEAR CONTROL MODE
     else if(ui->Linear_RadioButton->isChecked())
     {
         TensionOrAngle = 3;
+        emit sigSerialCtrl(TensionOrAngle, sendData);
+    }
+    else if(ui->torque_RadioButton->isChecked())
+    {
+        TensionOrAngle = 4;
+        sendData[0] = ui->sendMsgLineEdit7->text().toInt();
+        sendData[1] = ui->sendMsgLineEdit8->text().toInt();
+        sendData[2] = ui->sendMsgLineEdit9->text().toInt();
+        sendData[3] = ui->sendMsgLineEdit10->text().toUInt();
         emit sigSerialCtrl(TensionOrAngle, sendData);
     }
     else
@@ -1229,4 +1266,28 @@ void MainWindow::slotStartplot()
 {
     // start the plot
     plot_timer->start();
+}
+
+void MainWindow::on_TeachButton_clicked()
+{
+    emit sigTeach();
+//    if(ui->TeachButton->text() == "TEACH")
+//    {
+//        ui->TeachButton->text() = "STOPTEACH";
+//        emit sigTeach();
+//    }
+//    else {
+//        emit sigStopTeach();
+//        ui->TeachButton->text() = "TEACH";
+//    }
+}
+
+void MainWindow::on_StopteachButton_clicked()
+{
+    emit sigStopTeach();
+}
+
+void MainWindow::on_ReplayButton_clicked()
+{
+    emit sigReplay();
 }

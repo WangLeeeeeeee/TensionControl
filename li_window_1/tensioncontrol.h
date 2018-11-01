@@ -33,6 +33,9 @@ private:
     QTimer *tensionCtrlTimer;
     QTimer *cycleJointTimer;
     QTimer *linearControlTimer;
+    QTimer *teachTimer;
+    QTimer *replayTimer;
+    QTimer *torqueTimer;
     void TensionValueUpdate();
     void CalculateCabelLen(uint i, float* cableLen, float* tempAngle);
     void SendAimCircle(float* aimCircle, int setVel, int setAcc);
@@ -48,6 +51,12 @@ private slots:
     void slotLinearControl();
     void slotBeforeTigh(unsigned int *Data);
     void TensionSet();
+    void slotTeachStart();
+    void slotTeachStop();
+    void TeachRecord();
+    void slotReplayTeach();
+    void replayTeach();
+    void torqueControl();
 signals:
     void sigStopplot();
     void sigStartplot();

@@ -41,7 +41,7 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    
+
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -50,7 +50,7 @@ public:
 
 protected:
     void setActionsEnable(bool status);
-    
+
 private slots:
     void on_actionOpen_triggered();
     void on_actionClose_triggered();
@@ -82,6 +82,12 @@ private slots:
 
     void on_BeforeTightenButton_clicked();
 
+    void on_TeachButton_clicked();
+
+    void on_StopteachButton_clicked();
+
+    void on_ReplayButton_clicked();
+
 private:
     aboutdialog aboutdlg;
     //QSerialPort serial; // declare a serial com
@@ -104,6 +110,9 @@ signals:
     void sigBeforeTigh(unsigned int *Data);
     void sigSerialCtrl(unsigned int TensionOrAngle,int *Data);
     void sigVRSerialOpen();
+    void sigTeach();
+    void sigStopTeach();
+    void sigReplay();
 };
 
 #endif // MAINWINDOW_H
