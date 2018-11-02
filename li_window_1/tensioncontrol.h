@@ -17,6 +17,16 @@ typedef struct PID
     float velocity;     //
 }TensionPID;
 
+typedef struct TorqueAnglePID
+{
+    float KP;
+    float KI;
+    float KD;
+    float Error;
+    float LastError;
+    float integral;
+}TorAnPID;
+
 
 #define TIME_INTERVAL 1000
 

@@ -1,7 +1,8 @@
 #include "tensioncontrol.h"
 
 float TensionSensor[6];
-TensionPID tension_pid[6] = {{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0}};
+TensionPID tension_pid[6] = {{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.06,0,0,0,0,0,0}};
+TorAnPID torAn_pid[4] = {{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{1,0,0,0,0,0}};
 float Testq1[101] = {0,	0,	0.001,	0.041,	0.002,	0.196,	0.23,	0.256,	0.198,	0.159,	0.171,	0.15,	0.149,
                      0.148,	0.147,	0.147,	0.146,	0.146,	0.145,	0.145,	0.145,	0.144,	0.144,	0.144,	0.143,
                      0.143,	0.143,	0.142,	0.142,	0.142,	0.141,	0.141,	0.14,	0.14,	0.14,	0.139,	0.139,
@@ -90,19 +91,21 @@ void TensionControl::run()
 
 void TensionControl::TensionValueUpdate()
 {
+    unsigned int mintension;
+    mintension = 20;
     for(int i=0; i<10; i++)
     {
-        if(tension_y[receive_count_tension-i] > 60)
+        if(tension_y[receive_count_tension-i] > mintension)
             tensionLowFlag[0] = 1;
-        if(tension_y2[receive_count_tension-i] > 60)
+        if(tension_y2[receive_count_tension-i] > mintension)
             tensionLowFlag[1] = 1;
-        if(tension_y3[receive_count_tension-i] > 60)
+        if(tension_y3[receive_count_tension-i] > mintension)
             tensionLowFlag[2] = 1;
-        if(tension_y4[receive_count_tension-i] > 60)
+        if(tension_y4[receive_count_tension-i] > mintension)
             tensionLowFlag[3] = 1;
-        if(tension_y5[receive_count_tension-i] > 60)
+        if(tension_y5[receive_count_tension-i] > mintension)
             tensionLowFlag[4] = 1;
-        if(tension_y6[receive_count_tension-i] > 60)
+        if(tension_y6[receive_count_tension-i] > mintension)
             tensionLowFlag[5] = 1;
     }
     for(int i=0; i<10; i++)
@@ -318,13 +321,14 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
     // TORQUE CONTROL MODE
     else
     {
+        torqueTimer->stop();
         //emit sigStopplot();
         for(int i=0; i<4; i++)
         {
             tempAngle[i] = Data[i];
             //qDebug()<<tempAngle[i];
         }
-        torqueTimer->start(100);
+        torqueTimer->start(50);
     }
 }
 
@@ -566,7 +570,7 @@ void TensionControl::slotTeachStart()
     //tensionCtrlTimer->stop();
     cycleJointTimer->stop();
     linearControlTimer->stop();
-    teachTimer->start(100);
+    teachTimer->start(50);
     //emit sigStopplot();
 }
 
@@ -627,14 +631,23 @@ void TensionControl::replayTeach()
 
 void TensionControl::torqueControl()
 {
-    float kp;
-    kp=0.6;
     // just the elbow control for test
     for(int i=0; i<5; i++)
     {
         AimTension[i] = 100;
     }
-    AimTension[5] = AimTension[5] + kp*(tempAngle[3] + elbow_y[receive_count_angle]);
+    torAn_pid[3].Error = tempAngle[3] + elbow_y[receive_count_angle]; // because abduction is decrease
+    if((torAn_pid[3].Error > 3) || (torAn_pid[3].Error < -3))
+    {
+        torAn_pid[3].integral += torAn_pid[3].Error;
+        AimTension[5] = AimTension[5] + torAn_pid[3].KP*torAn_pid[3].Error + torAn_pid[3].KI*torAn_pid[3].integral + torAn_pid[3].KD*(torAn_pid[3].Error-torAn_pid[3].LastError);
+        torAn_pid[3].LastError = torAn_pid[3].Error;
+    }
+    else
+    {
+        AimTension[5] = AimTension[5];
+    }
+
     qDebug()<<"now the elbow angle is:"<<elbow_y[receive_count_angle];
     qDebug()<<"aimtension5 is:"<<AimTension[5]<<endl;
     TensionSet();
