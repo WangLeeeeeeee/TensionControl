@@ -1,0 +1,68 @@
+﻿  Generate moc_predefs.h
+  Moc'ing aboutdialog.h...
+  Moc'ing getsensordata.h...
+  Moc'ing linkdisplay.h...
+  Moc'ing mainwindow.h...
+  Moc'ing motorcontrol.h...
+  Moc'ing qcustomplot.h...
+  Moc'ing scatterdatamodifier.h...
+  Moc'ing tensioncontrol.h...
+  Moc'ing vrdisplay.h...
+  Rcc'ing li.qrc...
+  Uic'ing aboutdialog.ui...
+  Uic'ing mainwindow.ui...
+  D:\Document_LW\Github\TensionControl\li_window_1\mainwindow.ui: Warning: The name 'layoutWidget' (QWidget) is already in use, defaulting to 'layoutWidget1'.
+  D:\Document_LW\Github\TensionControl\li_window_1\mainwindow.ui: Warning: The name 'layoutWidget' (QWidget) is already in use, defaulting to 'layoutWidget2'.
+  D:\Document_LW\Github\TensionControl\li_window_1\mainwindow.ui: Warning: The name 'layoutWidget' (QWidget) is already in use, defaulting to 'layoutWidget3'.
+  aboutdialog.cpp
+  getsensordata.cpp
+  linkdisplay.cpp
+  main.cpp
+  mainwindow.cpp
+  motorcontrol.cpp
+  qcustomplot.cpp
+  scatterdatamodifier.cpp
+linkdisplay.cpp(17): warning C4305: “初始化”: 从“double”到“float”截断
+linkdisplay.cpp(86): warning C4100: “el_z”: 未引用的形参
+linkdisplay.cpp(86): warning C4100: “el_x”: 未引用的形参
+  tensioncontrol.cpp
+tensioncontrol.cpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  vrdisplay.cpp
+vrdisplay.cpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  moc_aboutdialog.cpp
+getsensordata.cpp(306): warning C4100: “userParam”: 未引用的形参
+  moc_getsensordata.cpp
+motorcontrol.cpp(436): warning C4100: “aim_angle”: 未引用的形参
+motorcontrol.cpp(436): warning C4100: “index”: 未引用的形参
+D:\Document_LW\Github\TensionControl\li_window_1\gsl\include\gsl\gsl_sf_bessel.h(26): fatal error C1083: 无法打开包括文件: “gsl/gsl_mode.h”: No such file or directory (编译源文件 main.cpp)
+  moc_linkdisplay.cpp
+  moc_mainwindow.cpp
+mainwindow.cpp(687): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+tensioncontrol.cpp(4): warning C4838: 从“double”转换到“float”需要收缩转换
+tensioncontrol.cpp(4): warning C4305: “初始化”: 从“double”到“float”截断
+tensioncontrol.cpp(5): warning C4838: 从“double”转换到“float”需要收缩转换
+tensioncontrol.cpp(5): warning C4305: “初始化”: 从“double”到“float”截断
+tensioncontrol.cpp(14): warning C4838: 从“double”转换到“float”需要收缩转换
+tensioncontrol.cpp(14): warning C4305: “初始化”: 从“double”到“float”截断
+tensioncontrol.cpp(23): warning C4838: 从“double”转换到“float”需要收缩转换
+tensioncontrol.cpp(23): warning C4305: “初始化”: 从“double”到“float”截断
+tensioncontrol.cpp(32): warning C4838: 从“double”转换到“float”需要收缩转换
+tensioncontrol.cpp(32): warning C4305: “初始化”: 从“double”到“float”截断
+tensioncontrol.cpp(40): warning C4838: 从“double”转换到“float”需要收缩转换
+tensioncontrol.cpp(40): warning C4305: “初始化”: 从“double”到“float”截断
+tensioncontrol.cpp(51): warning C4305: “初始化”: 从“double”到“float”截断
+tensioncontrol.cpp(74): warning C4305: “=”: 从“double”到“float”截断
+tensioncontrol.cpp(75): warning C4305: “=”: 从“double”到“float”截断
+tensioncontrol.cpp(76): warning C4305: “=”: 从“double”到“float”截断
+tensioncontrol.cpp(77): warning C4305: “=”: 从“double”到“float”截断
+tensioncontrol.cpp(78): warning C4305: “=”: 从“double”到“float”截断
+tensioncontrol.cpp(79): warning C4305: “=”: 从“double”到“float”截断
+tensioncontrol.cpp(282): warning C4305: “=”: 从“double”到“float”截断
+tensioncontrol.cpp(284): warning C4305: “=”: 从“double”到“float”截断
+tensioncontrol.cpp(509): warning C4305: “=”: 从“double”到“float”截断
+  moc_motorcontrol.cpp
+  moc_qcustomplot.cpp
+  moc_scatterdatamodifier.cpp
+  moc_tensioncontrol.cpp
+  moc_vrdisplay.cpp
+  qrc_li.cpp

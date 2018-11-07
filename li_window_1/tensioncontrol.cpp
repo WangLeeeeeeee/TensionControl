@@ -653,6 +653,18 @@ void TensionControl::torqueControl()
     TensionSet();
 }
 
+void TensionControl::slotEmgTenctrl(unsigned int *data)
+{
+    for(int i=0; i<6; i++)
+        AimTension[i] = data[i];
+    tensionCtrlTimer->start(100);
+    cycleJointTimer->stop();
+    linearControlTimer->stop();
+    replayTimer->stop();
+    //teachTimer->stop();
+    emit sigStopplot();
+}
+
 
 
 

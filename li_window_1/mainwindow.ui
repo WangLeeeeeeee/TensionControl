@@ -109,7 +109,7 @@
          <enum>Qt::WheelFocus</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab_3">
          <attribute name="title">
@@ -685,7 +685,7 @@
            <string>REPLAYTEACH</string>
           </property>
          </widget>
-         <widget class="QWidget" name="">
+         <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
             <x>302</x>
@@ -731,6 +731,50 @@
             </widget>
            </item>
           </layout>
+         </widget>
+        </widget>
+        <widget class="QWidget" name="tab_2">
+         <attribute name="title">
+          <string>EMG</string>
+         </attribute>
+         <widget class="QPushButton" name="pushButton_Start">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>90</y>
+            <width>81</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>START</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_Listen">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>40</y>
+            <width>81</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>LISTEN</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_Trigger">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>140</y>
+            <width>81</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>TRIGGER</string>
+          </property>
          </widget>
         </widget>
        </widget>

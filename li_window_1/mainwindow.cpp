@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     motorcontrol = new MotorControl;
     vrdisplay = new VRDisplay;
     tensioncontrol = new TensionControl;
+    emg_server = new EMG_server;
 
 
     // 3D surface
@@ -79,6 +80,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sigTeach()), tensioncontrol, SLOT(slotTeachStart()));
     connect(this, SIGNAL(sigStopTeach()), tensioncontrol, SLOT(slotTeachStop()));
     connect(this, SIGNAL(sigReplay()), tensioncontrol, SLOT(slotReplayTeach()));
+    connect(this, SIGNAL(sigEmgStart()), emg_server, SLOT(slotEmgStart()));
+    connect(this, SIGNAL(sigEmgTrigger()), emg_server, SLOT(slotEmgTrigger()));
 
 }
 
@@ -1290,4 +1293,41 @@ void MainWindow::on_StopteachButton_clicked()
 void MainWindow::on_ReplayButton_clicked()
 {
     emit sigReplay();
+}
+
+void MainWindow::on_pushButton_Listen_clicked()
+{
+    if(ui->pushButton_Listen->text() == tr("Listen"))
+    {
+        qDebug() << "Try to Listen!";
+        emg_server = new EMG_server();
+        ui->pushButton_Trigger->setEnabled(true);
+        ui->pushButton_Listen->setText("Listening...");
+    }
+    else
+    {
+        qDebug() << "Stop listening!";
+        emg_server->~EMG_server();
+        ui->pushButton_Listen->setText("Listen");
+        //发送按键失能
+        ui->pushButton_Trigger->setEnabled(false);
+    }
+}
+
+void MainWindow::on_pushButton_Start_clicked()
+{
+    qDebug() << "Start EMG!";
+    //获取文本框内容并以ASCII码形式发送
+    emg_server->socket->write("start");
+    emg_server->socket->flush();
+    emit sigEmgStart();
+}
+
+void MainWindow::on_pushButton_Trigger_clicked()
+{
+    qDebug() << "Send Trigger!";
+    //获取文本框内容并以ASCII码形式发送
+//    emg_server->socket->write("trigger");
+//    emg_server->socket->flush();
+    emit sigEmgTrigger();
 }

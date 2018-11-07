@@ -9,14 +9,17 @@
 #       Constant:   all big letter like: MAXSPEED
 #-------------------------------------------------
 win32 {
-    LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1/ -lLpSensor64
-    LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1/ -lLpSensorD64
+#    LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1/ -lLpSensor64
+#    LIBS += -LD:/Document_LW/Github/TensionControl/li_window_1/ -lLpSensorD64
+    LIBS += -L$$PWD\lib\x64 -lLpSensor64
+    LIBS += -L$$PWD\lib\x64 -lLpSensorD64
 }
 
 QT       += core gui
 QT       += serialport
 QT      += datavisualization
 QT += 3dcore 3drender 3dinput 3dextras
+QT       += network
 
 TARGET = li_window_1  printsupport
 TEMPLATE = app
@@ -31,7 +34,8 @@ SOURCES += main.cpp\
     vrdisplay.cpp \
     tensioncontrol.cpp \
     linkdisplay.cpp \
-    scatterdatamodifier.cpp
+    scatterdatamodifier.cpp \
+    emg_tcp.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -46,7 +50,8 @@ HEADERS  += mainwindow.h \
     vrdisplay.h \
     tensioncontrol.h \
     linkdisplay.h \
-    scatterdatamodifier.h
+    scatterdatamodifier.h \
+    emg_tcp.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui
@@ -62,6 +67,11 @@ QT  +=opengl
 #                -lglut
 QT += axcontainer
 QT  +=  printsupport
+
+#DEFINES += GSL_DLL
+#INCLUDEPATH += $$PWD\gsl\include
+#LIBS += -L$$PWD\gsl\lib -llibgsl
+#LIBS += -L$$PWD\gsl\lib -llibgslcblas
 
 
 

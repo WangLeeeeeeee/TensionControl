@@ -67,6 +67,7 @@ private slots:
     void slotReplayTeach();
     void replayTeach();
     void torqueControl();
+    void slotEmgTenctrl(unsigned int* data); // for emg
 signals:
     void sigStopplot();
     void sigStartplot();

@@ -16,6 +16,7 @@
 #include "getsensordata.h"
 #include "plotcurves.h"
 #include "linkdisplay.h"
+#include "emg_tcp.h"
 //#include "vrdisplay.h"
 //#include "motorcontrol.h"
 class VRDisplay;
@@ -88,6 +89,12 @@ private slots:
 
     void on_ReplayButton_clicked();
 
+    void on_pushButton_Listen_clicked();
+
+    void on_pushButton_Start_clicked();
+
+    void on_pushButton_Trigger_clicked();
+
 private:
     aboutdialog aboutdlg;
     //QSerialPort serial; // declare a serial com
@@ -97,6 +104,7 @@ private:
     MotorControl *motorcontrol;
     VRDisplay *vrdisplay;
     TensionControl *tensioncontrol;
+    EMG_server* emg_server;
     Ui::MainWindow *ui;
 
     // 3D surface
@@ -113,6 +121,10 @@ signals:
     void sigTeach();
     void sigStopTeach();
     void sigReplay();
+
+    // for emg
+    void sigEmgStart();
+    void sigEmgTrigger();
 };
 
 #endif // MAINWINDOW_H
