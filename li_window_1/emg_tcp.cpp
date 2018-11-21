@@ -24,6 +24,8 @@ double fitEfficient[20];
 double elbowLastMax = 0;
 double elbowLastMin = 0;
 
+unsigned int triggerTimes = 1;
+
 double testEmg[] = {0.344731, 0.159619, 0.306073, 0.286254, 0.228736, 0.235155, 0.458003, 0.298763, 0.235687, 0.192039, 0.12551, 0.473019, 0.236293, 0.374413, 0.393713, 0.197504,
                     0.282371, 0.313201, 0.326407, 0.235456, 0.271036, 0.249283, 0.192322, 0.530665, 0.290591, 0.377142, 0.411442, 0.217107, 0.269897, 0.227633, 0.191032, 0.216026,
                     0.146853, 0.301339, 0.146471, 0.204349, 0.274863, 0.217329, 0.262068, 0.24579, 0.20721, 0.190976, 0.296504, 0.259974, 0.181215, 0.189336, 0.203391, 0.279267,
@@ -188,6 +190,7 @@ void EMG_server::slotEmgStart()
 
 void EMG_server::slotEmgTrigger()
 {
+    triggerTimes++;
     recordAngleTimer->stop();
     posbackTimer->start(100);
     // find the max angle and the min angle of last record
@@ -235,7 +238,7 @@ void EMG_server::slotEmgTrigger()
         {
             BufferX[i] = elbYRecord_emg[i]; // just for test
             //BufferX[i] = testImu[i];
-            BufferY[i] = EMG_array[emgRecordCout-imuRecordCout+i];
+            BufferY[i] = triggerTimes*EMG_array[emgRecordCout-imuRecordCout+i];
         }
         //sizenum = sizeof(BufferX)/ sizeof(BufferX[0]);	//	拟合数据的维数
         sizenum = imuRecordCout;
@@ -304,7 +307,7 @@ void EMG_server::slotRecord()
     double aimElbowAngle;
     aimElbowAngle = imuRecordCout*1.2;
     qDebug()<<"fitTension is:"<<fitTension;
-    emgTension[5] = 300+1.5*fitTension*(aimElbowAngle - theta); // asist tension equal emg multiply deta theta
+    emgTension[5] = 300+4*fitTension*(aimElbowAngle - theta); // asist tension equal emg multiply deta theta
     qDebug()<<"emgTension is:"<<emgTension[5];
     if(emgTension[5] < 0)
     {

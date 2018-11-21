@@ -66,7 +66,7 @@ void LinkDisplay::buildLink()
 
     m_graph->axisY()->setRange(-600.0f,100.0f);
     m_graph->axisZ()->setRange(-200.0f,200.0f);
-    m_graph->axisX()->setRange(-200.0f,200.0f);
+    m_graph->axisX()->setRange(-200.0f,500.0f);
 
     /*
     QScatterDataArray *dataArray = new QScatterDataArray;

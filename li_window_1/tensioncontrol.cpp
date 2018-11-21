@@ -69,6 +69,11 @@ QVector<double> shouxRecord(length),shouyRecord(length),shouzRecord(length);
 unsigned int teachRecordCout = 0;
 unsigned int replayCount = 0;
 
+//---------------------------------------------------
+// Using the cubic polynomial to plan the angle
+//---------------------------------------------------
+double runTime = 5;
+
 TensionControl::TensionControl(QObject *parent):QThread(parent)
 {
     serial1 = new QSerialPort(this);
