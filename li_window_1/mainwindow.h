@@ -72,6 +72,7 @@ private slots:
     void Plot_Init();
     void slotStopplot();
     void slotStartplot();
+    void slotEmgThetaFit(double* fiteff, double* bufferX, double* bufferY, unsigned int dimension, int sizenum);
 
     void on_VRDisplay_clicked();
 

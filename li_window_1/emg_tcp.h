@@ -5,7 +5,8 @@
 #include <QTcpSocket>
 #include <QTimer>
 #include "getsensordata.h"
-#include "tensioncontrol.h"
+//#include "tensioncontrol.h"
+class TensionControl;
 
 
 #define PORT 8090
@@ -27,14 +28,21 @@ private slots:
     void socket_Disconnected();
     void Read_Data();
 
+
     void slotEmgStart();
     void slotEmgTrigger();
 
     void slotRecord();
+    void slotposBack(); // when we click "trigger" buttton we should let the elbow back to the start position
+
 
 private:
     QTimer *recordAngleTimer;
+    QTimer *posbackTimer; // when we click "trigger" buttton we should let the elbow back to the start position
     TensionControl *tenctrl;
+    void polyfit(int n,double x[],double y[],int poly_n,double p[]);
+    void gauss_solve(int n,double A[],double x[],double b[]);
+
     int PrintPara(double* Para, int SizeSrc);
     int ParalimitRow(double* Para, int SizeSrc, int Row);
     int Paralimit(double* Para, int SizeSrc);
@@ -45,8 +53,10 @@ private:
     int ParaDeal(double* Para, int SizeSrc);
     int GetParaBuffer(double* Para, const double* X, const double* Y, int Amount, int SizeSrc);
     int Cal(const double* BufferX, const double* BufferY, int Amount, int SizeSrc, double* ParaResK);
+
 signals:
     void sigEmgTensionctrl(unsigned int* data);
+    void sigEmgThetaFit(double* fiteff, double* bufferX, double* bufferY, unsigned int dimension, int sizenum);
 
 
 };

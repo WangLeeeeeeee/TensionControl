@@ -252,7 +252,7 @@ void GetSensordata::run()
         ret= udCounterCtrl->setEnabled(true);
         ret = udCounterCtrl1->setEnabled(true);
 
-        msleep(50);// every 10ms collect once
+        msleep(20);// every 10ms collect once
 
         int32 udCount[4],udCount1[4];
         ret = udCounterCtrl->Read(4,udCount);
@@ -264,7 +264,7 @@ void GetSensordata::run()
         Motor4Count[receive_count_mocount] = Motor4Count[receive_count_mocount-1] + udCount[3];
         Motor5Count[receive_count_mocount] = Motor5Count[receive_count_mocount-1] + udCount1[0];
         Motor6Count[receive_count_mocount] = Motor6Count[receive_count_mocount-1] + udCount1[1];
-        qDebug()<<"the motor6 count is:"<<Motor6Count[receive_count_mocount];
+        //qDebug()<<"the motor6 count is:"<<Motor6Count[receive_count_mocount];
 
         // Find the maxium of motor encorder count to set the range of the customplot
         max_motor_count[0] = (max_motor_count[0] > Motor1Count[receive_count_mocount]) ? max_motor_count[0] : Motor1Count[receive_count_mocount];

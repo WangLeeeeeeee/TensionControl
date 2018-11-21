@@ -37,7 +37,6 @@ MainWindow::MainWindow(QWidget *parent) :
     tensioncontrol = new TensionControl;
     emg_server = new EMG_server;
 
-
     // 3D surface
     //Q3DScatter *graph = new Q3DScatter();
     //QWidget *container = QWidget::createWindowContainer(graph);
@@ -50,7 +49,6 @@ MainWindow::MainWindow(QWidget *parent) :
         return -1;
     }
     */
-
 
     QSize screenSize = graph->screen()->size();
     container->setMinimumSize(QSize(screenSize.width()/4, screenSize.height()/4));
@@ -82,6 +80,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sigReplay()), tensioncontrol, SLOT(slotReplayTeach()));
     connect(this, SIGNAL(sigEmgStart()), emg_server, SLOT(slotEmgStart()));
     connect(this, SIGNAL(sigEmgTrigger()), emg_server, SLOT(slotEmgTrigger()));
+    connect(emg_server, SIGNAL(sigEmgThetaFit(double*,double*,double*,uint,int)), this, SLOT(slotEmgThetaFit(double*,double*,double*,uint,int)));
 
 }
 
@@ -148,6 +147,8 @@ void MainWindow::Plot_Init()
     ui->elbpresPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
                                      QCP::iSelectLegend | QCP::iSelectPlottables);
     ui->shopresPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
+                                     QCP::iSelectLegend | QCP::iSelectPlottables);
+    ui->emgFitPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
                                      QCP::iSelectLegend | QCP::iSelectPlottables);
 
     QFont fontTick("Times New Roman", 10, 75);
@@ -340,6 +341,22 @@ void MainWindow::Plot_Init()
     ui->shopresPlot->graph(1)->setPen(QPen(Qt::green));
     ui->shopresPlot->graph(1)->setName("shou_press_x");
 
+    ui->emgFitPlot->legend->setVisible(true);
+    ui->emgFitPlot->xAxis->setLabel("theta");
+    ui->emgFitPlot->yAxis->setLabel("emg");
+    ui->emgFitPlot->xAxis->setTickLabelFont(fontTick);
+    ui->emgFitPlot->yAxis->setTickLabelFont(fontTick);
+    ui->emgFitPlot->xAxis->setLabelFont(fontLabel);
+    ui->emgFitPlot->yAxis->setLabelFont(fontLabel);
+
+    ui->emgFitPlot->addGraph();
+    ui->emgFitPlot->graph(0)->setPen(QPen(Qt::red));
+    ui->emgFitPlot->graph(0)->setName("measurement");
+
+    ui->emgFitPlot->addGraph();
+    ui->emgFitPlot->graph(1)->setPen(QPen(Qt::green));
+    ui->emgFitPlot->graph(1)->setName("fit curve");
+
     plot_timer=new QTimer(this);
     plot_timerdly = TIME_PLOT_INTERVAL;
     connect(plot_timer,SIGNAL(timeout()),this,SLOT(plot()));
@@ -353,24 +370,26 @@ void MainWindow::startInit()
     setActionsEnable(false);
     ui->actionExit->setEnabled(true);
     ui->actionStopMeasure->setEnabled(false);
+    unsigned int initialValueMin = 200;
+    unsigned int initialValueMax = 4000;
 
-    ui->horizontalSlider->setMinimum(100);
-    ui->horizontalSlider->setMaximum(2000);
+    ui->horizontalSlider->setMinimum(initialValueMin);
+    ui->horizontalSlider->setMaximum(initialValueMax);
 
-    ui->horizontalSlider2->setMinimum(100);
-    ui->horizontalSlider2->setMaximum(2000);
+    ui->horizontalSlider2->setMinimum(initialValueMin);
+    ui->horizontalSlider2->setMaximum(initialValueMax);
 
-    ui->horizontalSlider3->setMinimum(100);
-    ui->horizontalSlider3->setMaximum(2000);
+    ui->horizontalSlider3->setMinimum(initialValueMin);
+    ui->horizontalSlider3->setMaximum(initialValueMax);
 
-    ui->horizontalSlider4->setMinimum(100);
-    ui->horizontalSlider4->setMaximum(2000);
+    ui->horizontalSlider4->setMinimum(initialValueMin);
+    ui->horizontalSlider4->setMaximum(initialValueMax);
 
-    ui->horizontalSlider5->setMinimum(100);
-    ui->horizontalSlider5->setMaximum(2000);
+    ui->horizontalSlider5->setMinimum(initialValueMin);
+    ui->horizontalSlider5->setMaximum(initialValueMax);
 
-    ui->horizontalSlider6->setMinimum(100);
-    ui->horizontalSlider6->setMaximum(2000);
+    ui->horizontalSlider6->setMinimum(initialValueMin);
+    ui->horizontalSlider6->setMaximum(initialValueMax);
 
     ui->horizontalSlider7->setMinimum(0);
     ui->horizontalSlider7->setMaximum(90);
@@ -427,12 +446,12 @@ void MainWindow::startInit()
 
     Plot_Init();
 
-    ui->sendMsgLineEdit->setText("100");
-    ui->sendMsgLineEdit2->setText("100");
-    ui->sendMsgLineEdit3->setText("100");
-    ui->sendMsgLineEdit4->setText("100");
-    ui->sendMsgLineEdit5->setText("100");
-    ui->sendMsgLineEdit6->setText("100");
+    ui->sendMsgLineEdit->setText(QString::number(long(initialValueMin)));
+    ui->sendMsgLineEdit2->setText(QString::number(long(initialValueMin)));
+    ui->sendMsgLineEdit3->setText(QString::number(long(initialValueMin)));
+    ui->sendMsgLineEdit4->setText(QString::number(long(initialValueMin)));
+    ui->sendMsgLineEdit5->setText(QString::number(long(initialValueMin)));
+    ui->sendMsgLineEdit6->setText(QString::number(long(initialValueMin)));
     ui->sendMsgLineEdit7->setText("0");
     ui->sendMsgLineEdit8->setText("0");
     ui->sendMsgLineEdit9->setText("0");
@@ -913,6 +932,9 @@ void MainWindow::on_actionClean_triggered()
     ui->Motor6Plot->clearGraphs();
     ui->Motor6Plot->replot();
 
+    ui->emgFitPlot->clearGraphs();
+    ui->emgFitPlot->replot();
+
     Plot_Init();
 
     receive_count_tension = 0;
@@ -1070,7 +1092,7 @@ void MainWindow::plot()
     ui->Motor6Plot->graph(0)->setPen(pen);
     ui->Motor6Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
     ui->Motor6Plot->yAxis->setRange(min_motor_count[5],max_motor_count[5]*1.1);
-    ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
+    ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);      
 }
 
 /*****************************/
@@ -1297,12 +1319,12 @@ void MainWindow::on_ReplayButton_clicked()
 
 void MainWindow::on_pushButton_Listen_clicked()
 {
-    if(ui->pushButton_Listen->text() == tr("Listen"))
+    if(ui->pushButton_Listen->text() == tr("LISTEN"))
     {
         qDebug() << "Try to Listen!";
         emg_server = new EMG_server();
         ui->pushButton_Trigger->setEnabled(true);
-        ui->pushButton_Listen->setText("Listening...");
+        ui->pushButton_Listen->setText("LISTENING...");
     }
     else
     {
@@ -1318,8 +1340,7 @@ void MainWindow::on_pushButton_Start_clicked()
 {
     qDebug() << "Start EMG!";
     //获取文本框内容并以ASCII码形式发送
-    emg_server->socket->write("start");
-    emg_server->socket->flush();
+    //emg_server->Send_Data("start");
     emit sigEmgStart();
 }
 
@@ -1327,7 +1348,66 @@ void MainWindow::on_pushButton_Trigger_clicked()
 {
     qDebug() << "Send Trigger!";
     //获取文本框内容并以ASCII码形式发送
-//    emg_server->socket->write("trigger");
-//    emg_server->socket->flush();
+    //emg_server->Send_Data("trigger");
+    //emg_server->socket->flush();
+    //ui->emgFitPlot->clearGraphs();
+    //ui->emgFitPlot->replot();
     emit sigEmgTrigger();
+}
+
+void MainWindow::slotEmgThetaFit(double *fiteff, double *bufferX, double *bufferY, unsigned int dimension, int sizenum)
+{
+    //plot_timer->stop();
+    //QVector<double> x_dot(200),y_dot(200);
+    QVector<double> x_dot;
+    QVector<double> y_dot;
+    for(int i=0; i<sizenum; i++)
+    {
+        x_dot.append(bufferX[i]);
+        y_dot.append(bufferY[i]);
+        qDebug()<<"x_dot"<<i<<"is:"<<x_dot[i];
+        qDebug()<<"y_dot"<<i<<"is:"<<y_dot[i];
+    }
+
+    QPen pen;
+    ui->emgFitPlot->graph(0)->setPen(QPen(Qt::blue));
+    ui->emgFitPlot->graph(0)->setLineStyle(QCPGraph::lsNone);
+    ui->emgFitPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
+    ui->emgFitPlot->graph(0)->setData(x_dot,y_dot);
+    ui->emgFitPlot->xAxis->setRange(-10,60);
+    ui->emgFitPlot->yAxis->setRange(-20,50);
+
+    double max,min;
+    max = bufferX[0];
+    min = bufferX[0];
+    for(int i=0; i<sizenum; i++)
+    {
+        if(min > bufferX[i])
+            min = bufferX[i];
+        if(max < bufferX[i])
+            max = bufferX[i];
+    }
+    qDebug()<<"min is:"<<min;
+    qDebug()<<"max is:"<<max;
+    QVector<double> x(1000),y(1000);
+    int k=0;
+    for(int j=10*min; j<10*max; j++)
+    {    
+        x[k] = 0.1*j;
+        for(unsigned int i=0; i<dimension+1; i++)
+        {
+            y[k] += fiteff[i]*qPow(x[k],dimension-i);
+        }
+        k++;
+        //qDebug()<<"y"<<k<<"is:"<<y[k];
+    }
+    //qDebug()<<"y size is:"<<y.size();
+
+    pen.setStyle(Qt::DashLine);
+    pen.setWidth(2);
+    pen.setColor(Qt::red);
+    ui->emgFitPlot->graph(1)->setPen(pen);
+    ui->emgFitPlot->graph(1)->setData(x,y);
+
+    ui->emgFitPlot->replot();
 }

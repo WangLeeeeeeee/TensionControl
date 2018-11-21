@@ -2,7 +2,7 @@
 #define TENSIONCONTROL_H
 
 #include "getsensordata.h"
-#include <QtSerialPort/QSerialPort>
+#include <QtSerialPort>
 #include <QThread>
 #include <QDebug>
 
@@ -15,6 +15,7 @@ typedef struct PID
     float LastError;    //
     float integral;     //
     float velocity;     //
+    int flag;          // 1 means it should be control by tension, -1 means do not controled by tension
 }TensionPID;
 
 typedef struct TorqueAnglePID
@@ -36,10 +37,11 @@ class TensionControl:public QThread
 public:
     explicit TensionControl(QObject *parent=0);
     ~TensionControl();
+    QSerialPort *serial1; // declare a serial com
 
 private:
     void run();
-    QSerialPort serial1; // declare a serial com
+    //QSerialPort *serial1; // declare a serial com
     QTimer *tensionCtrlTimer;
     QTimer *cycleJointTimer;
     QTimer *linearControlTimer;

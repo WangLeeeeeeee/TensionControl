@@ -1,7 +1,7 @@
 #include "tensioncontrol.h"
 
-float TensionSensor[6];
-TensionPID tension_pid[6] = {{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.6,0,0,0,0,0,0},{0.06,0,0,0,0,0,0}};
+double TensionSensor[6];
+TensionPID tension_pid[6] = {{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1}};
 TorAnPID torAn_pid[4] = {{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{1,0,0,0,0,0}};
 float Testq1[101] = {0,	0,	0.001,	0.041,	0.002,	0.196,	0.23,	0.256,	0.198,	0.159,	0.171,	0.15,	0.149,
                      0.148,	0.147,	0.147,	0.146,	0.146,	0.145,	0.145,	0.145,	0.144,	0.144,	0.144,	0.143,
@@ -41,10 +41,10 @@ float Testq4[101] = {0,	0,	-0.001,	-0.001,	0,	0.003,	0.004,	0.005,	0.013,	0.016,
 unsigned int linearCount = 0; // 读取角度位置数
 unsigned int lineCycleCount = 0; //直线来回走
 
-float MAXSPEED=1000;
-float MINSPEED=-1000;
+float MAXSPEED=4000;
+float MINSPEED=-4000;
 
-float AimTension[6] = {0,0,0,0,0,0};
+float AimTension[6] = {300,300,300,300,300,300};
 
 int testCount = 0;
 
@@ -71,6 +71,7 @@ unsigned int replayCount = 0;
 
 TensionControl::TensionControl(QObject *parent):QThread(parent)
 {
+    serial1 = new QSerialPort(this);
     cableLenInit[0] = 139.769;
     cableLenInit[1] = 234.459;
     cableLenInit[2] = 234.459;
@@ -92,8 +93,8 @@ void TensionControl::run()
 void TensionControl::TensionValueUpdate()
 {
     unsigned int mintension;
-    mintension = 20;
-    for(int i=0; i<10; i++)
+    mintension = 30;
+    for(int i=0; i<3; i++)
     {
         if(tension_y[receive_count_tension-i] > mintension)
             tensionLowFlag[0] = 1;
@@ -108,7 +109,8 @@ void TensionControl::TensionValueUpdate()
         if(tension_y6[receive_count_tension-i] > mintension)
             tensionLowFlag[5] = 1;
     }
-    for(int i=0; i<10; i++)
+    double count = 5.0;
+    for(int i=0; i<count; i++)
     {
         TensionSensor[0] += tension_y[receive_count_tension-i];
         TensionSensor[1] += tension_y2[receive_count_tension-i];
@@ -117,12 +119,12 @@ void TensionControl::TensionValueUpdate()
         TensionSensor[4] += tension_y5[receive_count_tension-i];
         TensionSensor[5] += tension_y6[receive_count_tension-i];
     }
-    TensionSensor[0] /= 10;
-    TensionSensor[1] /= 10;
-    TensionSensor[2] /= 10;
-    TensionSensor[3] /= 10;
-    TensionSensor[4] /= 10;
-    TensionSensor[5] /= 10;
+    TensionSensor[0] /= count;
+    TensionSensor[1] /= count;
+    TensionSensor[2] /= count;
+    TensionSensor[3] /= count;
+    TensionSensor[4] /= count;
+    TensionSensor[5] /= count;
 }
 
 
@@ -134,33 +136,59 @@ void TensionControl::TensionSet()
 
     for(int i=0; i<6; i++)
     {
-        tension_pid[i].Error = AimTension[i] - TensionSensor[i];
-        if((tension_pid[i].Error > 50) || (tension_pid[i].Error < -50))
+        if(TensionSensor[i]>3000)
         {
-            tension_pid[i].integral += tension_pid[i].Error;
-            tension_pid[i].velocity = tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
-            tension_pid[i].LastError = tension_pid[i].Error;
-
-            // ten array oftension is below one set value means it is totally loose, so speed up to make cable tense.
-            if(tensionLowFlag[i] == 0)
-                tension_pid[i].velocity = 600;
+            // it exceed the max tension motor must be stop
+            for(int j=0; j<6; j++)
+            {
+                SendData = QString::number(long(j)) + "V0" + "\r";
+                serial1->write(SendData.toLatin1());
+            }
+            qDebug()<<"the tension is out of the max value, too dangerous";
+            tensionCtrlTimer->stop();
         }
         else
         {
-            tension_pid[i].velocity = 0;
+            // only the flag equal 1 means it should be controled by the tension
+            if(tension_pid[i].flag == 1)
+            {
+                tension_pid[i].Error = AimTension[i] - TensionSensor[i];
+                if(tension_pid[i].Error > 50)
+                {
+                    tension_pid[i].integral += tension_pid[i].Error;
+                    tension_pid[i].velocity = tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
+                    tension_pid[i].LastError = tension_pid[i].Error;
+
+                    // ten array oftension is below one set value means it is totally loose, so speed up to make cable tense.
+                    if(tensionLowFlag[i] == 0)
+                    {
+                        if((i==4) || (i==5))
+                            tension_pid[i].velocity = 900;
+                        else
+                            tension_pid[i].velocity = 500;
+                    }
+                }
+                else if(tension_pid[i].Error < -50)
+                {
+                    tension_pid[i].integral += tension_pid[i].Error;
+                    tension_pid[i].velocity = tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
+                    tension_pid[i].LastError = tension_pid[i].Error;
+                }
+                else
+                {
+                    tension_pid[i].velocity = 0;
+                }
+
+                if(tension_pid[i].velocity > MAXSPEED)
+                    tension_pid[i].velocity = MAXSPEED;
+                if(tension_pid[i].velocity < MINSPEED)
+                    tension_pid[i].velocity = MINSPEED;
+
+                SendData = QString::number(long(i)) + "V" + QString::number(long(tension_pid[i].velocity)) + "\r";
+                serial1->write(SendData.toLatin1());
+            }
         }
-
-        if(tension_pid[i].velocity > MAXSPEED)
-            tension_pid[i].velocity = MAXSPEED;
-        if(tension_pid[i].velocity < MINSPEED)
-            tension_pid[i].velocity = MINSPEED;
-
-        //SendData = QString::number(long(i)) + "SP" + QString::number(long(1000)) + "\r";
-        //serial1.write(SendData.toLatin1());
-
-        SendData = QString::number(long(i)) + "V" + QString::number(long(tension_pid[i].velocity)) + "\r";
-        qDebug()<<SendData<<endl;
-        serial1.write(SendData.toLatin1());
+        //qDebug()<<SendData;
     }
 
     for(int i=0; i<6; i++)
@@ -170,17 +198,17 @@ void TensionControl::TensionSet()
 // Com open configure which connect with the 'open com' button
 void TensionControl::slotSerialInit()
 {
-    serial1.setPortName("COM13");
-    serial1.setBaudRate(QSerialPort::Baud9600);
-    serial1.setDataBits(QSerialPort::Data8);
-    serial1.setStopBits(QSerialPort::OneStop);
-    serial1.setFlowControl(QSerialPort::NoFlowControl);
-    serial1.setParity(QSerialPort::NoParity);
-    serial1.close();
+    serial1->setPortName("COM14");
+    serial1->setBaudRate(QSerialPort::Baud9600);
+    serial1->setDataBits(QSerialPort::Data8);
+    serial1->setStopBits(QSerialPort::OneStop);
+    serial1->setFlowControl(QSerialPort::NoFlowControl);
+    serial1->setParity(QSerialPort::NoParity);
+    serial1->close();
 
-    if(serial1.open(QIODevice::ReadWrite))
+    if(serial1->open(QIODevice::ReadWrite))
     {
-        QObject::connect(&serial1,SIGNAL(readyRead()),this,SLOT(slotReadMyCom()));
+        QObject::connect(serial1,SIGNAL(readyRead()),this,SLOT(slotReadMyCom()));
         QMessageBox::information(0,tr("open sucessful"),tr("sucessful open com"),QMessageBox::Ok);
     }
     else
@@ -216,7 +244,7 @@ void TensionControl::slotSerialClose()
     linearControlTimer->stop();
     teachTimer->stop();
     replayTimer->stop();
-    serial1.close();
+    serial1->close();
 }
 
 void TensionControl::slotReadMyCom()
@@ -235,6 +263,14 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
     {
         for(int i=0; i<6; i++)
             AimTension[i] = Data[i];
+        for(int i=0; i<6; i++)
+        {
+            SendData = QString::number(long(i)) + "AC" + QString::number(long(111*3)) + "\r";
+            serial1->write(SendData.toLatin1());
+
+            SendData = QString::number(long(i)) + "SP" + QString::number(long(MAXSPEED)) + "\r";
+            serial1->write(SendData.toLatin1());
+        }
         tensionCtrlTimer->start(100);
         cycleJointTimer->stop();
         linearControlTimer->stop();
@@ -265,6 +301,18 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
             //cableLenInit[i] = cableLen[i];
             aimCircle[i] = -1*cableLenDeta[i]/(2*pi*20);
             qDebug()<<"aimCircle"<<i<<"is: "<<aimCircle[i];
+
+            /*
+            // test a stragety that define the positive and negative cabel
+            // for positive cable we control the position that is aimcircle
+            // for negative cable we control the tension make it comply the motion
+            for(int i=0; i<6; i++)
+            {
+                if(aimCircle[i]>0.001)
+                    tension_pid[i].flag = -1;
+            }
+            */
+
         }
     }
     // PTP control mode
@@ -305,11 +353,11 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
         for(int i=0; i<6; i++)
         {
             SendData = QString::number(long(i)) + "SP" + QString::number(long(3000)) + "\r";
-            serial1.write(SendData.toLatin1());
+            serial1->write(SendData.toLatin1());
             SendData = QString::number(long(i)) + "AC" + QString::number(long(222)) + "\r";
-            serial1.write(SendData.toLatin1());
+            serial1->write(SendData.toLatin1());
             SendData = QString::number(long(i)) + "DEC" + QString::number(long(222)) + "\r";
-            serial1.write(SendData.toLatin1());
+            serial1->write(SendData.toLatin1());
         }
         linearControlTimer->start(45);
         tensionCtrlTimer->stop();
@@ -439,40 +487,50 @@ void TensionControl::SendAimCircle(float *aimCircle, int setVel, int setAcc)
     int vel, acc;
     float tA, tS, tAll, tMax;
     tMax = 0;
+    aimCircle[5] = aimCircle[5];
     for(int i=0; i<6; i++)
     {
-        vel = setVel;
-        acc = setAcc;
-        tA = float(vel)/(60*acc);
-        if(acc == 0)
-        {
-            QMessageBox::critical(0,tr("Wrong"),tr("are you stupid enough to set the acc zero"),QMessageBox::Ok);
-            return;
-        }
-        if((acc*tA*tA) >= qAbs(aimCircle[i]))
-        {
-            tA = qSqrt(qAbs(aimCircle[i])/acc);
-            tS = 0;
-            vel = tA * acc;
-        }
-        else
-        {
+        // set the decellerate quicker than the accelerate, means drag slow, loose quick
+//            if(aimCircle[i]<0)
+//                vel = 2.1*setVel;
+//            else
+            vel = setVel;
+            acc = setAcc;
             tA = float(vel)/(60*acc);
-            tS = (qAbs(aimCircle[i])-acc*tA*tA)*60/vel;
-        }
-        tAll = 2*tA + tS;
-        if(tAll > tMax) tMax = tAll;
+            if(acc == 0)
+            {
+                QMessageBox::critical(0,tr("Wrong"),tr("are you stupid enough to set the acc zero"),QMessageBox::Ok);
+                return;
+            }
+            if((acc*tA*tA) >= qAbs(aimCircle[i]))
+            {
+                tA = qSqrt(qAbs(aimCircle[i])/acc);
+                tS = 0;
+                vel = tA * acc;
+            }
+            else
+            {
+                tA = float(vel)/(60*acc);
+                tS = (qAbs(aimCircle[i])-acc*tA*tA)*60/vel;
+            }
+            tAll = 2*tA + tS;
+            if(tAll > tMax) tMax = tAll;
 
-        SendData = QString::number(long(i)) + "SP" + QString::number(long(111*vel)) + "\r";
-        serial1.write(SendData.toLatin1());
-        SendData = QString::number(long(i)) + "AC" + QString::number(long(111*acc)) + "\r";
-        serial1.write(SendData.toLatin1());
-        SendData = QString::number(long(i)) + "DEC" + QString::number(long(111*acc)) + "\r";
-        serial1.write(SendData.toLatin1());
-        SendData = QString::number(long(i)) + "LR" + QString::number(long(aimCircle[i]*111*512*4)) + "\r";
-        serial1.write(SendData.toLatin1());
-        SendData = "M\r";
-        serial1.write(SendData.toLatin1());
+            SendData = QString::number(long(i)) + "SP" + QString::number(long(111*vel)) + "\r";
+            serial1->write(SendData.toLatin1());
+             qDebug()<<SendData<<endl;
+            SendData = QString::number(long(i)) + "AC" + QString::number(long(111*acc)) + "\r";
+            serial1->write(SendData.toLatin1());
+             qDebug()<<SendData<<endl;
+            SendData = QString::number(long(i)) + "DEC" + QString::number(long(111*acc)) + "\r";
+            serial1->write(SendData.toLatin1());
+             qDebug()<<SendData<<endl;
+            SendData = QString::number(long(i)) + "LR" + QString::number(long(aimCircle[i]*111*512*4)) + "\r";
+            serial1->write(SendData.toLatin1());
+             qDebug()<<SendData<<endl;
+            SendData = "M\r";
+            serial1->write(SendData.toLatin1());
+             qDebug()<<SendData<<endl;
     }
 
 }
@@ -491,9 +549,11 @@ void TensionControl::slotCirculJoint()
     else
     {
         cycleJointTimer->stop();
+        tensionCtrlTimer->stop();
         for(int i=0; i<6; i++)
         {
             aimCircle[i] = 0;
+            tension_pid[i].flag = 1;
         }
         cycleCount = 0;
     }
@@ -552,7 +612,7 @@ void TensionControl::slotLinearControl()
     {
         //qDebug()<<"the speed is:"<<vel[i]<<"n/min";
         SendData = QString::number(long(i)) + "V" + QString::number(long(vel[i])) + "\r";
-        serial1.write(SendData.toLatin1());
+        serial1->write(SendData.toLatin1());
         qDebug()<<SendData<<endl;
     }
     //qDebug()<<"the lineCycleCount is"<<lineCycleCount;
@@ -609,7 +669,7 @@ void TensionControl::replayTeach()
 {
     QString SendData;
     float vel[6];
-    if(replayCount<teachRecordCout)
+    if(replayCount<teachRecordCout-1)
     {
         vel[0] = (MoRecord1[replayCount+1]-MoRecord1[replayCount])*10*60/512;
         vel[1] = (MoRecord2[replayCount+1]-MoRecord2[replayCount])*10*60/512;
@@ -621,12 +681,16 @@ void TensionControl::replayTeach()
         for(int i=0; i<6; i++)
         {
             SendData = QString::number(long(i)) + "V" + QString::number(long(vel[i])) + "\r";
-            //serial1.write(SendData.toLatin1());
+            //serial1->write(SendData.toLatin1());
             qDebug()<<SendData<<endl;
         }
         replayCount++;
     }
-    emit sigStartplot();
+    else
+    {
+        emit sigStartplot();
+    }
+    //emit sigStartplot();
 }
 
 void TensionControl::torqueControl()
@@ -655,14 +719,23 @@ void TensionControl::torqueControl()
 
 void TensionControl::slotEmgTenctrl(unsigned int *data)
 {
-    for(int i=0; i<6; i++)
-        AimTension[i] = data[i];
-    tensionCtrlTimer->start(100);
-    cycleJointTimer->stop();
-    linearControlTimer->stop();
-    replayTimer->stop();
-    //teachTimer->stop();
-    emit sigStopplot();
+    if(serial1->isOpen())
+    {
+        for(int i=0; i<6; i++)
+            AimTension[i] = data[i];
+        TensionSet();
+    }
+    else
+    {
+        slotSerialInit();
+        if(serial1->open(QIODevice::ReadWrite))
+            serial1->write("ok");
+        else
+        {
+            //error
+            qDebug()<<serial1->errorString();
+        }
+    }
 }
 
 

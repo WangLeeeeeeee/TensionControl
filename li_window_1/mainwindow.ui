@@ -776,6 +776,16 @@
            <string>TRIGGER</string>
           </property>
          </widget>
+         <widget class="QCustomPlot" name="emgFitPlot" native="true">
+          <property name="geometry">
+           <rect>
+            <x>160</x>
+            <y>40</y>
+            <width>461</width>
+            <height>301</height>
+           </rect>
+          </property>
+         </widget>
         </widget>
        </widget>
        <widget class="QTabWidget" name="tabWidget_3">
