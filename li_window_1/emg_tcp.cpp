@@ -19,7 +19,7 @@ unsigned int emgTension[6] = {0,0,0,0,0,0};
 unsigned int emgdataLength=50;
 unsigned int polyRank=6;
 bool receiveFlag=0;
-#define Dimension 16
+#define Dimension 6
 double fitEfficient[20];
 double elbowLastMax = 0;
 double elbowLastMin = 0;
@@ -126,6 +126,17 @@ void EMG_server::Read_Data()
     {
         qDebug() <<  EMG_array;
     }
+
+    recordAngleTimer->stop();
+    posbackTimer->start(100);
+    // find the max angle and the min angle of last record
+    for(unsigned int i=0; i<imuRecordCout; i++)
+    {
+        if(elbYRecord_emg[i]>elbowLastMax)
+            elbowLastMax = elbYRecord_emg[i];
+        if(elbYRecord_emg[i]<elbowLastMin)
+            elbowLastMin = elbYRecord_emg[i];
+    }
     receiveFlag = 1;
 
     qDebug()<<"starting the fit";
@@ -190,6 +201,7 @@ void EMG_server::slotEmgStart()
 
 void EMG_server::slotEmgTrigger()
 {
+    /*
     triggerTimes++;
     recordAngleTimer->stop();
     posbackTimer->start(100);
@@ -234,6 +246,7 @@ void EMG_server::slotEmgTrigger()
             a++;
         }
         */
+    /*
         for(unsigned int i=0; i<imuRecordCout; i++)
         {
             BufferX[i] = elbYRecord_emg[i]; // just for test
@@ -266,6 +279,7 @@ void EMG_server::slotEmgTrigger()
         unsigned int dimension = Dimension;
         emit sigEmgThetaFit(fitEfficient, BufferX, BufferY, dimension, sizenum);
     }
+*/
 }
 
 void EMG_server::slotRecord()
@@ -307,7 +321,7 @@ void EMG_server::slotRecord()
     double aimElbowAngle;
     aimElbowAngle = imuRecordCout*1.2;
     qDebug()<<"fitTension is:"<<fitTension;
-    emgTension[5] = 300+4*fitTension*(aimElbowAngle - theta); // asist tension equal emg multiply deta theta
+    emgTension[5] = 300+10*fitTension*(aimElbowAngle - theta); // asist tension equal emg multiply deta theta
     qDebug()<<"emgTension is:"<<emgTension[5];
     if(emgTension[5] < 0)
     {

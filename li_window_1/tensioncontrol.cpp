@@ -139,7 +139,7 @@ void TensionControl::TensionSet()
 
     QString SendData;
 
-    for(int i=0; i<6; i++)
+    for(int i=4; i<6; i++) // remember just for emg test!!!!
     {
         if(TensionSensor[i]>3000)
         {
