@@ -1348,7 +1348,7 @@ void MainWindow::on_pushButton_Trigger_clicked()
 {
     qDebug() << "Send Trigger!";
     //获取文本框内容并以ASCII码形式发送
-    emg_server->Send_Data("trigger");
+    emg_server->Send_Data("end");
     //emg_server->socket->flush();
     //ui->emgFitPlot->clearGraphs();
     //ui->emgFitPlot->replot();

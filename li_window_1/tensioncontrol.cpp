@@ -141,7 +141,7 @@ void TensionControl::TensionSet()
 
     for(int i=4; i<6; i++) // remember just for emg test!!!!
     {
-        if(TensionSensor[i]>3000)
+        if(TensionSensor[i]>7000)
         {
             // it exceed the max tension motor must be stop
             for(int j=0; j<6; j++)
@@ -168,7 +168,7 @@ void TensionControl::TensionSet()
                     if(tensionLowFlag[i] == 0)
                     {
                         if((i==4) || (i==5))
-                            tension_pid[i].velocity = 900;
+                            tension_pid[i].velocity = 1200;
                         else
                             tension_pid[i].velocity = 500;
                     }

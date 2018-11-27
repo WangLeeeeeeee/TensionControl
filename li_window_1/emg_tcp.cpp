@@ -21,6 +21,7 @@ unsigned int polyRank=6;
 bool receiveFlag=0;
 #define Dimension 6
 double fitEfficient[20];
+double prefitEfficient[20];
 double elbowLastMax = 0;
 double elbowLastMin = 0;
 
@@ -152,13 +153,26 @@ void EMG_server::Read_Data()
     {
         emgRecordCout = EMG_array.size();
         qDebug()<<"emgRecordCout is"<<emgRecordCout;
-        // 从后向前截取一段肌电信号和角度记录值
-        for(unsigned int i=0; i<imuRecordCout; i++)
+        if(imuRecordCout < emgRecordCout)
         {
-            BufferX[i] = elbYRecord_emg[i];
-            BufferY[i] = EMG_array[emgRecordCout-imuRecordCout+i];
+            // 从后向前截取一段肌电信号和角度记录值
+            for(unsigned int i=0; i<imuRecordCout; i++)
+            {
+                BufferX[i] = elbYRecord_emg[i];
+                BufferY[i] = EMG_array[emgRecordCout-imuRecordCout+i];
+            }
+            sizenum = imuRecordCout; // data count
         }
-        sizenum = imuRecordCout; // data count
+        else
+        {
+            // 从后向前截取一段角度信号和角度记录值
+            for(unsigned int i=0; i<emgRecordCout; i++)
+            {
+                BufferX[i] = elbYRecord_emg[imuRecordCout-emgRecordCout+i];
+                BufferY[i] = EMG_array[i];
+            }
+            sizenum = emgRecordCout; // data count
+        }
         Cal((const double*)BufferX, (const double*)BufferY, sizenum, sizeof(P) / sizeof(double), (double*)P);
         //polyfit(sizenum, BufferX, BufferY, dimension, P);
         for (int i=0;i<Dimension+1;i++)				//这里是升序排列，Matlab是降序排列
@@ -166,9 +180,14 @@ void EMG_server::Read_Data()
             fitEfficient[i] = P[i];
             qDebug()<<"P"<<i<<"is"<<P[i];
         }
+        for(int i=0; i<Dimension+1; i++)
+        {
+            fitEfficient[i] +=  prefitEfficient[i];
+            prefitEfficient[i] = fitEfficient[i];
+        }
         // test the fit data
         double *sum;
-        sum = (double *)calloc(imuRecordCout , sizeof(double));
+        sum = (double *)calloc(sizenum , sizeof(double));
         for(int j=0; j<sizenum; j++)
         {
             for(int i=0; i<Dimension+1; i++)
@@ -265,6 +284,11 @@ void EMG_server::slotEmgTrigger()
 
         // test the fit function
         //QVector<double> sum;
+        for(int i=0; i<Dimension+1; i++)
+        {
+            fitEfficient[i] +=  prefitEfficient[i];
+            prefitEfficient[i] = fitEfficient[i];
+        }
         double *sum;
         sum = (double *)calloc(imuRecordCout , sizeof(double));
         for(int j=0; j<sizenum; j++)
@@ -319,19 +343,23 @@ void EMG_server::slotRecord()
     for(int i=0; i<5; i++)
         emgTension[i] = 300;
     double aimElbowAngle;
-    aimElbowAngle = imuRecordCout*1.2;
+    aimElbowAngle = imuRecordCout*3;
     qDebug()<<"fitTension is:"<<fitTension;
-    emgTension[5] = 300+10*fitTension*(aimElbowAngle - theta); // asist tension equal emg multiply deta theta
+    double detaTheta = 0;
+    detaTheta = aimElbowAngle - theta;
+    if(detaTheta < 0)
+        detaTheta = -detaTheta;
+    emgTension[5] = 300+10*fitTension*(detaTheta); // asist tension equal emg multiply deta theta
     qDebug()<<"emgTension is:"<<emgTension[5];
     if(emgTension[5] < 0)
     {
         qDebug()<<"the asist tension is less 0";
         emgTension[5] = 0;
     }
-    if(emgTension[5] > 3000)
+    if(emgTension[5] > 4500)
     {
         qDebug()<<"the asist tension is exceed 3000";
-        emgTension[5] = 3000;
+        emgTension[5] = 4500;
     }
     imuRecordCout++;
 
