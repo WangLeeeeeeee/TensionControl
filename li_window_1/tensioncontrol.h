@@ -8,13 +8,13 @@
 
 typedef struct PID
 {
-    float KP;           // proportion parameter
-    float KI;           // integral parameter
-    float KD;           // differential parameter
-    float Error;        //
-    float LastError;    //
+    double KP;           // proportion parameter
+    double KI;           // integral parameter
+    double KD;           // differential parameter
+    double Error;        //
+    double LastError;    //
     float integral;     //
-    float velocity;     //
+    double velocity;     //
     int flag;          // 1 means it should be control by tension, -1 means do not controled by tension
 }TensionPID;
 
@@ -49,8 +49,8 @@ private:
     QTimer *replayTimer;
     QTimer *torqueTimer;
     void TensionValueUpdate();
-    void CalculateCabelLen(uint i, float* cableLen, float* tempAngle);
-    void SendAimCircle(float* aimCircle, int setVel, int setAcc);
+    void CalculateCabelLen(uint i, double* cableLen, double* tempAngle);
+    void SendAimCircle(double* aimCircle, int setVel, int setAcc);
     QMutex m_mutex;
     bool m_quit = false;
 

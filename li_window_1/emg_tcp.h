@@ -11,6 +11,9 @@ class TensionControl;
 
 #define PORT 8090
 
+extern QVector<double> EmgDataSave,AngleElbow_emg;
+extern unsigned int emgsaveLen;
+
 class EMG_server:public QObject
 {
     Q_OBJECT

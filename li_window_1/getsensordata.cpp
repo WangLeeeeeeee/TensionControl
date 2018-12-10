@@ -79,8 +79,8 @@ GetSensordata::GetSensordata(QObject *parent):QThread(parent)
     //udCounterCtrl = UdCounterCtrl::Create();
     //WaveformAiCtrl * wfAiCtrl = WaveformAiCtrl::Create();
     getsensorTimer = new QTimer(this);
-    //QObject::connect(getsensorTimer, SIGNAL(timeout()), this, SLOT(slotChangeSenFlag()));
-    //getsensorTimer->start(50);
+    QObject::connect(getsensorTimer, SIGNAL(timeout()), this, SLOT(slotSendDataToPlot()));
+    getsensorTimer->start(100);
 
 }
 
@@ -415,12 +415,32 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
 //    qDebug()<<"tensiony6:"<<tension_y6[receive_count_tension];
 
     // Find the maxium of tension to set the range of the customplot
-    max_tension[0] = (max_tension[0] > tension_y[receive_count_tension])  ? max_tension[0] : tension_y[receive_count_tension];
-    max_tension[1] = (max_tension[1] > tension_y2[receive_count_tension]) ? max_tension[1] : tension_y2[receive_count_tension];
-    max_tension[2] = (max_tension[2] > tension_y3[receive_count_tension]) ? max_tension[2] : tension_y3[receive_count_tension];
-    max_tension[3] = (max_tension[3] > tension_y4[receive_count_tension]) ? max_tension[3] : tension_y4[receive_count_tension];
-    max_tension[4] = (max_tension[4] > tension_y5[receive_count_tension]) ? max_tension[4] : tension_y5[receive_count_tension];
-    max_tension[5] = (max_tension[5] > tension_y6[receive_count_tension]) ? max_tension[5] : tension_y6[receive_count_tension];
+    if(receive_count_tension<50)
+    {
+        max_tension[0] = (max_tension[0] > tension_y[receive_count_tension])  ? max_tension[0] : tension_y[receive_count_tension];
+        max_tension[1] = (max_tension[1] > tension_y2[receive_count_tension]) ? max_tension[1] : tension_y2[receive_count_tension];
+        max_tension[2] = (max_tension[2] > tension_y3[receive_count_tension]) ? max_tension[2] : tension_y3[receive_count_tension];
+        max_tension[3] = (max_tension[3] > tension_y4[receive_count_tension]) ? max_tension[3] : tension_y4[receive_count_tension];
+        max_tension[4] = (max_tension[4] > tension_y5[receive_count_tension]) ? max_tension[4] : tension_y5[receive_count_tension];
+        max_tension[5] = (max_tension[5] > tension_y6[receive_count_tension]) ? max_tension[5] : tension_y6[receive_count_tension];
+    }
+    else
+    {
+        for(int i=0; i<6; i++)
+        {
+            max_tension[i] = 0;
+        }
+        // find the latest fifty tension value max
+        for(int i=receive_count_tension-50; i<receive_count_tension; i++)
+        {
+            max_tension[0] = (max_tension[0] > tension_y[i])  ? max_tension[0] : tension_y[i];
+            max_tension[1] = (max_tension[1] > tension_y2[i]) ? max_tension[1] : tension_y2[i];
+            max_tension[2] = (max_tension[2] > tension_y3[i]) ? max_tension[2] : tension_y3[i];
+            max_tension[3] = (max_tension[3] > tension_y4[i]) ? max_tension[3] : tension_y4[i];
+            max_tension[4] = (max_tension[4] > tension_y5[i]) ? max_tension[4] : tension_y5[i];
+            max_tension[5] = (max_tension[5] > tension_y6[i]) ? max_tension[5] : tension_y6[i];
+        }
+    }
 
 //    for(int i=0; i<6; i++)
 //    {
@@ -430,14 +450,18 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
 
 }
 
-void GetSensordata::slotChangeSenFlag()
-{
-}
-
 void GetSensordata::delay(int mseconds)
 {
     QTime dieTime=QTime::currentTime().addMSecs(mseconds);
     while( QTime::currentTime() < dieTime )
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
+
+void GetSensordata::slotSendDataToPlot()
+{
+    if((receive_count_tension!=0)&&(receive_count_angle!=0)&&(receive_count_mocount!=0))
+    {
+        emit sigPlotTrigger();
+    }
 }
 

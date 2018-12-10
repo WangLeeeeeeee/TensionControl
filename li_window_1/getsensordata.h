@@ -62,7 +62,10 @@ public:
     void CheckError(ErrorCode errorCode);
 
 private slots:
-    void slotChangeSenFlag();
+    void slotSendDataToPlot();
+
+signals:
+    void sigPlotTrigger();
 
 };
 

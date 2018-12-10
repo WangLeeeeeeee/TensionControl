@@ -1,8 +1,25 @@
 #include "emg_tcp.h"
 #include "tensioncontrol.h"
 
-// wrong !!!!
 unsigned int len = 131072;
+
+// 运动轨迹改成三次,拟合曲线外平滑不跳动
+double theta0_aim = 0;
+double thetaf_aim = 60.0;
+double tf_aim = 100.0; // aim time is 5 second(50 100 millisecond)
+
+// 保存拟合曲线数据
+QVector<double> EmgDataSave(len),AngleElbow_emg(len);
+unsigned int emgsaveLen=0;
+
+// 自动触发end
+
+// 给定阻力(三次曲线)
+double resisforce0 = 0;
+double resisforcef = 3000;
+double resist_tf = 20.0;
+
+
 
 double elbXRecord_emg[131072];
 double elbYRecord_emg[131072];
@@ -128,8 +145,8 @@ void EMG_server::Read_Data()
         qDebug() <<  EMG_array;
     }
 
-    recordAngleTimer->stop();
-    posbackTimer->start(100);
+    //recordAngleTimer->stop();
+    //posbackTimer->start(100);
     // find the max angle and the min angle of last record
     for(unsigned int i=0; i<imuRecordCout; i++)
     {
@@ -159,8 +176,18 @@ void EMG_server::Read_Data()
             for(unsigned int i=0; i<imuRecordCout; i++)
             {
                 BufferX[i] = elbYRecord_emg[i];
-                BufferY[i] = EMG_array[emgRecordCout-imuRecordCout+i];
+                BufferY[i] = 100*EMG_array[emgRecordCout-imuRecordCout+i];
+
+                // save the emg and the angle data
+                EmgDataSave[emgsaveLen] = BufferY[i];
+                AngleElbow_emg[emgsaveLen] = BufferX[i];
+                emgsaveLen = emgsaveLen + 1;
             }
+            // using 1000 as a sepreate flag
+            EmgDataSave[emgsaveLen] = 1000;
+            AngleElbow_emg[emgsaveLen] = 1000;
+            emgsaveLen = emgsaveLen + 1;
+
             sizenum = imuRecordCout; // data count
         }
         else
@@ -169,12 +196,21 @@ void EMG_server::Read_Data()
             for(unsigned int i=0; i<emgRecordCout; i++)
             {
                 BufferX[i] = elbYRecord_emg[imuRecordCout-emgRecordCout+i];
-                BufferY[i] = EMG_array[i];
+                BufferY[i] = 100*EMG_array[i];
+
+                // save the emg and the angle data
+                EmgDataSave[emgsaveLen] = BufferY[i];
+                AngleElbow_emg[emgsaveLen] = BufferX[i];
+                emgsaveLen = emgsaveLen + 1;
             }
+            // using 1000 as a sepreate flag
+            EmgDataSave[emgsaveLen] = 1000;
+            AngleElbow_emg[emgsaveLen] = 1000;
+            emgsaveLen = emgsaveLen + 1;
+
             sizenum = emgRecordCout; // data count
         }
         Cal((const double*)BufferX, (const double*)BufferY, sizenum, sizeof(P) / sizeof(double), (double*)P);
-        //polyfit(sizenum, BufferX, BufferY, dimension, P);
         for (int i=0;i<Dimension+1;i++)				//这里是升序排列，Matlab是降序排列
         {
             fitEfficient[i] = P[i];
@@ -265,13 +301,24 @@ void EMG_server::slotEmgTrigger()
             a++;
         }
         */
+
     /*
         for(unsigned int i=0; i<imuRecordCout; i++)
         {
             BufferX[i] = elbYRecord_emg[i]; // just for test
             //BufferX[i] = testImu[i];
             BufferY[i] = triggerTimes*EMG_array[emgRecordCout-imuRecordCout+i];
+
+            // save the emg and the angle data
+            EmgDataSave[emgsaveLen] = BufferY[i];
+            AngleElbow_emg[emgsaveLen] = BufferX[i];
+            emgsaveLen = emgsaveLen + 1;
         }
+        // using 1000 as a sepreate flag
+        EmgDataSave[emgsaveLen] = 1000;
+        AngleElbow_emg[emgsaveLen] = 1000;
+        emgsaveLen = emgsaveLen + 1;
+
         //sizenum = sizeof(BufferX)/ sizeof(BufferX[0]);	//	拟合数据的维数
         sizenum = imuRecordCout;
          qDebug()<<"sizenum is"<<sizenum;
@@ -303,7 +350,7 @@ void EMG_server::slotEmgTrigger()
         unsigned int dimension = Dimension;
         emit sigEmgThetaFit(fitEfficient, BufferX, BufferY, dimension, sizenum);
     }
-*/
+    */
 }
 
 void EMG_server::slotRecord()
@@ -328,38 +375,92 @@ void EMG_server::slotRecord()
         theta = 1;
     qDebug()<<"theta is"<<theta;
 
+    // judge the angle if exceed the aim angle auto trigger
+    if(theta > 59)
+    {
+        slotEmgTrigger();
+        Send_Data("end");
+        recordAngleTimer->stop();
+        posbackTimer->start(100);
+    }
+
     // when the theta is out of the range of last record, the fit result maybe strange, so set it to zero
-    if((theta>elbowLastMax) || (theta<elbowLastMin))
-        fitTension = 0;
+    // the strategy mentioned up is not very well, so changed it to below(let the result be the same as the margin)
+    if(theta>elbowLastMax)
+        theta = elbowLastMax;
+    if(theta<elbowLastMin)
+        theta = elbowLastMin;
+    for(int i=0; i<Dimension+1; i++)
+    {
+        // use the first and second data test
+        fitTension += fitEfficient[i]*qPow(theta,Dimension-i);
+        qDebug()<<"the fitEfficiet"<<i<<"is:"<<fitEfficient[i];
+    }
+    for(int i=0; i<4; i++)
+        emgTension[i] = 300;
+    if((theta>30)&&(theta<60))
+    {
+        emgTension[4] = 600+(theta-30)*150;
+    }
+    else
+        emgTension[4] = 300;
+    qDebug()<<"emgTension 4 is:"<<emgTension[4];
+    /*
+    // give a resist force
+    double aimResistForce;
+    double a0_re,a1_re,a2_re,a3_re;
+    unsigned int t_re;
+    a0_re = resisforce0;
+    a1_re = 0.0;
+    a2_re = 3*(resisforcef - resisforce0)/qPow(resist_tf,2);
+    a3_re = -2*(resisforcef - resisforce0)/qPow(resist_tf,3);
+    t_re = imuRecordCout;
+    if(t_re < resist_tf)
+    {
+       aimResistForce = a0_re + a1_re*t_re + a2_re*qPow(t_re,2) + a3_re*qPow(t_re,3);
+    }
     else
     {
-        for(int i=0; i<Dimension+1; i++)
-        {
-            // use the first and second data test
-            fitTension += fitEfficient[i]*qPow(theta,Dimension-i);
-            qDebug()<<"the fitEfficiet"<<i<<"is:"<<fitEfficient[i];
-        }
+        aimResistForce = resisforcef;
     }
-    for(int i=0; i<5; i++)
-        emgTension[i] = 300;
-    double aimElbowAngle;
-    aimElbowAngle = imuRecordCout*3;
-    qDebug()<<"fitTension is:"<<fitTension;
+    emgTension[4] = aimResistForce;
+    */
+    double aimElbowAngle; // cubic poly nomial theta
+    double a0,a1,a2,a3;
+    unsigned int t;
+    a0 = theta0_aim;
+    a1 = 0.0;
+    a2 = 3*(thetaf_aim - theta0_aim)/qPow(tf_aim,2);
+    a3 = -2*(thetaf_aim - theta0_aim)/qPow(tf_aim,3);
+    t = imuRecordCout;
+    if(t < tf_aim)
+    {
+        aimElbowAngle = a0 + a1*t + a2*qPow(t,2) + a3*qPow(t,3);
+    }
+    else
+    {
+        aimElbowAngle = thetaf_aim;
+    }
+    qDebug()<<"aim theta is:"<<aimElbowAngle;
     double detaTheta = 0;
     detaTheta = aimElbowAngle - theta;
     if(detaTheta < 0)
         detaTheta = -detaTheta;
-    emgTension[5] = 300+10*fitTension*(detaTheta); // asist tension equal emg multiply deta theta
-    qDebug()<<"emgTension is:"<<emgTension[5];
-    if(emgTension[5] < 0)
+    fitTension = 300+10*fitTension*(detaTheta); // asist tension equal emg multiply deta theta
+    qDebug()<<"fitTension is:"<<fitTension;
+    if(fitTension < 0)
     {
         qDebug()<<"the asist tension is less 0";
-        emgTension[5] = 0;
+        emgTension[5] = 200;
     }
-    if(emgTension[5] > 4500)
+    else
+    {
+        emgTension[5] = fitTension;
+    }
+    if(emgTension[5] > 6500)
     {
         qDebug()<<"the asist tension is exceed 3000";
-        emgTension[5] = 4500;
+        emgTension[5] = 6500;
     }
     imuRecordCout++;
 

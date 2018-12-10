@@ -1,60 +1,65 @@
 #include "tensioncontrol.h"
 
+// matlab: theta1:tempAngle[2] theta2:tempAngle[1] theta3:tempAngle[0] theta4:tempAngle[3]
 double TensionSensor[6];
 TensionPID tension_pid[6] = {{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1}};
 TorAnPID torAn_pid[4] = {{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{1,0,0,0,0,0}};
-float Testq1[101] = {0,	0,	0.001,	0.041,	0.002,	0.196,	0.23,	0.256,	0.198,	0.159,	0.171,	0.15,	0.149,
-                     0.148,	0.147,	0.147,	0.146,	0.146,	0.145,	0.145,	0.145,	0.144,	0.144,	0.144,	0.143,
-                     0.143,	0.143,	0.142,	0.142,	0.142,	0.141,	0.141,	0.14,	0.14,	0.14,	0.139,	0.139,
-                     0.138,	0.137,	0.137,	0.136,	0.136,	0.135,	0.134,	0.133,	0.133,	0.132,	0.131,	0.13,
-                     0.129,	0.128,	0.127,	0.126,	0.125,	0.123,	0.122,	0.121,	0.119,	0.118,	0.116,	0.114,
-                     0.113,	0.111,	0.109,	0.107,	0.105,	0.103,	0.1,	0.098,	0.095,	0.092,	0.089,	0.086,
-                     0.083,	0.08,	0.076,	0.073,	0.069,	0.065,	0.06,	0.056,	0.052,	0.047,	0.043,	0.039,
-                     0.035,	0.031,	0.027,	0.024,	0.02,	0.017,	0.014,	0.011,	0.009,	0.006,	0.005,	0.003,
-                     0.002,	0.001,	0,	0};
-float Testq2[101] = {0,	0,	0.001,	0.002,	0.003,	0.004,	0.006,	0.008,	0.008,	0.01,	0.013,	0.014,	0.017,
-                     0.02,	0.023,	0.026,	0.03,	0.034,	0.038,	0.042,	0.047,	0.052,	0.057,	0.062,	0.067,
-                     0.072,	0.078,	0.083,	0.088,	0.094,	0.099,	0.105,	0.11,	0.116,	0.121,	0.127,	0.132,
-                     0.138,	0.144,	0.149,	0.155,	0.161,	0.167,	0.173,	0.179,	0.185,	0.191,	0.197,	0.203,
-                     0.209,	0.216,	0.222,	0.229,	0.235,	0.242,	0.248,	0.255,	0.262,	0.269,	0.276,	0.283,
-                     0.29,	0.297,	0.304,	0.312,	0.319,	0.327,	0.334,	0.342,	0.35,	0.358,	0.365,	0.374,
-                     0.382,	0.39,	0.398,	0.407,	0.415,	0.424,	0.432,	0.441,	0.448,	0.456,	0.463,	0.47,
-                     0.476,	0.482,	0.488,	0.493,	0.498,	0.503,	0.507,	0.51,	0.513,	0.516,	0.519,	0.521,
-                     0.522,	0.523,	0.524,	0.524};
-float Testq3[101] = {0,	0,	0.001,	0.001,	0.002,	0.003,	0.004,	0.005,	0.007,	0.009,	0.011,	0.014,	0.017,
-                     0.019,	0.023,	0.026,	0.029,	0.033,	0.037,	0.042,	0.046,	0.051,	0.056,	0.061,	0.066,
-                     0.071,	0.077,	0.082,	0.087,	0.092,	0.097,	0.103,	0.108,	0.113,	0.119,	0.124,	0.129,
-                     0.135,	0.14,	0.145,	0.151,	0.156,	0.162,	0.168,	0.173,	0.179,	0.184,	0.19,	0.196,
-                     0.202,	0.208,	0.213,	0.219,	0.225,	0.232,	0.238,	0.244,	0.25,	0.256,	0.263,	0.269,
-                     0.276,	0.283,	0.289,	0.296,	0.303,	0.31,	0.317,	0.325,	0.332,	0.34,	0.347,	0.355,
-                     0.363,	0.371,	0.38,	0.388,	0.397,	0.406,	0.415,	0.424,	0.432,	0.441,	0.449,	0.456,
-                     0.464,	0.471,	0.478,	0.484,	0.49,	0.496,	0.501,	0.506,	0.51,	0.513,	0.516,	0.519,
-                     0.521,	0.522,	0.523,	0.524};
-float Testq4[101] = {0,	0,	-0.001,	-0.001,	0,	0.003,	0.004,	0.005,	0.013,	0.016,	0.017,	0.024,	0.029,	0.034,
-                     0.04,	0.045,	0.052,	0.058,	0.065,	0.073,	0.081,	0.089,	0.097,	0.106,	0.115,	0.123,	0.132,
-                     0.141,	0.149,	0.158,	0.166,	0.175,	0.183,	0.192,	0.2,	0.209,	0.217,	0.225,	0.233,	0.241,
-                     0.25,	0.258,	0.266,	0.273,	0.281,	0.289,	0.297,	0.304,	0.312,	0.32,	0.327,	0.334,	0.342,
-                     0.349,	0.356,	0.363,	0.37,	0.377,	0.383,	0.39,	0.396,	0.403,	0.409,	0.415,	0.421,	0.427,
-                     0.433,	0.439,	0.445,	0.45,	0.455,	0.46,	0.465,	0.47,	0.475,	0.48,	0.484,	0.488,	0.492,
-                     0.496,	0.5,	0.503,	0.506,	0.508,	0.51,	0.512,	0.514,	0.516,	0.517,	0.518,	0.519,	0.52,
-                     0.521,	0.522,	0.522,	0.523,	0.523,	0.523,	0.523,	0.524,	0.524};
+double Testq1[101] = {0,	0.002,	0.011,	0.018,	0.024,	0.029,	0.033,	0.038,	0.042,	0.047,	0.052,	0.057,
+                      0.062,	0.067,	0.072,	0.077,	0.082,	0.088,	0.094,	0.1,	0.105,	0.111,	0.116,
+                      0.121,	0.126,	0.131,	0.136,	0.14,	0.145,	0.149,	0.153,	0.157,	0.161,	0.165,
+                      0.169,	0.172,	0.175,	0.178,	0.181,	0.184,	0.187,	0.189,	0.191,	0.193,	0.195,
+                      0.197,	0.198,	0.2,	0.201,	0.202,	0.202,	0.203,	0.203,	0.203,	0.203,	0.203,
+                      0.202,	0.201,	0.2,	0.199,	0.197,	0.195,	0.193,	0.191,	0.189,	0.186,	0.183,
+                      0.18,	0.176,	0.172,	0.168,	0.164,	0.159,	0.154,	0.149,	0.144,	0.138,	0.132,	0.125,
+                      0.119,	0.112,	0.104,	0.096,	0.088,	0.08,	0.072,	0.065,	0.057,	0.05,	0.043,	0.036,
+                      0.03,	0.024,	0.019,	0.014,	0.01,	0.007,	0.004,	0.002,	0.001,	0};
+double Testq2[101] = {0,	-0.004,	-0.014,	-0.026,	-0.039,	-0.052,	-0.065,	-0.078,	-0.091,	-0.103,	-0.115,	-0.127,
+                      -0.138,	-0.15,	-0.16,	-0.17,	-0.18,	-0.189,	-0.198,	-0.206,	-0.212,	-0.219,	-0.224,
+                      -0.229,	-0.233,	-0.236,	-0.239,	-0.242,	-0.244,	-0.245,	-0.246,	-0.247,	-0.248,	-0.248,
+                      -0.247,	-0.247,	-0.246,	-0.244,	-0.243,	-0.241,	-0.239,	-0.236,	-0.234,	-0.231,	-0.228,
+                      -0.225,	-0.221,	-0.217,	-0.214,	-0.21,	-0.205,	-0.201,	-0.197,	-0.192,	-0.187,	-0.182,
+                      -0.177,	-0.172,	-0.167,	-0.161,	-0.156,	-0.15,	-0.145,	-0.139,	-0.133,	-0.128,	-0.122,
+                      -0.116,	-0.11,	-0.104,	-0.098,	-0.093,	-0.087,	-0.081,	-0.075,	-0.069,	-0.064,	-0.058,
+                      -0.052,	-0.047,	-0.041,	-0.036,	-0.031,	-0.026,	-0.022,	-0.018,	-0.014,	-0.011,	-0.009,
+                      -0.007,	-0.005,	-0.003,	-0.002,	-0.001,	-0.001,	0,	0,	0,	0,	0,	0};
+double Testq3[101] = {0,	0,	0.001,	0.001,	0.003,	0.004,	0.007,	0.009,	0.012,	0.015,	0.019,	0.023,
+                      0.028,	0.033,	0.039,	0.045,	0.051,	0.058,	0.066,	0.073,	0.081,	0.089,	0.097,
+                      0.105,	0.113,	0.121,	0.129,	0.138,	0.146,	0.154,	0.163,	0.171,	0.18,	0.188,
+                      0.197,	0.206,	0.214,	0.223,	0.232,	0.241,	0.25,	0.259,	0.268,	0.277,	0.286,
+                      0.295,	0.304,	0.313,	0.323,	0.332,	0.341,	0.351,	0.36,	0.37,	0.379,	0.389,
+                      0.399,	0.409,	0.418,	0.428,	0.438,	0.448,	0.458,	0.468,	0.479,	0.489,	0.499,
+                      0.51,	0.52,	0.53,	0.541,	0.552,	0.562,	0.573,	0.584,	0.595,	0.606,	0.617,	0.628,
+                      0.64,	0.651,	0.662,	0.674,	0.685,	0.696,	0.706,	0.716,	0.725,	0.733,	0.741,	0.749,
+                      0.755,	0.761,	0.767,	0.772,	0.776,	0.779,	0.782,	0.784,	0.785,	0.785};
+double Testq4[101] = {0,	0.061,	0.083,	0.11,	0.139,	0.169,	0.199,	0.23,	0.261,	0.292,	0.323,	0.353,
+                      0.384,	0.414,	0.444,	0.474,	0.504,	0.533,	0.562,	0.59,	0.616,	0.641,	0.664,
+                      0.686,	0.707,	0.727,	0.746,	0.763,	0.78,	0.797,	0.812,	0.827,	0.841,	0.854,
+                      0.867,	0.879,	0.891,	0.902,	0.912,	0.922,	0.931,	0.94,	0.949,	0.956,	0.964,
+                      0.97,	0.977,	0.983,	0.988,	0.993,	0.997,	1.001,	1.005,	1.008,	1.011,	1.013,	1.015,
+                      1.016,	1.017,	1.018,	1.018,	1.017,	1.016,	1.015,	1.013,	1.011,	1.009,	1.006,	1.002,
+                      0.998,	0.994,	0.989,	0.984,	0.978,	0.972,	0.965,	0.958,	0.95,	0.942,	0.933,	0.924,
+                      0.915,	0.904,	0.894,	0.883,	0.873,	0.863,	0.854,	0.845,	0.836,	0.828,	0.82,	0.813,
+                      0.807,	0.801,	0.797,	0.793,	0.789,	0.787,	0.786,	0.785};
 unsigned int linearCount = 0; // 读取角度位置数
 unsigned int lineCycleCount = 0; //直线来回走
+unsigned int InverseJoint = 0; //角度三次规划，到达目标角度，往回走
 
-float MAXSPEED=4000;
-float MINSPEED=-4000;
+unsigned int ControlMode = 0; // control mode: joint, tension, linear or others
 
-float AimTension[6] = {300,300,300,300,300,300};
+double MAXSPEED=4000;
+double MINSPEED=-4000;
+
+double AimTension[6] = {300,300,300,300,300,300};
 
 int testCount = 0;
 
-const float pi=3.1415926;
-float cableLenInit[6];
+const double pi=3.1415926;
+double cableLenInit[6];
 int cycleCount = 0;
 int setCir;
-float aimCircle[6];
+double aimCircle[6];
 int setAcc,setVel;
-float tempAngle[4];
+double tempAngle[4];
 
 // record if the latest 10 times tension data is below one number
 bool tensionLowFlag[6];
@@ -73,6 +78,9 @@ unsigned int replayCount = 0;
 // Using the cubic polynomial to plan the angle
 //---------------------------------------------------
 double runTime = 5;
+double thetaStart[4] = {0,0,0,0};
+double thetaEnd[4] = {0,0,0,0};
+double thetaTf = 50.0;
 
 TensionControl::TensionControl(QObject *parent):QThread(parent)
 {
@@ -139,9 +147,9 @@ void TensionControl::TensionSet()
 
     QString SendData;
 
-    for(int i=4; i<6; i++) // remember just for emg test!!!!
+    for(int i=5; i<6; i++) // remember just for emg test!!!!
     {
-        if(TensionSensor[i]>7000)
+        if(TensionSensor[i]>8000)
         {
             // it exceed the max tension motor must be stop
             for(int j=0; j<6; j++)
@@ -158,22 +166,22 @@ void TensionControl::TensionSet()
             if(tension_pid[i].flag == 1)
             {
                 tension_pid[i].Error = AimTension[i] - TensionSensor[i];
-                if(tension_pid[i].Error > 50)
+                if(tension_pid[i].Error > 10)
                 {
                     tension_pid[i].integral += tension_pid[i].Error;
-                    tension_pid[i].velocity = tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
+                    tension_pid[i].velocity = 0.8*tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
                     tension_pid[i].LastError = tension_pid[i].Error;
 
                     // ten array oftension is below one set value means it is totally loose, so speed up to make cable tense.
                     if(tensionLowFlag[i] == 0)
                     {
                         if((i==4) || (i==5))
-                            tension_pid[i].velocity = 1200;
+                            tension_pid[i].velocity = 1400;
                         else
                             tension_pid[i].velocity = 500;
                     }
                 }
-                else if(tension_pid[i].Error < -50)
+                else if(tension_pid[i].Error < -10)
                 {
                     tension_pid[i].integral += tension_pid[i].Error;
                     tension_pid[i].velocity = tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
@@ -203,7 +211,7 @@ void TensionControl::TensionSet()
 // Com open configure which connect with the 'open com' button
 void TensionControl::slotSerialInit()
 {
-    serial1->setPortName("COM14");
+    serial1->setPortName("COM16");
     serial1->setBaudRate(QSerialPort::Baud9600);
     serial1->setDataBits(QSerialPort::Data8);
     serial1->setStopBits(QSerialPort::OneStop);
@@ -260,32 +268,60 @@ void TensionControl::slotReadMyCom()
 void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
 {
     unsigned int tempPos[3];
-    float cableLen[6],cableLenDeta[6];
+    double cableLen[6],cableLenDeta[6];
     QString SendData;
 
     // tension control mode
     if(tensionOrAngle == 0)
     {
+        ControlMode = 0;
         for(int i=0; i<6; i++)
             AimTension[i] = Data[i];
+        // here we change the kp parameter to test
+        tension_pid[5].KP = 0.01 * Data[6];
+        tension_pid[5].KI = 0.01 * Data[7];
+
         for(int i=0; i<6; i++)
         {
             SendData = QString::number(long(i)) + "AC" + QString::number(long(111*3)) + "\r";
             serial1->write(SendData.toLatin1());
 
             SendData = QString::number(long(i)) + "SP" + QString::number(long(MAXSPEED)) + "\r";
-            serial1->write(SendData.toLatin1());
+            serial1->write(SendData.toLatin1());qazzzzzzzzzzzzzzzzzzzzzaz
         }
         tensionCtrlTimer->start(100);
         cycleJointTimer->stop();
         linearControlTimer->stop();
         replayTimer->stop();
         //teachTimer->stop();
-        emit sigStopplot();
+        //emit sigStopplot();
     }
     // Joint angle control mode
     else if(tensionOrAngle == 1)
     {
+        ControlMode = 1;
+        lineCycleCount = 0;
+        cycleJointTimer->stop();
+        tensionCtrlTimer->stop();
+        linearControlTimer->start(100);
+        teachTimer->stop();
+        replayTimer->stop();
+        emit sigStopplot();
+        for(int i=0; i<4; i++)
+        {
+            thetaEnd[i] = Data[i]*3.14/180;
+            //qDebug()<<tempAngle[i];
+        }
+        for(int i=0; i<6; i++)
+        {
+            SendData = QString::number(long(i)) + "SP" + QString::number(long(3000)) + "\r";
+            serial1->write(SendData.toLatin1());
+            SendData = QString::number(long(i)) + "AC" + QString::number(long(222)) + "\r";
+            serial1->write(SendData.toLatin1());
+            SendData = QString::number(long(i)) + "DEC" + QString::number(long(222)) + "\r";
+            serial1->write(SendData.toLatin1());
+        }
+        /*
         cycleJointTimer->start(5000);
         tensionCtrlTimer->stop();
         linearControlTimer->stop();
@@ -316,13 +352,13 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
                 if(aimCircle[i]>0.001)
                     tension_pid[i].flag = -1;
             }
-            */
-
         }
+        */
     }
     // PTP control mode
     else if(tensionOrAngle == 2)
     {
+        ControlMode = 2;
         for(int i=0; i<3; i++)
         {
             tempPos[i] = Data[i];
@@ -350,10 +386,8 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
     // LINEAR CONTROL MODE
     else if(tensionOrAngle == 3)
     {
-        lineCycleCount = 0;
-        // set the q1 equal zero(it should be as testq1)
-        for(int i=0; i<101; i++)
-            Testq1[i] = 0;
+        ControlMode = 3;
+        lineCycleCount = 0;        
 
         for(int i=0; i<6; i++)
         {
@@ -364,7 +398,7 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
             SendData = QString::number(long(i)) + "DEC" + QString::number(long(222)) + "\r";
             serial1->write(SendData.toLatin1());
         }
-        linearControlTimer->start(45);
+        linearControlTimer->start(50);
         tensionCtrlTimer->stop();
         cycleJointTimer->stop();
         teachTimer->stop();
@@ -374,6 +408,7 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
     // TORQUE CONTROL MODE
     else
     {
+        ControlMode = 4;
         torqueTimer->stop();
         //emit sigStopplot();
         for(int i=0; i<4; i++)
@@ -385,7 +420,7 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
     }
 }
 
-void TensionControl::CalculateCabelLen(uint i, float *cableLen, float* tempAngle)
+void TensionControl::CalculateCabelLen(uint i, double *cableLen, double* tempAngle)
 {
     switch (i) {
     case 0:
@@ -435,30 +470,47 @@ void TensionControl::CalculateCabelLen(uint i, float *cableLen, float* tempAngle
                         (343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 +
                         35*sin(tempAngle[0])*sin(tempAngle[1] - pi/2) + 33),2)),0.5);break;
     case 4:
-        cableLen[i] = qPow((qPow((125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) -
-                        (343*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
-                        (343*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 + 142),2) +
-                       qPow(((343*cos(tempAngle[2])*sin(tempAngle[0]))/2 +
-                        125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
-                        (343*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 - 27),2) +
-                       qPow(((343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 - 125*cos(tempAngle[1] - pi/2) + 33),2)),0.5) +
-                qPow((qPow((125*cos(tempAngle[1] - pi/2) - 118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) +
-                  132*cos(tempAngle[0])*sin(tempAngle[1] - pi/2) + 118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) +
-                  118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
-                  118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2) +
-                 qPow((125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) +
-                  132*sin(tempAngle[2])*sin(tempAngle[0]) +
-                  118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
-                  118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
-                  118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
-                  118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
-                  132*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)),2) +
-                 qPow((132*cos(tempAngle[2])*sin(tempAngle[0]) - 125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
-                  118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
-                  118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
-                  132*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]) +
-                  118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
-                  118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
+        cableLen[i] = qPow((qPow(((607*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 -
+                        118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) +
+                        118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) +
+                        118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+                        118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) + 33),2) +
+                       qPow(((607*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
+                        118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
+                        118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
+                        118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+                        118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
+                        (607*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 - 142),2) +
+                       qPow(((607*cos(tempAngle[2])*sin(tempAngle[0]))/2 +
+                        118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+                        118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+                        (607*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 +
+                        118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
+                        118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
+//        cableLen[i] = qPow((qPow((125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) -
+//                        (343*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
+//                        (343*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 + 142),2) +
+//                       qPow(((343*cos(tempAngle[2])*sin(tempAngle[0]))/2 +
+//                        125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
+//                        (343*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 - 27),2) +
+//                       qPow(((343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 - 125*cos(tempAngle[1] - pi/2) + 33),2)),0.5) +
+//                qPow((qPow((125*cos(tempAngle[1] - pi/2) - 118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) +
+//                  132*cos(tempAngle[0])*sin(tempAngle[1] - pi/2) + 118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) +
+//                  118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+//                  118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2) +
+//                 qPow((125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) +
+//                  132*sin(tempAngle[2])*sin(tempAngle[0]) +
+//                  118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
+//                  118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
+//                  118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+//                  118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
+//                  132*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)),2) +
+//                 qPow((132*cos(tempAngle[2])*sin(tempAngle[0]) - 125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
+//                  118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+//                  118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+//                  132*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]) +
+//                  118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
+//                  118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
     case 5:
         cableLen[i] = qPow((qPow((118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) +
                         (607*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 +
@@ -482,7 +534,7 @@ void TensionControl::CalculateCabelLen(uint i, float *cableLen, float* tempAngle
     }
 }
 
-void TensionControl::SendAimCircle(float *aimCircle, int setVel, int setAcc)
+void TensionControl::SendAimCircle(double *aimCircle, int setVel, int setAcc)
 {
     QString SendData;
     //int runTime = 5;
@@ -490,7 +542,7 @@ void TensionControl::SendAimCircle(float *aimCircle, int setVel, int setAcc)
     //int flag = 0;
     // Recommend vel is 16 acc is 1
     int vel, acc;
-    float tA, tS, tAll, tMax;
+    double tA, tS, tAll, tMax;
     tMax = 0;
     aimCircle[5] = aimCircle[5];
     for(int i=0; i<6; i++)
@@ -501,7 +553,7 @@ void TensionControl::SendAimCircle(float *aimCircle, int setVel, int setAcc)
 //            else
             vel = setVel;
             acc = setAcc;
-            tA = float(vel)/(60*acc);
+            tA = double(vel)/(60*acc);
             if(acc == 0)
             {
                 QMessageBox::critical(0,tr("Wrong"),tr("are you stupid enough to set the acc zero"),QMessageBox::Ok);
@@ -515,7 +567,7 @@ void TensionControl::SendAimCircle(float *aimCircle, int setVel, int setAcc)
             }
             else
             {
-                tA = float(vel)/(60*acc);
+                tA = double(vel)/(60*acc);
                 tS = (qAbs(aimCircle[i])-acc*tA*tA)*60/vel;
             }
             tAll = 2*tA + tS;
@@ -567,58 +619,130 @@ void TensionControl::slotCirculJoint()
 void TensionControl::slotLinearControl()
 {
     QString SendData;
-    float tempAngle[4];
-    float cableLen[6],cableLenDeta[6];
-    float vel[6];
-    float inteTime;
+    double tempAngle[4];
+    double cableLen[6],cableLenDeta[6];
+    double vel[6];
+    double inteTime,inteJointTime;
     inteTime = 0.05;
-    linearCount++;
-    for(int i=0; i<6; i++)
+    inteJointTime = 0.1;
+    if(ControlMode == 3)
     {
-        if(linearCount > 150)
+        linearCount++;
+        for(int i=0; i<6; i++)
         {
-            linearCount = 0;
-            lineCycleCount++;
-            if(lineCycleCount == 6)
+            if(linearCount > 150)
             {
-                linearControlTimer->stop();
-                emit sigStartplot();
+                linearCount = 0;
+                lineCycleCount++;
+                if(lineCycleCount == 6)
+                {
+                    lineCycleCount = 0;
+                    linearControlTimer->stop();
+                    emit sigStartplot();
+                }
             }
-        }
-        else if(linearCount > 100)
-        {
-            vel[i] = 0;
-        }
-        else
-        {
-            if(lineCycleCount%2 == 0)
+            else if(linearCount > 100)
             {
-                tempAngle[0] = Testq1[linearCount];
-                tempAngle[1] = Testq2[linearCount];
-                tempAngle[2] = Testq3[linearCount];
-                tempAngle[3] = Testq4[linearCount];
+                vel[i] = 0;
             }
             else
             {
-                tempAngle[0] = Testq1[100-linearCount];
-                tempAngle[1] = Testq2[100-linearCount];
-                tempAngle[2] = Testq3[100-linearCount];
-                tempAngle[3] = Testq4[100-linearCount];
+                if(lineCycleCount%2 == 0)
+                {
+                    tempAngle[0] = Testq3[linearCount];
+                    tempAngle[1] = Testq2[linearCount];
+                    tempAngle[2] = Testq1[linearCount];
+                    tempAngle[3] = Testq4[linearCount];
+                }
+                else
+                {
+                    tempAngle[0] = Testq3[100-linearCount];
+                    tempAngle[1] = Testq2[100-linearCount];
+                    tempAngle[2] = Testq1[100-linearCount];
+                    tempAngle[3] = Testq4[100-linearCount];
+                }
+                CalculateCabelLen(i,cableLen,tempAngle);
+                cableLenDeta[i] = cableLen[i] - cableLenInit[i];
+                //qDebug()<<"cablelendeta"<<i<<"is"<<cableLenDeta[i];
+                cableLenInit[i] = cableLen[i];
+                aimCircle[i] = -1*cableLenDeta[i]/(2*pi*20);
+                qDebug()<<"aimCircle"<<i<<"is"<<aimCircle[i];
+                vel[i] = double(111*60*aimCircle[i])/double(inteJointTime); // the last speed must be zero!!!
             }
-            CalculateCabelLen(i,cableLen,tempAngle);
-            cableLenDeta[i] = cableLen[i] - cableLenInit[i];
-            //qDebug()<<"cablelendeta"<<i<<"is"<<cableLenDeta[i];
-            cableLenInit[i] = cableLen[i];
-            aimCircle[i] = -1*cableLenDeta[i]/(2*pi*20);
-            vel[i] = float(111*60*aimCircle[i])/float(inteTime); // the last speed must be zero!!!
+        }
+        for(int i=0; i<6; i++)
+        {
+            //qDebug()<<"the speed is:"<<vel[i]<<"n/min";
+            SendData = QString::number(long(i)) + "V" + QString::number(long(vel[i])) + "\r";
+            serial1->write(SendData.toLatin1());
+            qDebug()<<SendData<<endl;
         }
     }
-    for(int i=0; i<6; i++)
+    // joint control mode
+    if(ControlMode == 1)
     {
-        //qDebug()<<"the speed is:"<<vel[i]<<"n/min";
-        SendData = QString::number(long(i)) + "V" + QString::number(long(vel[i])) + "\r";
-        serial1->write(SendData.toLatin1());
-        qDebug()<<SendData<<endl;
+        if(linearCount == 0)
+        {
+            InverseJoint = 0;
+            lineCycleCount++;
+        }
+        if(linearCount == thetaTf)
+        {
+            InverseJoint = 1;
+        }
+        if(InverseJoint == 0)
+        {
+            linearCount++;
+        }
+        else
+        {
+            linearCount--;
+        }
+        if(lineCycleCount == 4)
+        {
+            lineCycleCount = 0;
+            for(int i=0; i<6; i++)
+            {
+                //qDebug()<<"the speed is:"<<vel[i]<<"n/min";
+                SendData = QString::number(long(i)) + "V0" + "\r";
+                serial1->write(SendData.toLatin1());
+                qDebug()<<SendData<<endl;
+            }
+            linearControlTimer->stop();
+            emit sigStartplot();
+        }
+        else
+        {
+            double theta[4]; // cubic poly nomial theta
+            double a0[4],a1[4],a2[4],a3[4];
+            unsigned int t;
+            for(int i=0; i<6; i++)
+            {
+                for(int a=0; a<4; a++)
+                {
+                    t = linearCount;
+                    a0[a] = thetaStart[a];
+                    a1[a] = 0;
+                    a2[a] = 3*(thetaEnd[a] - thetaStart[a])/qPow(thetaTf,2);
+                    a3[a] = -2*(thetaEnd[a] - thetaStart[a])/qPow(thetaTf,3);
+                    theta[a] = a0[a] + a1[a]*t + a2[a]*qPow(t,2) + a3[a]*qPow(t,3);
+                }
+                CalculateCabelLen(i,cableLen,theta);
+                cableLenDeta[i] = cableLen[i] - cableLenInit[i];
+                cableLenInit[i] = cableLen[i];
+                aimCircle[i] = -1*cableLenDeta[i]/(2*pi*20);
+                qDebug()<<"aimCircle"<<i<<"is"<<aimCircle[i];
+                vel[i] = 0.5*double(111*60*aimCircle[i])/double(inteTime); // the last speed must be zero!!!
+                qDebug()<<"vel"<<i<<"is"<<vel[i];
+            }
+            for(int i=0; i<6; i++)
+            {
+                //qDebug()<<"the speed is:"<<vel[i]<<"n/min";
+                SendData = QString::number(long(i)) + "V" + QString::number(long(vel[i])) + "\r";
+                serial1->write(SendData.toLatin1());
+                qDebug()<<SendData<<endl;
+            }
+        }
     }
     //qDebug()<<"the lineCycleCount is"<<lineCycleCount;
     //qDebug()<<"the linearCout is"<<linearCount;
@@ -673,7 +797,7 @@ void TensionControl::slotReplayTeach()
 void TensionControl::replayTeach()
 {
     QString SendData;
-    float vel[6];
+    double vel[6];
     if(replayCount<teachRecordCout-1)
     {
         vel[0] = (MoRecord1[replayCount+1]-MoRecord1[replayCount])*10*60/512;
@@ -709,7 +833,8 @@ void TensionControl::torqueControl()
     if((torAn_pid[3].Error > 3) || (torAn_pid[3].Error < -3))
     {
         torAn_pid[3].integral += torAn_pid[3].Error;
-        AimTension[5] = AimTension[5] + torAn_pid[3].KP*torAn_pid[3].Error + torAn_pid[3].KI*torAn_pid[3].integral + torAn_pid[3].KD*(torAn_pid[3].Error-torAn_pid[3].LastError);
+        //AimTension[5] = AimTension[5] + torAn_pid[3].KP*torAn_pid[3].Error + torAn_pid[3].KI*torAn_pid[3].integral + torAn_pid[3].KD*(torAn_pid[3].Error-torAn_pid[3].LastError);
+        AimTension[5] = torAn_pid[3].KP*torAn_pid[3].Error + torAn_pid[3].KI*torAn_pid[3].integral + torAn_pid[3].KD*(torAn_pid[3].Error-torAn_pid[3].LastError);
         torAn_pid[3].LastError = torAn_pid[3].Error;
     }
     else

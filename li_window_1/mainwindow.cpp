@@ -81,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sigEmgStart()), emg_server, SLOT(slotEmgStart()));
     connect(this, SIGNAL(sigEmgTrigger()), emg_server, SLOT(slotEmgTrigger()));
     connect(emg_server, SIGNAL(sigEmgThetaFit(double*,double*,double*,uint,int)), this, SLOT(slotEmgThetaFit(double*,double*,double*,uint,int)));
+    connect(getsensordata, SIGNAL(sigPlotTrigger()), this, SLOT(plot()));
 
 }
 
@@ -359,8 +360,7 @@ void MainWindow::Plot_Init()
 
     plot_timer=new QTimer(this);
     plot_timerdly = TIME_PLOT_INTERVAL;
-    connect(plot_timer,SIGNAL(timeout()),this,SLOT(plot()));
-    //plot_timer->start(plot_timerdly);
+    //connect(plot_timer,SIGNAL(timeout()),this,SLOT(plot()));
 
 }
 
@@ -544,7 +544,6 @@ void MainWindow::on_actionSave_triggered()
     pSheets = pWorkBook->querySubObject("Sheets");
     pSheet = pSheets->querySubObject("Item(int)", 1);
 
-    //
     QAxObject *cell_1 = pSheet->querySubObject("Cells(int, int)", 1, 1);
     cell_1->dynamicCall("SetValue(const QVariant&)", QVariant("ten1(g)"));
 
@@ -607,6 +606,12 @@ void MainWindow::on_actionSave_triggered()
 
     QAxObject *cell_21 = pSheet->querySubObject("Cells(int, int)", 1, 21);
     cell_21->dynamicCall("SetValue(const QVariant&)", QVariant("shoPre2"));
+
+    QAxObject *cell_22 = pSheet->querySubObject("Cells(int, int)", 1, 22);
+    cell_22->dynamicCall("SetValue(const QVariant&)", QVariant("Emgvalue"));
+
+    QAxObject *cell_23 = pSheet->querySubObject("Cells(int, int)", 1, 23);
+    cell_23->dynamicCall("SetValue(const QVariant&)", QVariant("ElbowAngle_emg"));
 
 
     // Change one-dimension to two-dimension array
@@ -867,6 +872,33 @@ void MainWindow::on_actionSave_triggered()
     user_range20->setProperty("Value",res_20);
     vars.clear();
 
+    /*
+    // the emg data and the relevant elbow angle
+    for(i=0; i<emgsaveLen; i++)
+    {
+        QList<QVariant> rows;
+        rows.append(EmgDataSave[i]);
+        vars.append(QVariant(rows));
+    }
+    QVariant res_21(vars);
+    RangeStr = "V2:V" + QString::number(emgsaveLen);
+    QAxObject *user_range21 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range21->setProperty("Value",res_21);
+    vars.clear();
+
+    for(i=0; i<emgsaveLen; i++)
+    {
+        QList<QVariant> rows;
+        rows.append(AngleElbow_emg[i]);
+        vars.append(QVariant(rows));
+    }
+    QVariant res_22(vars);
+    RangeStr = "W2:W" + QString::number(emgsaveLen);
+    QAxObject *user_range22 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range22->setProperty("Value",res_22);
+    vars.clear();
+*/
+
     //excel
     pWorkBook->dynamicCall("SaveAs(const QString &)", QDir::toNativeSeparators(filename));
     pApplication->dynamicCall("Quit()");
@@ -950,6 +982,7 @@ void MainWindow::on_actionClean_triggered()
 
 void MainWindow::plot()
 {
+
     linkdisplay->adjustPos(shoulder_x[receive_count_angle]*3.14/180,
             shoulder_y[receive_count_angle]*3.14/180,
             shoulder_z[receive_count_angle]*3.14/180,
@@ -959,11 +992,171 @@ void MainWindow::plot()
 
     //linkdisplay->adjustPos(0,0,0,0,0,3.14/3);
 
+
     QPen pen;
     pen.setStyle(Qt::SolidLine);
     pen.setWidth(3);
     pen.setBrush(Qt::blue);
 
+    unsigned int plotXrange = (time_x_tension[receive_count_tension]>50)?(time_x_tension[receive_count_tension]-50):(0);
+    qDebug()<<"plotXrange is:"<<plotXrange;
+
+
+    // test, only paint the latest one hundred data;
+    unsigned int plotlength = 100;
+    QVector<double> time_x_plot(plotlength),tensionPlot(plotlength),tension2Plot(plotlength),tension3Plot(plotlength),tension4Plot(plotlength),tension5Plot(100),tension6Plot(plotlength);
+    QVector<double> elbowXPlot(plotlength),elbowYPlot(plotlength),elbowZPlot(plotlength),shoulXPlot(plotlength),shoulYPlot(plotlength),shoulZPlot(plotlength);
+    QVector<double> Mot1CntPlot(plotlength),Mot2CntPlot(plotlength),Mot3CntPlot(plotlength),Mot4CntPlot(plotlength),Mot5CntPlot(plotlength),Mot6CntPlot(plotlength);
+    unsigned int k = 0;
+    unsigned int p = 0;
+    unsigned int s = 0;
+    if(time_x_tension[receive_count_tension]>plotlength)
+    {
+        for(int i=time_x_tension[receive_count_tension]-plotlength; i<time_x_tension[receive_count_tension]; i++)
+        {
+            time_x_plot[k] = i;
+            tensionPlot[k] = tension_y[i];
+            tension2Plot[k] = tension_y2[i];
+            tension3Plot[k] = tension_y3[i];
+            tension4Plot[k] = tension_y4[i];
+            tension5Plot[k] = tension_y5[i];
+            tension6Plot[k] = tension_y6[i];
+            k++;
+        }
+        for(int i=time_x_angle[receive_count_angle]-plotlength; i<time_x_angle[receive_count_angle]; i++)
+        {
+            elbowXPlot[p] = elbow_x[i];
+            elbowYPlot[p] = elbow_y[i];
+            elbowZPlot[p] = elbow_z[i];
+            shoulXPlot[p] = shoulder_x[i];
+            shoulYPlot[p] = shoulder_y[i];
+            shoulZPlot[p] = shoulder_z[i];
+            p++;
+        }
+        for(int i=time_x_mocount[receive_count_mocount]-plotlength; i<time_x_mocount[receive_count_mocount]; i++)
+        {
+            Mot1CntPlot[s] = Motor1Count[i];
+            Mot2CntPlot[s] = Motor2Count[i];
+            Mot3CntPlot[s] = Motor3Count[i];
+            Mot4CntPlot[s] = Motor4Count[i];
+            Mot5CntPlot[s] = Motor5Count[i];
+            Mot6CntPlot[s] = Motor6Count[i];
+            s++;
+        }
+
+        // tension data plot
+        ui->qCustomPlot->graph(0)->setData(time_x_plot,tensionPlot);
+        ui->qCustomPlot->graph(0)->setPen(pen);
+        ui->qCustomPlot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot->yAxis->setRange(0,max_tension[0]*1.1);
+        ui->qCustomPlot->replot();
+
+        ui->qCustomPlot2->graph(0)->setData(time_x_plot,tension2Plot);
+        ui->qCustomPlot2->graph(0)->setPen(pen);
+        ui->qCustomPlot2->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot2->yAxis->setRange(0,max_tension[1]*1.1);
+        ui->qCustomPlot2->replot();
+
+        ui->qCustomPlot3->graph(0)->setData(time_x_plot,tension3Plot);
+        ui->qCustomPlot3->graph(0)->setPen(pen);
+        ui->qCustomPlot3->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot3->yAxis->setRange(0,max_tension[2]*1.1);
+        ui->qCustomPlot3->replot();
+
+        ui->qCustomPlot4->graph(0)->setData(time_x_plot,tension4Plot);
+        ui->qCustomPlot4->graph(0)->setPen(pen);
+        ui->qCustomPlot4->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot4->yAxis->setRange(0,max_tension[3]*1.1);
+        ui->qCustomPlot4->replot();
+
+        ui->qCustomPlot5->graph(0)->setData(time_x_plot,tension5Plot);
+        ui->qCustomPlot5->graph(0)->setPen(pen);
+        ui->qCustomPlot5->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot5->yAxis->setRange(0,max_tension[4]*1.1);
+        ui->qCustomPlot5->replot();
+
+        ui->qCustomPlot6->graph(0)->setData(time_x_plot,tension6Plot);
+        ui->qCustomPlot6->graph(0)->setPen(pen);
+        ui->qCustomPlot6->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
+        ui->qCustomPlot6->replot();
+
+        // angle data plot
+        ui->qCustomPlot7->graph(0)->setData(time_x_plot,elbowXPlot);
+        ui->qCustomPlot7->graph(0)->setPen(pen);
+        ui->qCustomPlot7->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot7->yAxis->setRange(-120,120);
+        ui->qCustomPlot7->replot();
+
+        ui->qCustomPlot8->graph(0)->setData(time_x_plot,elbowYPlot);
+        ui->qCustomPlot8->graph(0)->setPen(pen);
+        ui->qCustomPlot8->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot8->yAxis->setRange(-120,120);
+        ui->qCustomPlot8->replot();
+
+        ui->qCustomPlot9->graph(0)->setData(time_x_plot,elbowZPlot);
+        ui->qCustomPlot9->graph(0)->setPen(pen);
+        ui->qCustomPlot9->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot9->yAxis->setRange(-120,120);
+        ui->qCustomPlot9->replot();
+
+        ui->qCustomPlot10->graph(0)->setData(time_x_plot,shoulXPlot);
+        ui->qCustomPlot10->graph(0)->setPen(pen);
+        ui->qCustomPlot10->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot10->yAxis->setRange(-120,120);
+        ui->qCustomPlot10->replot();
+
+        ui->qCustomPlot11->graph(0)->setData(time_x_plot,shoulYPlot);
+        ui->qCustomPlot11->graph(0)->setPen(pen);
+        ui->qCustomPlot11->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot11->yAxis->setRange(-120,120);
+        ui->qCustomPlot11->replot();
+
+        ui->qCustomPlot12->graph(0)->setData(time_x_plot,shoulZPlot);
+        ui->qCustomPlot12->graph(0)->setPen(pen);
+        ui->qCustomPlot12->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot12->yAxis->setRange(-120,120);
+        ui->qCustomPlot12->replot();
+
+        ui->Motor1Plot->graph(0)->setData(time_x_plot,Mot1CntPlot);
+        ui->Motor1Plot->graph(0)->setPen(pen);
+        ui->Motor1Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->Motor1Plot->yAxis->setRange(min_motor_count[0],max_motor_count[0]*1.1);
+        ui->Motor1Plot->replot();
+
+        ui->Motor2Plot->graph(0)->setData(time_x_plot,Mot2CntPlot);
+        ui->Motor2Plot->graph(0)->setPen(pen);
+        ui->Motor2Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->Motor2Plot->yAxis->setRange(min_motor_count[1],max_motor_count[1]*1.1);
+        ui->Motor2Plot->replot();
+
+        ui->Motor3Plot->graph(0)->setData(time_x_plot,Mot3CntPlot);
+        ui->Motor3Plot->graph(0)->setPen(pen);
+        ui->Motor3Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->Motor3Plot->yAxis->setRange(min_motor_count[2],max_motor_count[2]*1.1);
+        ui->Motor3Plot->replot();
+
+        ui->Motor4Plot->graph(0)->setData(time_x_plot,Mot4CntPlot);
+        ui->Motor4Plot->graph(0)->setPen(pen);
+        ui->Motor4Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->Motor4Plot->yAxis->setRange(min_motor_count[3],max_motor_count[3]*1.1);
+        ui->Motor4Plot->replot();
+
+        ui->Motor5Plot->graph(0)->setData(time_x_plot,Mot5CntPlot);
+        ui->Motor5Plot->graph(0)->setPen(pen);
+        ui->Motor5Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->Motor5Plot->yAxis->setRange(min_motor_count[4],max_motor_count[4]*1.1);
+        ui->Motor5Plot->replot(QCustomPlot::rpQueuedReplot);
+
+        ui->Motor6Plot->graph(0)->setData(time_x_plot,Mot6CntPlot);
+        ui->Motor6Plot->graph(0)->setPen(pen);
+        ui->Motor6Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->Motor6Plot->yAxis->setRange(min_motor_count[5],max_motor_count[5]*1.1);
+        ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
+    }
+
+
+    /*
     ui->qCustomPlot->graph(0)->setData(time_x_tension,tension_y);
     ui->qCustomPlot->graph(0)->setPen(pen);
     ui->qCustomPlot->xAxis->setRange(0,time_x_tension[receive_count_tension]);
@@ -994,12 +1187,18 @@ void MainWindow::plot()
     ui->qCustomPlot5->yAxis->setRange(0,max_tension[4]*1.1);
     ui->qCustomPlot5->replot();
 
+    // pass data points to graphs:
     ui->qCustomPlot6->graph(0)->setData(time_x_tension,tension_y6);
+    // let the ranges scale themselves so graph 0 fits perfectly in the visible area:
+    //ui->qCustomPlot6->graph(0)->rescaleAxes();
+
     ui->qCustomPlot6->graph(0)->setPen(pen);
-    ui->qCustomPlot6->xAxis->setRange(0,time_x_tension[receive_count_tension]);
+    ui->qCustomPlot6->xAxis->setRange(receive_count_tension,50,Qt::AlignRight);
+    //ui->qCustomPlot6->xAxis->setRange(plotXrange,time_x_tension[receive_count_tension]);
     ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
     ui->qCustomPlot6->replot();
 
+    /*
     // Elbow and Shoulder angle figure
     ui->qCustomPlot7->graph(0)->setData(time_x_angle,elbow_x);
     ui->qCustomPlot7->graph(0)->setPen(pen);
@@ -1050,49 +1249,43 @@ void MainWindow::plot()
     ui->shopresPlot->yAxis->setRange(0,5);
     ui->shopresPlot->replot();
 
-
-    /********1**********/
     ui->Motor1Plot->graph(0)->setData(time_x_mocount,Motor1Count);
     ui->Motor1Plot->graph(0)->setPen(pen);
     ui->Motor1Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
     ui->Motor1Plot->yAxis->setRange(min_motor_count[0],max_motor_count[0]*1.1);
     ui->Motor1Plot->replot();
 
-    /********2**********/
     ui->Motor2Plot->graph(0)->setData(time_x_mocount,Motor2Count);
     ui->Motor2Plot->graph(0)->setPen(pen);
     ui->Motor2Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
     ui->Motor2Plot->yAxis->setRange(min_motor_count[1],max_motor_count[1]*1.1);
     ui->Motor2Plot->replot();
 
-    /********3**********/
     ui->Motor3Plot->graph(0)->setData(time_x_mocount,Motor3Count);
     ui->Motor3Plot->graph(0)->setPen(pen);
     ui->Motor3Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
     ui->Motor3Plot->yAxis->setRange(min_motor_count[2],max_motor_count[2]*1.1);
     ui->Motor3Plot->replot();
 
-    /********4**********/
     ui->Motor4Plot->graph(0)->setData(time_x_mocount,Motor4Count);
     ui->Motor4Plot->graph(0)->setPen(pen);
     ui->Motor4Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
     ui->Motor4Plot->yAxis->setRange(min_motor_count[3],max_motor_count[3]*1.1);
     ui->Motor4Plot->replot();
 
-
-    /********5**********/
     ui->Motor5Plot->graph(0)->setData(time_x_mocount,Motor5Count);
     ui->Motor5Plot->graph(0)->setPen(pen);
     ui->Motor5Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
     ui->Motor5Plot->yAxis->setRange(min_motor_count[4],max_motor_count[4]*1.1);
     ui->Motor5Plot->replot(QCustomPlot::rpQueuedReplot);
 
-    /********6**********/
     ui->Motor6Plot->graph(0)->setData(time_x_mocount,Motor6Count);
     ui->Motor6Plot->graph(0)->setPen(pen);
     ui->Motor6Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
     ui->Motor6Plot->yAxis->setRange(min_motor_count[5],max_motor_count[5]*1.1);
-    ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);      
+    ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
+    */
+
 }
 
 /*****************************/
@@ -1205,6 +1398,8 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[3] = ui->sendMsgLineEdit4->text().toInt();
         sendData[4] = ui->sendMsgLineEdit5->text().toInt();
         sendData[5] = ui->sendMsgLineEdit6->text().toInt();
+        sendData[6] = ui->TensionP->text().toUInt(); // 100*kp
+        sendData[7] = ui->TensionD->text().toUInt(); // 100*kd
         emit sigSerialCtrl(TensionOrAngle, sendData);
         //motorcontrol->start();
     }
@@ -1248,7 +1443,7 @@ void MainWindow::on_actionStartMeasure_triggered()
 //    receive_count_pressure = 0;
 //    receive_count_mocount = 0;
     getsensordata->start();
-    plot_timer->start(plot_timerdly);
+    //plot_timer->start(plot_timerdly);
     ui->actionStartMeasure->setEnabled(false);
     ui->actionStopMeasure->setEnabled(true);
 }
@@ -1290,7 +1485,7 @@ void MainWindow::slotStopplot()
 void MainWindow::slotStartplot()
 {
     // start the plot
-    plot_timer->start();
+    //plot_timer->start();
 }
 
 void MainWindow::on_TeachButton_clicked()
@@ -1348,10 +1543,7 @@ void MainWindow::on_pushButton_Trigger_clicked()
 {
     qDebug() << "Send Trigger!";
     //获取文本框内容并以ASCII码形式发送
-    emg_server->Send_Data("end");
-    //emg_server->socket->flush();
-    //ui->emgFitPlot->clearGraphs();
-    //ui->emgFitPlot->replot();
+    //emg_server->Send_Data("end");
     emit sigEmgTrigger();
 }
 
