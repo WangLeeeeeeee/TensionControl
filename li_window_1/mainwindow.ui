@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1832</width>
-    <height>1028</height>
+    <width>1400</width>
+    <height>850</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,71 +30,11 @@
        <attribute name="title">
         <string>TENSION</string>
        </attribute>
-       <widget class="QCustomPlot" name="qCustomPlot" native="true">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot2" native="true">
-        <property name="geometry">
-         <rect>
-          <x>570</x>
-          <y>10</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot3" native="true">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>260</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot4" native="true">
-        <property name="geometry">
-         <rect>
-          <x>570</x>
-          <y>260</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot5" native="true">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>510</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot6" native="true">
-        <property name="geometry">
-         <rect>
-          <x>570</x>
-          <y>510</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
        <widget class="QTabWidget" name="tabWidget_2">
         <property name="geometry">
          <rect>
-          <x>1130</x>
-          <y>450</y>
+          <x>690</x>
+          <y>280</y>
           <width>671</width>
           <height>441</height>
          </rect>
@@ -360,92 +300,6 @@
            </layout>
           </widget>
          </widget>
-         <widget class="QGroupBox" name="groupBox">
-          <property name="geometry">
-           <rect>
-            <x>290</x>
-            <y>100</y>
-            <width>151</width>
-            <height>131</height>
-           </rect>
-          </property>
-          <property name="font">
-           <font>
-            <family>Times New Roman</family>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="title">
-           <string>POSITION</string>
-          </property>
-          <widget class="QWidget" name="layoutWidget">
-           <property name="geometry">
-            <rect>
-             <x>21</x>
-             <y>31</y>
-             <width>91</width>
-             <height>83</height>
-            </rect>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_4">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,3">
-              <item>
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string>X</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="PosXlineEdit"/>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="1,3">
-              <item>
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>Y</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="PosYlineEdit"/>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="1,3">
-              <item>
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Z</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="PosZlineEdit"/>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </widget>
-         <widget class="QPushButton" name="sendmsgButton">
-          <property name="geometry">
-           <rect>
-            <x>440</x>
-            <y>360</y>
-            <width>71</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>SEND</string>
-          </property>
-         </widget>
          <widget class="QGroupBox" name="groupBox_3">
           <property name="geometry">
            <rect>
@@ -630,8 +484,8 @@
          <widget class="QPushButton" name="BeforeTightenButton">
           <property name="geometry">
            <rect>
-            <x>520</x>
-            <y>360</y>
+            <x>510</x>
+            <y>340</y>
             <width>111</width>
             <height>31</height>
            </rect>
@@ -644,45 +498,6 @@
           </property>
           <property name="text">
            <string>BeforeTighten</string>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="TeachButton">
-          <property name="geometry">
-           <rect>
-            <x>440</x>
-            <y>320</y>
-            <width>75</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>TEACH</string>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="StopteachButton">
-          <property name="geometry">
-           <rect>
-            <x>520</x>
-            <y>320</y>
-            <width>91</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>STOPTEACH</string>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="ReplayButton">
-          <property name="geometry">
-           <rect>
-            <x>440</x>
-            <y>280</y>
-            <width>101</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>REPLAYTEACH</string>
           </property>
          </widget>
          <widget class="QWidget" name="layoutWidget">
@@ -732,43 +547,222 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="">
+         <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
-            <x>470</x>
-            <y>110</y>
-            <width>81</width>
-            <height>54</height>
+            <x>460</x>
+            <y>70</y>
+            <width>111</width>
+            <height>85</height>
            </rect>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_5">
+          <layout class="QVBoxLayout" name="verticalLayout_6" stretch="2,2">
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_18">
+            <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,6">
              <item>
-              <widget class="QLabel" name="label_13">
-               <property name="text">
-                <string>P</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_18" stretch="1,6">
+               <item>
+                <widget class="QLabel" name="label_13">
+                 <property name="text">
+                  <string>P</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="TensionP"/>
+               </item>
+              </layout>
              </item>
              <item>
-              <widget class="QLineEdit" name="TensionP"/>
+              <layout class="QHBoxLayout" name="horizontalLayout_19" stretch="1,6">
+               <item>
+                <widget class="QLabel" name="label_14">
+                 <property name="text">
+                  <string>D</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="TensionD"/>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_19">
+            <layout class="QHBoxLayout" name="horizontalLayout_20" stretch="1,6">
              <item>
-              <widget class="QLabel" name="label_14">
+              <widget class="QLabel" name="label_15">
                <property name="text">
-                <string>D</string>
+                <string>I</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="TensionD"/>
+              <widget class="QLineEdit" name="TensionI"/>
              </item>
             </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QPushButton" name="VRDisplay">
+          <property name="geometry">
+           <rect>
+            <x>550</x>
+            <y>210</y>
+            <width>101</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <family>Times New Roman</family>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>VRDISPLAY</string>
+          </property>
+         </widget>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="geometry">
+           <rect>
+            <x>300</x>
+            <y>60</y>
+            <width>151</width>
+            <height>131</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <family>Times New Roman</family>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="title">
+           <string>POSITION</string>
+          </property>
+          <widget class="QWidget" name="layoutWidget">
+           <property name="geometry">
+            <rect>
+             <x>21</x>
+             <y>31</y>
+             <width>91</width>
+             <height>83</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,3">
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>X</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="PosXlineEdit"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="1,3">
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>Y</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="PosYlineEdit"/>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="1,3">
+              <item>
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Z</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="PosZlineEdit"/>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>300</x>
+            <y>200</y>
+            <width>241</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_30">
+           <item>
+            <widget class="QPushButton" name="ReplayButton">
+             <property name="text">
+              <string>ReplayTeach</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="TeachButton">
+             <property name="text">
+              <string>TeachStart</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="StopteachButton">
+             <property name="text">
+              <string>StopTeach</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>450</x>
+            <y>280</y>
+            <width>171</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_31">
+           <item>
+            <widget class="QPushButton" name="sendmsgButton">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>SEND</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="StopMotorButton">
+             <property name="font">
+              <font>
+               <pointsize>12</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string>StopMotor</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -828,183 +822,146 @@
          </widget>
         </widget>
        </widget>
-       <widget class="QTabWidget" name="tabWidget_3">
+       <widget class="QWidget" name="linkWidget" native="true">
         <property name="geometry">
          <rect>
-          <x>1140</x>
+          <x>680</x>
           <y>10</y>
-          <width>621</width>
-          <height>411</height>
+          <width>281</width>
+          <height>201</height>
          </rect>
         </property>
-        <property name="font">
-         <font>
-          <family>Times New Roman</family>
-          <pointsize>10</pointsize>
-         </font>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>651</width>
+          <height>641</height>
+         </rect>
         </property>
-        <property name="currentIndex">
-         <number>0</number>
-        </property>
-        <widget class="QWidget" name="tab">
-         <attribute name="title">
-          <string>LINKDISPLAY</string>
-         </attribute>
-         <widget class="QWidget" name="linkWidget" native="true">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>20</y>
-            <width>431</width>
-            <height>341</height>
-           </rect>
-          </property>
-         </widget>
-         <widget class="QPushButton" name="VRDisplay">
-          <property name="geometry">
-           <rect>
-            <x>470</x>
-            <y>20</y>
-            <width>101</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="font">
-           <font>
-            <family>Times New Roman</family>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>VRDISPLAY</string>
-          </property>
-         </widget>
-        </widget>
+        <layout class="QVBoxLayout" name="TensionplotLayout">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_21">
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot" native="true"/>
+           </item>
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot2" native="true"/>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_22">
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot3" native="true"/>
+           </item>
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot4" native="true"/>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_23">
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot5" native="true"/>
+           </item>
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot6" native="true"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
         <string>ENCONDER</string>
        </attribute>
-       <widget class="QCustomPlot" name="Motor1Plot" native="true">
-        <property name="geometry">
-         <rect>
-          <x>1150</x>
-          <y>20</y>
-          <width>315</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="Motor2Plot" native="true">
-        <property name="geometry">
-         <rect>
-          <x>1150</x>
-          <y>270</y>
-          <width>315</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="Motor3Plot" native="true">
-        <property name="geometry">
-         <rect>
-          <x>1150</x>
-          <y>530</y>
-          <width>315</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="Motor4Plot" native="true">
-        <property name="geometry">
-         <rect>
-          <x>1490</x>
-          <y>20</y>
-          <width>315</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="Motor5Plot" native="true">
-        <property name="geometry">
-         <rect>
-          <x>1490</x>
-          <y>270</y>
-          <width>315</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="Motor6Plot" native="true">
-        <property name="geometry">
-         <rect>
-          <x>1490</x>
-          <y>530</y>
-          <width>315</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot7" native="true">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>20</x>
           <y>20</y>
-          <width>540</width>
-          <height>240</height>
+          <width>601</width>
+          <height>491</height>
          </rect>
         </property>
+        <layout class="QVBoxLayout" name="verticalLayout_7">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_24">
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot7" native="true"/>
+           </item>
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot10" native="true"/>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_25">
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot8" native="true"/>
+           </item>
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot11" native="true"/>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_26">
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot9" native="true"/>
+           </item>
+           <item>
+            <widget class="QCustomPlot" name="qCustomPlot12" native="true"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </widget>
-       <widget class="QCustomPlot" name="qCustomPlot10" native="true">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
-          <x>580</x>
+          <x>660</x>
           <y>20</y>
-          <width>540</width>
-          <height>240</height>
+          <width>601</width>
+          <height>551</height>
          </rect>
         </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot8" native="true">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>270</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot11" native="true">
-        <property name="geometry">
-         <rect>
-          <x>580</x>
-          <y>270</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot9" native="true">
-        <property name="geometry">
-         <rect>
-          <x>20</x>
-          <y>520</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
-       </widget>
-       <widget class="QCustomPlot" name="qCustomPlot12" native="true">
-        <property name="geometry">
-         <rect>
-          <x>580</x>
-          <y>520</y>
-          <width>540</width>
-          <height>240</height>
-         </rect>
-        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_27">
+           <item>
+            <widget class="QCustomPlot" name="Motor1Plot" native="true"/>
+           </item>
+           <item>
+            <widget class="QCustomPlot" name="Motor4Plot" native="true"/>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_28">
+           <item>
+            <widget class="QCustomPlot" name="Motor2Plot" native="true"/>
+           </item>
+           <item>
+            <widget class="QCustomPlot" name="Motor5Plot" native="true"/>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_29">
+           <item>
+            <widget class="QCustomPlot" name="Motor3Plot" native="true"/>
+           </item>
+           <item>
+            <widget class="QCustomPlot" name="Motor6Plot" native="true"/>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_5">
@@ -1085,7 +1042,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1832</width>
+     <width>1400</width>
      <height>23</height>
     </rect>
    </property>

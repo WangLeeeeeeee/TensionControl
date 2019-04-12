@@ -2,7 +2,7 @@
 
 // matlab: theta1:tempAngle[2] theta2:tempAngle[1] theta3:tempAngle[0] theta4:tempAngle[3]
 double TensionSensor[6];
-TensionPID tension_pid[6] = {{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1},{0.6,0,0,0,0,0,0,1}};
+TensionPID tension_pid[6] = {{0.7,0.4,0,0,0,0,0,0,1},{0.7,0.4,0,0,0,0,0,0,1},{0.7,0.4,0,0,0,0,0,0,1},{0.7,0.4,0,0,0,0,0,0,1},{0.70,0.4,0.001,0.01,0,0,0,0,1},{0.55,0.19,0.001,0.01,0,0,0,0,1}};
 TorAnPID torAn_pid[4] = {{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{1,0,0,0,0,0}};
 double Testq1[101] = {0,	0.002,	0.011,	0.018,	0.024,	0.029,	0.033,	0.038,	0.042,	0.047,	0.052,	0.057,
                       0.062,	0.067,	0.072,	0.077,	0.082,	0.088,	0.094,	0.1,	0.105,	0.111,	0.116,
@@ -77,10 +77,9 @@ unsigned int replayCount = 0;
 //---------------------------------------------------
 // Using the cubic polynomial to plan the angle
 //---------------------------------------------------
-double runTime = 5;
 double thetaStart[4] = {0,0,0,0};
 double thetaEnd[4] = {0,0,0,0};
-double thetaTf = 50.0;
+double thetaTf = 20.0;
 
 TensionControl::TensionControl(QObject *parent):QThread(parent)
 {
@@ -106,8 +105,8 @@ void TensionControl::run()
 void TensionControl::TensionValueUpdate()
 {
     unsigned int mintension;
-    mintension = 30;
-    for(int i=0; i<3; i++)
+    mintension = 20;
+    for(int i=0; i<6; i++)
     {
         if(tension_y[receive_count_tension-i] > mintension)
             tensionLowFlag[0] = 1;
@@ -147,7 +146,7 @@ void TensionControl::TensionSet()
 
     QString SendData;
 
-    for(int i=5; i<6; i++) // remember just for emg test!!!!
+    for(int i=4; i<6; i++) // remember just for emg test!!!!
     {
         if(TensionSensor[i]>8000)
         {
@@ -166,25 +165,17 @@ void TensionControl::TensionSet()
             if(tension_pid[i].flag == 1)
             {
                 tension_pid[i].Error = AimTension[i] - TensionSensor[i];
-                if(tension_pid[i].Error > 10)
+                if(tension_pid[i].Error > 50)
                 {
-                    tension_pid[i].integral += tension_pid[i].Error;
-                    tension_pid[i].velocity = 0.8*tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
-                    tension_pid[i].LastError = tension_pid[i].Error;
 
-                    // ten array oftension is below one set value means it is totally loose, so speed up to make cable tense.
-                    if(tensionLowFlag[i] == 0)
-                    {
-                        if((i==4) || (i==5))
-                            tension_pid[i].velocity = 1400;
-                        else
-                            tension_pid[i].velocity = 500;
-                    }
+                    tension_pid[i].integral += tension_pid[i].Error;
+                    tension_pid[i].velocity = 1.7*tension_pid[i].KPTight*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
+                    tension_pid[i].LastError = tension_pid[i].Error;
                 }
-                else if(tension_pid[i].Error < -10)
+                else if(tension_pid[i].Error < -50)
                 {
                     tension_pid[i].integral += tension_pid[i].Error;
-                    tension_pid[i].velocity = tension_pid[i].KP*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
+                    tension_pid[i].velocity = 1.6*tension_pid[i].KPLoose*tension_pid[i].Error + tension_pid[i].KI*tension_pid[i].integral + tension_pid[i].KD*(tension_pid[i].Error-tension_pid[i].LastError);
                     tension_pid[i].LastError = tension_pid[i].Error;
                 }
                 else
@@ -192,16 +183,11 @@ void TensionControl::TensionSet()
                     tension_pid[i].velocity = 0;
                 }
 
-                if(tension_pid[i].velocity > MAXSPEED)
-                    tension_pid[i].velocity = MAXSPEED;
-                if(tension_pid[i].velocity < MINSPEED)
-                    tension_pid[i].velocity = MINSPEED;
-
-                SendData = QString::number(long(i)) + "V" + QString::number(long(tension_pid[i].velocity)) + "\r";
+                SendData = QString::number(long(i)) + "C" + QString::number(long(tension_pid[i].velocity)) + "\r";
                 serial1->write(SendData.toLatin1());
             }
         }
-        //qDebug()<<SendData;
+        qDebug()<<SendData;
     }
 
     for(int i=0; i<6; i++)
@@ -211,7 +197,7 @@ void TensionControl::TensionSet()
 // Com open configure which connect with the 'open com' button
 void TensionControl::slotSerialInit()
 {
-    serial1->setPortName("COM16");
+    serial1->setPortName("COM19");
     serial1->setBaudRate(QSerialPort::Baud9600);
     serial1->setDataBits(QSerialPort::Data8);
     serial1->setStopBits(QSerialPort::OneStop);
@@ -278,8 +264,11 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
         for(int i=0; i<6; i++)
             AimTension[i] = Data[i];
         // here we change the kp parameter to test
-        tension_pid[5].KP = 0.01 * Data[6];
-        tension_pid[5].KI = 0.01 * Data[7];
+
+        //tension_pid[5].KP = 0.01 * Data[6];
+        //tension_pid[5].KD = 0.01 * Data[7];
+        //tension_pid[5].KI = 0.001 * Data[8];
+
 
         for(int i=0; i<6; i++)
         {
@@ -287,9 +276,9 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
             serial1->write(SendData.toLatin1());
 
             SendData = QString::number(long(i)) + "SP" + QString::number(long(MAXSPEED)) + "\r";
-            serial1->write(SendData.toLatin1());qazzzzzzzzzzzzzzzzzzzzzaz
+            serial1->write(SendData.toLatin1());
         }
-        tensionCtrlTimer->start(100);
+        tensionCtrlTimer->start(50);
         cycleJointTimer->stop();
         linearControlTimer->stop();
         replayTimer->stop();
@@ -321,39 +310,6 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
             SendData = QString::number(long(i)) + "DEC" + QString::number(long(222)) + "\r";
             serial1->write(SendData.toLatin1());
         }
-        /*
-        cycleJointTimer->start(5000);
-        tensionCtrlTimer->stop();
-        linearControlTimer->stop();
-        teachTimer->stop();
-        replayTimer->stop();
-        for(int i=0; i<4; i++)
-        {
-            tempAngle[i] = Data[i]*3.14/180;
-            //qDebug()<<tempAngle[i];
-        }
-        setVel = Data[4];
-        setAcc = Data[5];
-        setCir = Data[6];
-        for(int i=0; i<6; i++)
-        {
-            CalculateCabelLen(i,cableLen,tempAngle);
-            cableLenDeta[i] = cableLen[i] - cableLenInit[i];
-            //cableLenInit[i] = cableLen[i];
-            aimCircle[i] = -1*cableLenDeta[i]/(2*pi*20);
-            qDebug()<<"aimCircle"<<i<<"is: "<<aimCircle[i];
-
-            /*
-            // test a stragety that define the positive and negative cabel
-            // for positive cable we control the position that is aimcircle
-            // for negative cable we control the tension make it comply the motion
-            for(int i=0; i<6; i++)
-            {
-                if(aimCircle[i]>0.001)
-                    tension_pid[i].flag = -1;
-            }
-        }
-        */
     }
     // PTP control mode
     else if(tensionOrAngle == 2)
@@ -398,7 +354,7 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
             SendData = QString::number(long(i)) + "DEC" + QString::number(long(222)) + "\r";
             serial1->write(SendData.toLatin1());
         }
-        linearControlTimer->start(50);
+        linearControlTimer->start(70);
         tensionCtrlTimer->stop();
         cycleJointTimer->stop();
         teachTimer->stop();
@@ -416,6 +372,9 @@ void TensionControl::slotSerialCtrl(uint tensionOrAngle, int* Data)
             tempAngle[i] = Data[i];
             //qDebug()<<tempAngle[i];
         }
+        torAn_pid[3].KP = Data[4]*0.01;
+        torAn_pid[3].KD = Data[5]*0.01;
+        torAn_pid[3].KI = Data[6]*0.001;
         torqueTimer->start(50);
     }
 }
@@ -487,30 +446,6 @@ void TensionControl::CalculateCabelLen(uint i, double *cableLen, double* tempAng
                         (607*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 +
                         118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
                         118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
-//        cableLen[i] = qPow((qPow((125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) -
-//                        (343*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
-//                        (343*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 + 142),2) +
-//                       qPow(((343*cos(tempAngle[2])*sin(tempAngle[0]))/2 +
-//                        125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
-//                        (343*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 - 27),2) +
-//                       qPow(((343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 - 125*cos(tempAngle[1] - pi/2) + 33),2)),0.5) +
-//                qPow((qPow((125*cos(tempAngle[1] - pi/2) - 118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) +
-//                  132*cos(tempAngle[0])*sin(tempAngle[1] - pi/2) + 118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) +
-//                  118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
-//                  118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2) +
-//                 qPow((125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) +
-//                  132*sin(tempAngle[2])*sin(tempAngle[0]) +
-//                  118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
-//                  118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
-//                  118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
-//                  118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
-//                  132*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)),2) +
-//                 qPow((132*cos(tempAngle[2])*sin(tempAngle[0]) - 125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
-//                  118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
-//                  118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
-//                  132*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]) +
-//                  118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
-//                  118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
     case 5:
         cableLen[i] = qPow((qPow((118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) +
                         (607*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 +
@@ -630,7 +565,7 @@ void TensionControl::slotLinearControl()
         linearCount++;
         for(int i=0; i<6; i++)
         {
-            if(linearCount > 150)
+            if(linearCount > 110)
             {
                 linearCount = 0;
                 lineCycleCount++;
@@ -827,7 +762,7 @@ void TensionControl::torqueControl()
     // just the elbow control for test
     for(int i=0; i<5; i++)
     {
-        AimTension[i] = 100;
+        AimTension[i] = 200;
     }
     torAn_pid[3].Error = tempAngle[3] + elbow_y[receive_count_angle]; // because abduction is decrease
     if((torAn_pid[3].Error > 3) || (torAn_pid[3].Error < -3))
@@ -839,7 +774,7 @@ void TensionControl::torqueControl()
     }
     else
     {
-        AimTension[5] = AimTension[5];
+        AimTension[5] = 200;
     }
 
     qDebug()<<"now the elbow angle is:"<<elbow_y[receive_count_angle];

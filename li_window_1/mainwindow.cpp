@@ -8,19 +8,13 @@
 #include <QVariant>
 #include <ActiveQt/QAxObject>
 #include <qdebug.h>
-#include "motorcontrol.h"
+//#include "motorcontrol.h"
 #include "vrdisplay.h"
-#include "tensioncontrol.h"
+//#include "tensioncontrol.h"
+#include "modbus.h"
+#include <QLayout>
 
-
-unsigned int shift_x_tension = 0;
-unsigned int shift_x_angle = 0;
-unsigned int shift_x_pressure = 0;
-
-#define RcvBufSize 380
-unsigned int RcvBufNum;
-unsigned char RcvBuf[RcvBufSize];
-bool new_flag=0;
+QVector<float> fiteffRecord;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -31,57 +25,51 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle(QString("Upper Limb Console"));
     ui->statusBar->showMessage(QString("welcome to use upper limb console"));
 
+    // Instantiation object
     getsensordata = new GetSensordata;
-    motorcontrol = new MotorControl;
+    //motorcontrol = new MotorControl;
     vrdisplay = new VRDisplay;
-    tensioncontrol = new TensionControl;
+    //tensioncontrol = new TensionControl;
     emg_server = new EMG_server;
+    mb = new modbus;
 
-    // 3D surface
-    //Q3DScatter *graph = new Q3DScatter();
-    //QWidget *container = QWidget::createWindowContainer(graph);
-
-    /*
-    if (!graph->hasContext()) {
-        QMessageBox msgBox;
-        msgBox.setText("Couldn't initialize the OpenGL context.");
-        msgBox.exec();
-        return -1;
-    }
-    */
-
+    // 3D link module visualization
     QSize screenSize = graph->screen()->size();
     container->setMinimumSize(QSize(screenSize.width()/4, screenSize.height()/4));
     container->setMaximumSize(QSize(screenSize.width(), screenSize.height()));
-
     container->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     container->setFocusPolicy(Qt::StrongFocus);
-
     QHBoxLayout *hLayout = new QHBoxLayout(ui->linkWidget);
     QVBoxLayout *vLayout = new QVBoxLayout();
     hLayout->addWidget(container, 1);
     hLayout->addLayout(vLayout);
     vLayout->setAlignment(Qt::AlignTop);
-
     ui->linkWidget->setWindowTitle(QStringLiteral("Link model"));
-
     ui->linkWidget->show();
 
-    // Before connect object must be instantiation!!!
-    connect(this, SIGNAL(sigSerialInit()), tensioncontrol, SLOT(slotSerialInit()));
-    connect(this, SIGNAL(sigSerialClose()), tensioncontrol, SLOT(slotSerialClose()));
-    connect(this, SIGNAL(sigSerialCtrl(uint, int*)), tensioncontrol, SLOT(slotSerialCtrl(uint, int*)));
-    connect(this, SIGNAL(sigBeforeTigh(unsigned int *)), tensioncontrol, SLOT(slotBeforeTigh(unsigned int *)));
+    // connect the maindow signal with vr com
     connect(this,SIGNAL(sigVRSerialOpen()), vrdisplay, SLOT(slotVRSerialOpen()));
-    connect(tensioncontrol, SIGNAL(sigStopplot()), this, SLOT(slotStopplot()));
-    connect(tensioncontrol, SIGNAL(sigStartplot()), this, SLOT(slotStartplot()));
-    connect(this, SIGNAL(sigTeach()), tensioncontrol, SLOT(slotTeachStart()));
-    connect(this, SIGNAL(sigStopTeach()), tensioncontrol, SLOT(slotTeachStop()));
-    connect(this, SIGNAL(sigReplay()), tensioncontrol, SLOT(slotReplayTeach()));
+
+    // connect the emg_tcp signals with mainwindows
     connect(this, SIGNAL(sigEmgStart()), emg_server, SLOT(slotEmgStart()));
     connect(this, SIGNAL(sigEmgTrigger()), emg_server, SLOT(slotEmgTrigger()));
     connect(emg_server, SIGNAL(sigEmgThetaFit(double*,double*,double*,uint,int)), this, SLOT(slotEmgThetaFit(double*,double*,double*,uint,int)));
+
+    // connect the getsensordata signals with mainwindow
     connect(getsensordata, SIGNAL(sigPlotTrigger()), this, SLOT(plot()));
+
+    // connect the mainwindow signals with modbus
+    connect(this, SIGNAL(sigDisableMotor()), mb, SLOT(slotDisableMotor()));
+    connect(this, SIGNAL(sigMdSerialInit()), mb, SLOT(slotMdSerialInit()));
+    connect(this, SIGNAL(sigMdSerialClose()), mb, SLOT(slotMdSerialClose()));
+    connect(this, SIGNAL(sigMdBeforeTigh(uint*)), mb, SLOT(slotMdBeforeTigh(uint*)));
+    connect(this, SIGNAL(sigMdSerialCtrl(uint,int*)), mb, SLOT(slotMdSerialCtrl(uint,int*)));
+    connect(this, SIGNAL(sigTeach()), mb, SLOT(slotMdTeachStart()));
+    connect(this, SIGNAL(sigStopTeach()), mb, SLOT(slotMdTeachStop()));
+    connect(this, SIGNAL(sigReplay()), mb, SLOT(slotMdReplayTeach()));
+    // connect the modbus signals with mainwindow
+    connect(mb, SIGNAL(sigMdStopplot()), this, SLOT(slotStopplot()));
+    connect(mb, SIGNAL(sigMdStartplot()), this, SLOT(slotStartplot()));
 
 }
 
@@ -91,17 +79,6 @@ MainWindow::~MainWindow()
     getsensordata->wait();
     delete getsensordata;
     getsensordata = 0;
-
-    motorcontrol->terminate();
-    motorcontrol->wait();
-    delete motorcontrol;
-    motorcontrol = 0;
-
-    tensioncontrol->terminate();
-    tensioncontrol->wait();
-    delete tensioncontrol;
-    tensioncontrol = 0;
-
     delete ui;
 }
 
@@ -161,7 +138,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot->xAxis->setLabel("Time");
+    //ui->qCustomPlot->xAxis->setLabel("Time");
     ui->qCustomPlot->yAxis->setLabel("Tenison1");
 
     ui->qCustomPlot2->addGraph();
@@ -170,7 +147,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot2->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot2->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot2->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot2->xAxis->setLabel("Time");
+    //ui->qCustomPlot2->xAxis->setLabel("Time");
     ui->qCustomPlot2->yAxis->setLabel("Tenison2");
 
     ui->qCustomPlot3->addGraph();
@@ -179,7 +156,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot3->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot3->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot3->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot3->xAxis->setLabel("Time");
+    //ui->qCustomPlot3->xAxis->setLabel("Time");
     ui->qCustomPlot3->yAxis->setLabel("Tenison3");
 
     ui->qCustomPlot4->addGraph();
@@ -188,7 +165,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot4->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot4->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot4->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot4->xAxis->setLabel("Time");
+    //ui->qCustomPlot4->xAxis->setLabel("Time");
     ui->qCustomPlot4->yAxis->setLabel("Tenison4");
 
     ui->qCustomPlot5->addGraph();
@@ -197,7 +174,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot5->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot5->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot5->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot5->xAxis->setLabel("Time");
+    //ui->qCustomPlot5->xAxis->setLabel("Time");
     ui->qCustomPlot5->yAxis->setLabel("Tenison5");
 
     ui->qCustomPlot6->addGraph();
@@ -206,7 +183,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot6->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot6->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot6->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot6->xAxis->setLabel("Time");
+    //ui->qCustomPlot6->xAxis->setLabel("Time");
     ui->qCustomPlot6->yAxis->setLabel("Tenison6");
 
     ui->qCustomPlot7->addGraph();
@@ -480,7 +457,7 @@ void MainWindow::setActionsEnable(bool status)
 //
 void MainWindow::on_actionOpen_triggered()
 {
-    emit sigSerialInit();
+    emit sigMdSerialInit();
     //tensioncontrol->start();
     ui->actionOpen->setEnabled(false);
 
@@ -502,7 +479,7 @@ void MainWindow::on_actionClose_triggered()
 
     ui->statusBar->showMessage(tr(""));
 
-    emit sigSerialClose();
+    emit sigMdSerialClose();
 }
 
 
@@ -612,6 +589,9 @@ void MainWindow::on_actionSave_triggered()
 
     QAxObject *cell_23 = pSheet->querySubObject("Cells(int, int)", 1, 23);
     cell_23->dynamicCall("SetValue(const QVariant&)", QVariant("ElbowAngle_emg"));
+
+    QAxObject *cell_24 = pSheet->querySubObject("Cells(int, int)", 1, 24);
+    cell_24->dynamicCall("SetValue(const QVariant&)", QVariant("ElbowAngle_fit"));
 
 
     // Change one-dimension to two-dimension array
@@ -872,7 +852,6 @@ void MainWindow::on_actionSave_triggered()
     user_range20->setProperty("Value",res_20);
     vars.clear();
 
-    /*
     // the emg data and the relevant elbow angle
     for(i=0; i<emgsaveLen; i++)
     {
@@ -897,7 +876,19 @@ void MainWindow::on_actionSave_triggered()
     QAxObject *user_range22 = pSheet->querySubObject("Range(const QString&)",RangeStr);
     user_range22->setProperty("Value",res_22);
     vars.clear();
-*/
+
+    for(i=0; i<fiteffRecord.size(); i++)
+    {
+        QList<QVariant> rows;
+        rows.append(fiteffRecord[i]);
+        vars.append(QVariant(rows));
+    }
+    QVariant res_23(vars);
+    RangeStr = "W2:W" + QString::number(fiteffRecord.length());
+    QAxObject *user_range23 = pSheet->querySubObject("Range(const QString&)",RangeStr);
+    user_range23->setProperty("Value",res_23);
+    vars.clear();
+
 
     //excel
     pWorkBook->dynamicCall("SaveAs(const QString &)", QDir::toNativeSeparators(filename));
@@ -998,8 +989,7 @@ void MainWindow::plot()
     pen.setWidth(3);
     pen.setBrush(Qt::blue);
 
-    unsigned int plotXrange = (time_x_tension[receive_count_tension]>50)?(time_x_tension[receive_count_tension]-50):(0);
-    qDebug()<<"plotXrange is:"<<plotXrange;
+    //qDebug()<<"plotXrange is:"<<plotXrange;
 
 
     // test, only paint the latest one hundred data;
@@ -1023,6 +1013,7 @@ void MainWindow::plot()
             tension6Plot[k] = tension_y6[i];
             k++;
         }
+
         for(int i=time_x_angle[receive_count_angle]-plotlength; i<time_x_angle[receive_count_angle]; i++)
         {
             elbowXPlot[p] = elbow_x[i];
@@ -1033,6 +1024,7 @@ void MainWindow::plot()
             shoulZPlot[p] = shoulder_z[i];
             p++;
         }
+
         for(int i=time_x_mocount[receive_count_mocount]-plotlength; i<time_x_mocount[receive_count_mocount]; i++)
         {
             Mot1CntPlot[s] = Motor1Count[i];
@@ -1081,6 +1073,7 @@ void MainWindow::plot()
         ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
         ui->qCustomPlot6->replot();
 
+
         // angle data plot
         ui->qCustomPlot7->graph(0)->setData(time_x_plot,elbowXPlot);
         ui->qCustomPlot7->graph(0)->setPen(pen);
@@ -1117,6 +1110,7 @@ void MainWindow::plot()
         ui->qCustomPlot12->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
         ui->qCustomPlot12->yAxis->setRange(-120,120);
         ui->qCustomPlot12->replot();
+
 
         ui->Motor1Plot->graph(0)->setData(time_x_plot,Mot1CntPlot);
         ui->Motor1Plot->graph(0)->setPen(pen);
@@ -1382,11 +1376,8 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[1] = ui->sendMsgLineEdit8->text().toInt();
         sendData[2] = ui->sendMsgLineEdit9->text().toInt();
         sendData[3] = ui->sendMsgLineEdit10->text().toUInt();
-        sendData[4] = ui->vellineEdit->text().toUInt();
-        sendData[5] = ui->acclineEdit->text().toUInt();
-        sendData[6] = ui->circlelineEdit->text().toUInt();
-        emit sigSerialCtrl(TensionOrAngle, sendData);
-        //motorcontrol->start();
+        sendData[4] = ui->circlelineEdit->text().toUInt();
+        emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
     // CABEL TENSION MODE
     else if(ui->cabel_RadioButton->isChecked())
@@ -1400,8 +1391,8 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[5] = ui->sendMsgLineEdit6->text().toInt();
         sendData[6] = ui->TensionP->text().toUInt(); // 100*kp
         sendData[7] = ui->TensionD->text().toUInt(); // 100*kd
-        emit sigSerialCtrl(TensionOrAngle, sendData);
-        //motorcontrol->start();
+        sendData[8] = ui->TensionI->text().toUInt(); // 100*ki
+        emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
     // PTP CONTROL MODE
     else if(ui->Position_RadioButton->isChecked())
@@ -1412,14 +1403,16 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[2] = ui->PosZlineEdit->text().toInt();
         sendData[3] = ui->vellineEdit->text().toUInt();
         sendData[4] = ui->acclineEdit->text().toUInt();
-        emit sigSerialCtrl(TensionOrAngle, sendData);
+        emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
     // LINEAR CONTROL MODE
     else if(ui->Linear_RadioButton->isChecked())
     {
         TensionOrAngle = 3;
-        emit sigSerialCtrl(TensionOrAngle, sendData);
+        emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
+
+    // Position PD control
     else if(ui->torque_RadioButton->isChecked())
     {
         TensionOrAngle = 4;
@@ -1427,7 +1420,10 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[1] = ui->sendMsgLineEdit8->text().toInt();
         sendData[2] = ui->sendMsgLineEdit9->text().toInt();
         sendData[3] = ui->sendMsgLineEdit10->text().toUInt();
-        emit sigSerialCtrl(TensionOrAngle, sendData);
+        sendData[4] = ui->TensionP->text().toUInt(); // 100*kp
+        sendData[5] = ui->TensionD->text().toUInt(); // 100*kd
+        sendData[6] = ui->TensionI->text().toUInt(); // 1000*ki
+        emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
     else
     {
@@ -1438,10 +1434,6 @@ void MainWindow::on_sendmsgButton_clicked()
 
 void MainWindow::on_actionStartMeasure_triggered()
 {
-//    receive_count_tension = 0;
-//    receive_count_angle = 0;
-//    receive_count_pressure = 0;
-//    receive_count_mocount = 0;
     getsensordata->start();
     //plot_timer->start(plot_timerdly);
     ui->actionStartMeasure->setEnabled(false);
@@ -1471,7 +1463,7 @@ void MainWindow::on_BeforeTightenButton_clicked()
         unsigned int TensionData[6];
         for(int i=0; i<6; i++)
             TensionData[i] = 200;
-        emit sigBeforeTigh(TensionData);
+        emit sigMdBeforeTigh(TensionData);
     }
 
 }
@@ -1490,26 +1482,17 @@ void MainWindow::slotStartplot()
 
 void MainWindow::on_TeachButton_clicked()
 {
-    emit sigTeach();
-//    if(ui->TeachButton->text() == "TEACH")
-//    {
-//        ui->TeachButton->text() = "STOPTEACH";
-//        emit sigTeach();
-//    }
-//    else {
-//        emit sigStopTeach();
-//        ui->TeachButton->text() = "TEACH";
-//    }
+    emit slotMdTeachStart();
 }
 
 void MainWindow::on_StopteachButton_clicked()
 {
-    emit sigStopTeach();
+    emit slotMdTeachStop();
 }
 
 void MainWindow::on_ReplayButton_clicked()
 {
-    emit sigReplay();
+    emit slotMdReplayTeach();
 }
 
 void MainWindow::on_pushButton_Listen_clicked()
@@ -1526,7 +1509,7 @@ void MainWindow::on_pushButton_Listen_clicked()
         qDebug() << "Stop listening!";
         emg_server->~EMG_server();
         ui->pushButton_Listen->setText("Listen");
-        //发送按键失能
+        // disable the button
         ui->pushButton_Trigger->setEnabled(false);
     }
 }
@@ -1534,7 +1517,6 @@ void MainWindow::on_pushButton_Listen_clicked()
 void MainWindow::on_pushButton_Start_clicked()
 {
     qDebug() << "Start EMG!";
-    //获取文本框内容并以ASCII码形式发送
     emg_server->Send_Data("start");
     emit sigEmgStart();
 }
@@ -1542,8 +1524,7 @@ void MainWindow::on_pushButton_Start_clicked()
 void MainWindow::on_pushButton_Trigger_clicked()
 {
     qDebug() << "Send Trigger!";
-    //获取文本框内容并以ASCII码形式发送
-    //emg_server->Send_Data("end");
+    emg_server->Send_Data("end");
     emit sigEmgTrigger();
 }
 
@@ -1551,6 +1532,8 @@ void MainWindow::slotEmgThetaFit(double *fiteff, double *bufferX, double *buffer
 {
     //plot_timer->stop();
     //QVector<double> x_dot(200),y_dot(200);
+    for(int i=0; i<10; i++)
+        fiteffRecord.append(fiteff[i]); // record the fit value
     QVector<double> x_dot;
     QVector<double> y_dot;
     for(int i=0; i<sizenum; i++)
@@ -1602,4 +1585,9 @@ void MainWindow::slotEmgThetaFit(double *fiteff, double *bufferX, double *buffer
     ui->emgFitPlot->graph(1)->setData(x,y);
 
     ui->emgFitPlot->replot();
+}
+
+void MainWindow::on_StopMotorButton_clicked()
+{
+    emit sigDisableMotor();
 }

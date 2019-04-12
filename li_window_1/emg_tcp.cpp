@@ -1,12 +1,13 @@
 #include "emg_tcp.h"
-#include "tensioncontrol.h"
+//#include "tensioncontrol.h"
+#include "modbus.h"
 
 unsigned int len = 131072;
 
 // 运动轨迹改成三次,拟合曲线外平滑不跳动
 double theta0_aim = 0;
 double thetaf_aim = 60.0;
-double tf_aim = 100.0; // aim time is 5 second(50 100 millisecond)
+double tf_aim = 200.0; // aim time is 5 second(50 100 millisecond)
 
 // 保存拟合曲线数据
 QVector<double> EmgDataSave(len),AngleElbow_emg(len);
@@ -18,6 +19,9 @@ unsigned int emgsaveLen=0;
 double resisforce0 = 0;
 double resisforcef = 3000;
 double resist_tf = 20.0;
+
+// 记录系统采集时间
+int recordsecond = 0;
 
 
 
@@ -89,8 +93,10 @@ EMG_server::EMG_server(QObject* parent):QObject(parent)
     connect(recordAngleTimer,SIGNAL(timeout()),this,SLOT(slotRecord()));
     posbackTimer = new QTimer(this);
     connect(posbackTimer,SIGNAL(timeout()),this,SLOT(slotposBack()));
-    tenctrl = new TensionControl;
-    connect(this, SIGNAL(sigEmgTensionctrl(uint*)), tenctrl, SLOT(slotEmgTenctrl(uint*)));
+    //tenctrl = new TensionControl;
+    //connect(this, SIGNAL(sigEmgTensionctrl(uint*)), tenctrl, SLOT(slotEmgTenctrl(uint*)));
+    mbctrl = new modbus;
+    connect(this, SIGNAL(sigEmgTensionctrl(uint*)), mbctrl, SLOT(slotEmgTenctrl(uint*)));
 }
 
 
@@ -122,15 +128,23 @@ void EMG_server::server_New_Connect()
 
 void EMG_server::Read_Data()
 {
-    qDebug()<<"enter the read dat";
+    recordAngleTimer->stop();
+    //Sleep(0.5);
+//    QTime current_time =QTime::currentTime();
+//    recordsecond = current_time.second() - recordsecond;
+//    qDebug()<<"recordsecond is:"<<recordsecond;
+    qDebug()<<"enter the read data";
     QByteArray buffer;
     //QVector<float> EMG_array;
     char* buf_string;
     const char delim[] = " ,[]";
     char *p;
     //读取缓冲区数据
+        //socket->readyRead();
     buffer = socket->readAll();
+    qDebug()<<"buffer is:"<<buffer;
     buf_string = buffer.data();//QByteArray to char
+    qDebug()<<"buf_string is:"<<buf_string;
     p = strtok(buf_string, delim);//Segmentate the string
     if(EMG_array.size() != 0) // clear the last data
         EMG_array.clear();
@@ -143,6 +157,17 @@ void EMG_server::Read_Data()
     if(!buffer.isEmpty())
     {
         qDebug() <<  EMG_array;
+        qDebug() << buffer;
+    }
+
+    // 检测是否有异常
+    for(int i=0; i<EMG_array.size(); i++)
+    {
+      if(EMG_array[i]>100)
+      {
+          qDebug()<<"something wrong happen in the process emg data receive!!!";
+            return;
+      }
     }
 
     //recordAngleTimer->stop();
@@ -245,6 +270,7 @@ void EMG_server::socket_Disconnected()
 
 void EMG_server::slotEmgStart()
 {
+    QTime current_time =QTime::currentTime();
     for(unsigned int i=0; i<imuRecordCout; i++)
     {
         elbYRecord_emg[i] = 0;
@@ -252,6 +278,7 @@ void EMG_server::slotEmgStart()
     imuRecordCout = 0;
     recordAngleTimer->start(100);
     posbackTimer->stop();
+    recordsecond = current_time.second();
 }
 
 void EMG_server::slotEmgTrigger()
@@ -355,7 +382,12 @@ void EMG_server::slotEmgTrigger()
 
 void EMG_server::slotRecord()
 {
-    qDebug()<<"imuRecord count is:"<<imuRecordCout;
+    //qDebug()<<"imuRecord count is:"<<imuRecordCout;
+    QTime current_time =QTime::currentTime();
+    recordsecond = current_time.second();
+    //qDebug()<<"recordsecond is:"<<recordsecond;
+    //qDebug()<<"imuRecordCout is:"<<imuRecordCout;
+
     // RECORD THE ANGLE
     double a;
     a = -elbow_y[receive_count_angle];
@@ -373,7 +405,7 @@ void EMG_server::slotRecord()
     //theta = testImu[imuRecordCout] + 1.11;
     if(theta == 0) // the result of qPow(0,n) seems infinite
         theta = 1;
-    qDebug()<<"theta is"<<theta;
+    //qDebug()<<"theta is"<<theta;
 
     // judge the angle if exceed the aim angle auto trigger
     if(theta > 59)
@@ -381,7 +413,7 @@ void EMG_server::slotRecord()
         slotEmgTrigger();
         Send_Data("end");
         recordAngleTimer->stop();
-        posbackTimer->start(100);
+        posbackTimer->start(50);
     }
 
     // when the theta is out of the range of last record, the fit result maybe strange, so set it to zero
@@ -394,7 +426,7 @@ void EMG_server::slotRecord()
     {
         // use the first and second data test
         fitTension += fitEfficient[i]*qPow(theta,Dimension-i);
-        qDebug()<<"the fitEfficiet"<<i<<"is:"<<fitEfficient[i];
+        //qDebug()<<"the fitEfficiet"<<i<<"is:"<<fitEfficient[i];
     }
     for(int i=0; i<4; i++)
         emgTension[i] = 300;
@@ -404,7 +436,7 @@ void EMG_server::slotRecord()
     }
     else
         emgTension[4] = 300;
-    qDebug()<<"emgTension 4 is:"<<emgTension[4];
+    //qDebug()<<"emgTension 4 is:"<<emgTension[4];
     /*
     // give a resist force
     double aimResistForce;
@@ -441,26 +473,26 @@ void EMG_server::slotRecord()
     {
         aimElbowAngle = thetaf_aim;
     }
-    qDebug()<<"aim theta is:"<<aimElbowAngle;
+    //qDebug()<<"aim theta is:"<<aimElbowAngle;
     double detaTheta = 0;
     detaTheta = aimElbowAngle - theta;
     if(detaTheta < 0)
         detaTheta = -detaTheta;
     fitTension = 300+10*fitTension*(detaTheta); // asist tension equal emg multiply deta theta
-    qDebug()<<"fitTension is:"<<fitTension;
+    //qDebug()<<"fitTension is:"<<fitTension;
     if(fitTension < 0)
     {
-        qDebug()<<"the asist tension is less 0";
+        //qDebug()<<"the asist tension is less 0";
         emgTension[5] = 200;
     }
     else
     {
         emgTension[5] = fitTension;
     }
-    if(emgTension[5] > 6500)
+    if(emgTension[5] > 7000)
     {
-        qDebug()<<"the asist tension is exceed 3000";
-        emgTension[5] = 6500;
+        //qDebug()<<"the asist tension is exceed 3000";
+        emgTension[5] = 7000;
     }
     imuRecordCout++;
 

@@ -17,19 +17,12 @@
 #include "plotcurves.h"
 #include "linkdisplay.h"
 #include "emg_tcp.h"
-//#include "vrdisplay.h"
-//#include "motorcontrol.h"
+#include "modbus.h"
+
 class VRDisplay;
-class MotorControl;
-class TensionControl;
-//#include <QtSerialPort/QSerialPort> //put the com send data in motorcontrol
-//#include "myglwidget.h"
+//class MotorControl;
+//class TensionControl;
 
-// set the read/write com delay
-//#define TIME_OUT  2
-
-// set the read com interval
-//#define TIMER_INTERVAL 10
 
 // set the plot interval
 #define TIME_PLOT_INTERVAL 200
@@ -96,16 +89,19 @@ private slots:
 
     void on_pushButton_Trigger_clicked();
 
+    void on_StopMotorButton_clicked();
+
 private:
     aboutdialog aboutdlg;
     //QSerialPort serial; // declare a serial com
     QTimer *plot_timer;
     unsigned int plot_timerdly;//set the serial port receive/send interval
     GetSensordata *getsensordata;
-    MotorControl *motorcontrol;
+    //MotorControl *motorcontrol;
     VRDisplay *vrdisplay;
-    TensionControl *tensioncontrol;
+    //TensionControl *tensioncontrol;
     EMG_server* emg_server;
+    modbus *mb;
     Ui::MainWindow *ui;
 
     // 3D surface
@@ -114,18 +110,23 @@ private:
     LinkDisplay *linkdisplay = new LinkDisplay(graph);
 
 signals:
-    void sigSerialInit();
-    void sigSerialClose();
-    void sigBeforeTigh(unsigned int *Data);
-    void sigSerialCtrl(unsigned int TensionOrAngle,int *Data);
+    // for com connect vr device
     void sigVRSerialOpen();
-    void sigTeach();
-    void sigStopTeach();
-    void sigReplay();
 
     // for emg
     void sigEmgStart();
     void sigEmgTrigger();
+
+    // for modbus
+    void sigDisableMotor();
+    void sigMdSerialInit();
+    void sigMdSerialClose();
+    void sigMdBeforeTigh(unsigned int *Data);
+    void sigMdSerialCtrl(unsigned int TensionOrAngle,int *Data);
+    void slotMdTeachStart();
+    void slotMdTeachStop();
+    void slotMdReplayTeach();
+
 };
 
 #endif // MAINWINDOW_H

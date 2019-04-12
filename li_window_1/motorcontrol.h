@@ -8,7 +8,7 @@
 //#include <QtSerialPort/QSerialPort>
 //#include "currentpid.h"
 #include "getsensordata.h"
-#include "tensioncontrol.h"
+//#include "tensioncontrol.h"
 
 /*
 typedef struct PID

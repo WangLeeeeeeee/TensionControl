@@ -8,7 +8,8 @@
 
 typedef struct PID
 {
-    double KP;           // proportion parameter
+    double KPTight;     // proportion of tight
+    double KPLoose;     // proportion of loose
     double KI;           // integral parameter
     double KD;           // differential parameter
     double Error;        //

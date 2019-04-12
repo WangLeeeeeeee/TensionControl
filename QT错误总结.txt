@@ -1,0 +1,54 @@
+error: LNK1158: 无法运行“D:\SFSetupPath\VisualStudio2015\VC\BIN\amd64\rc.exe”
+解决办法：
+将C:\Program Files (x86)\Windows Kits\10\bin\10.0.16299.0\x64  下的RC.Exe和RcDll.Dll拷贝到qmake的目录下（D:\SFSetupPath\QT\5.9.4\msvc2015_64\bin）
+
+qt error: C2872: “Q3DScatter”: 不明确的符号:
+将QT示例程序scatter中的scatterdatamodifier.cpp和scatterdatamodifier.h复制到工程目录下，编译通过（奇了怪）
+
+添加图标，点击resource, 右键，选择open with->资源管理器，新建prefix(若已经建过则不用再建)， 再添加文件，选中图标图片。
+
+D:\SFSetupPath\VisualStudio2015\VC\include\sal.h:2361: error: C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int
+解决办法：没有合适的解决办法，于是用git将版本退回之前的
+
+有一类错误就是定义的类型不合适：例如定义了一个unsigned int 型的k，然后将k赋值0.6，这会导致k在参与计算的过程中结果不对。
+
+想使用GSL（数学函数库），方便进行数学计算，调用外部库时显示：无法打开库
+在此记录是如何使用外部GSL库的：主要参考这篇博文：https://blog.csdn.net/czyt1988/article/details/39178975，不同的是生成lib文件不是使用cmd而是使用vs2015 x64本机工具命令提示符。
+main.obj:-1: error: LNK2019: 无法解析的外部符号 __imp_gsl_sf_bessel_J0，该符号在函数 main 中被引用
+但在使用vs程序调用没有问题。使用MinGW编译器版本的QT IDE也没有问题，于是尝试两种解决办法：1，将程序移植到MinGW下，但另一个问题出现就是在MinGW下，无法采集IMU数据（Lpms 构造函数报错）
+2，使用VS打开qt程序，在vs下编译，结果还是不行。
+
+新建emg_tcp文件后，新建了emg_server的信号和tensioncontrol的槽，目的是在点击窗口start按钮的时候，开始张力控制，流程是这样的：先在主窗口点击open com，接着点击start，但显示串口没打开，
+这是为什么：明明在第一步就点击的打开串口而且显示串口成功打开，为什么还会显示没打开呢？仔细想想，应该是这个原因：在mainwindow初始化的时候，新建了一个tensioncontrol的类，这个类中包含了serial这个
+类，也就是说点击了open com之后，一个serial类建立了，我们把它叫成tensioncontrol.serial，接着点击start，想要通过串口发送数据，但是注意，主窗口初始化的时候，同时新建了一个emgserver类，点击start之后，
+跳到emgserver类的槽函数中，在emgserver类初始化的过程中，同时新建了一个tesnioncontrol的类，名为tensionctrl，tensionctrl类自然也包含了一个serial类，所以问题出在这：tensioncontrol和tensionctrl是两个
+不同的类，点击open com只是初始化了tensioncontrol这个类中的serial，tensionctrl类中的serial并没有初始化，自然也就没有打开。
+
+sizeof(BufferX)/ sizeof(BufferX[0])或者sizeof(P) / sizeof(double)似乎不能计算数组包含数据的个数。
+使用如下语句新建数组：double *BufferY；BufferY = (double *)calloc(n , sizeof(double));其中n为数组长度
+QVector<double> x_dot；使用x_dot[i]=a;报错，似乎只能使用x_dot.append(a)添加数据但使用QVector<double> x_dot(100); x_dot[i]=a;可行，这是为什么？
+另外，使用QVector<double> x_dot这种方式可以使用x_dot.size()求得数组长度，但是用QVector<double> x_dot(100)，使用x_dot.size()得到得就是100
+
+有个问题就是：使用这种方式QVector<double> elbXRecord_emg(len)定义，elbowXRecord[0]赋值过后不能重新赋值。
+
+QAxBase: Error calling IDispatch member Range: Exception thrown by server
+             Code       : -2146827284
+             Source     : 
+             Description: 
+             Help       : 
+         Connect to the exception(int,QString,QString,QString) signal to catch this exception
+
+主界面卡顿（但并未利用主线程做计算，只是界面刷新绘图），猜想可能是绘图函数，所绘点太多导致，发现问题：
+	设置QVector<double> tension_y（131072），绘制时相当于将131072个数赋给绘图中，故产生卡顿，
+	修改为：新建数组大小为50，最近50个传感器数值，只绘制这50个数值。
+
+QThread 未定义基类
+解决办法：添加头文件<QThread>
+
+无法解析的外部命令：
+清理项目，执行qmake，构建项目，若还报错，则检查是不是函数未实现（如析构函数）
+
+在析构函数中不能调用虚函数！！！
+
+若想在点击右上角窗口关闭时执行某个函数，可以使用void MainWindow::closeEvent(QCloseEvent *event)函数，在函数中调用或执行命令
+但：可以发送信号到槽函数，不能调用串口发送数据，例如想要在关闭界面时给电机驱动器发送失能指令，发送不了。

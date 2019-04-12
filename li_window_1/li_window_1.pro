@@ -16,7 +16,7 @@ win32 {
 }
 
 QT       += core gui
-QT       += serialport
+QT       += serialport serialbus
 QT      += datavisualization
 QT += 3dcore 3drender 3dinput 3dextras
 QT       += network
@@ -30,12 +30,11 @@ SOURCES += main.cpp\
     qcustomplot.cpp \
     aboutdialog.cpp \
     getsensordata.cpp \
-    motorcontrol.cpp \
     vrdisplay.cpp \
-    tensioncontrol.cpp \
     linkdisplay.cpp \
     scatterdatamodifier.cpp \
-    emg_tcp.cpp
+    emg_tcp.cpp \
+    modbus.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -46,12 +45,11 @@ HEADERS  += mainwindow.h \
     LpmsSensorI.h \
     LpmsSensorManagerI.h \
     getsensordata.h \
-    motorcontrol.h \
     vrdisplay.h \
-    tensioncontrol.h \
     linkdisplay.h \
     scatterdatamodifier.h \
-    emg_tcp.h
+    emg_tcp.h \
+    modbus.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui

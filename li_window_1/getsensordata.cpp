@@ -63,8 +63,8 @@ float ShoulderAngle[3];
 ImuData Lpms1_Data;
 ImuData Lpms2_Data;
 
-LpmsSensorI* lpms1;
-LpmsSensorI* lpms2;
+//LpmsSensorI* lpms1;
+//LpmsSensorI* lpms2;
 
 // use for delay
 bool SenFlag = 0;
@@ -208,6 +208,7 @@ void GetSensordata::run()
 
    while(1)
    {
+
         // Checks, if conncted
         if((lpms1->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) && (lpms2->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED))
         {
@@ -244,6 +245,7 @@ void GetSensordata::run()
                 time_x_angle[receive_count_angle] = receive_count_angle;
             }
         }
+
 
         // Step 6: The device is acquiring data.
         wfAiCtrl->Start();
@@ -459,9 +461,13 @@ void GetSensordata::delay(int mseconds)
 
 void GetSensordata::slotSendDataToPlot()
 {
-    if((receive_count_tension!=0)&&(receive_count_angle!=0)&&(receive_count_mocount!=0))
-    {
-        emit sigPlotTrigger();
-    }
+//    if((receive_count_tension!=0)&&(receive_count_angle!=0)&&(receive_count_mocount!=0))
+//    {
+//        emit sigPlotTrigger();
+//    }
+        if((receive_count_tension!=0)&&(receive_count_mocount!=0))
+        {
+            emit sigPlotTrigger();
+        }
 }
 
