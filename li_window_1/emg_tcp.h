@@ -5,9 +5,11 @@
 #include <QTcpSocket>
 #include <QTimer>
 #include "getsensordata.h"
+//#include "modbus.h"
+#include "motorcontrol.h"
 //#include "tensioncontrol.h"
 //class TensionControl;
-class modbus;
+//class modbus;
 
 
 #define PORT 8090
@@ -44,7 +46,8 @@ private:
     QTimer *recordAngleTimer;
     QTimer *posbackTimer; // when we click "trigger" buttton we should let the elbow back to the start position
     //TensionControl *tenctrl;
-    modbus *mbctrl;
+    //modbus *mbctrl;
+//    motorcontrol* motorctrl;
     void polyfit(int n,double x[],double y[],int poly_n,double p[]);
     void gauss_solve(int n,double A[],double x[],double b[]);
 

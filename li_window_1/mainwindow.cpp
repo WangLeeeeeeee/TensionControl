@@ -1,17 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "myglwidget.h"
 #include <QDebug>
 #include <QtGui>
-#include <QVector>
-#include <QList>
-#include <QVariant>
 #include <ActiveQt/QAxObject>
 #include <qdebug.h>
-//#include "motorcontrol.h"
 #include "vrdisplay.h"
-//#include "tensioncontrol.h"
 #include "modbus.h"
+#include "motorcontrol.h"
 #include <QLayout>
 
 QVector<float> fiteffRecord;
@@ -27,11 +22,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Instantiation object
     getsensordata = new GetSensordata;
-    //motorcontrol = new MotorControl;
     vrdisplay = new VRDisplay;
-    //tensioncontrol = new TensionControl;
     emg_server = new EMG_server;
     mb = new modbus;
+    motorctrl = new motorcontrol;
+
+    // 创建子线程
+    threadModbus = new QThread(this);
+    mb->moveToThread(threadModbus);
 
     // 3D link module visualization
     QSize screenSize = graph->screen()->size();
@@ -47,6 +45,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->linkWidget->setWindowTitle(QStringLiteral("Link model"));
     ui->linkWidget->show();
 
+    // 通过信号与槽调用子线程
+    connect(threadModbus, &QThread::started, mb, &modbus::slotMdSerialInit, Qt::DirectConnection);
+    connect(mb, SIGNAL(sigModMessage(QString,QString)), this, SLOT(modMessage(QString,QString)));
+    connect(this, SIGNAL(sigModbusClose()), mb, SLOT(slotMdSerialClose()));
+    connect(motorctrl, SIGNAL(sigMotorControl(uint,int,qint32,bool)), mb, SLOT(writeModbus(uint,int,qint32,bool)));
+
     // connect the maindow signal with vr com
     connect(this,SIGNAL(sigVRSerialOpen()), vrdisplay, SLOT(slotVRSerialOpen()));
 
@@ -58,23 +62,24 @@ MainWindow::MainWindow(QWidget *parent) :
     // connect the getsensordata signals with mainwindow
     connect(getsensordata, SIGNAL(sigPlotTrigger()), this, SLOT(plot()));
 
-    // connect the mainwindow signals with modbus
-    connect(this, SIGNAL(sigDisableMotor()), mb, SLOT(slotDisableMotor()));
-    connect(this, SIGNAL(sigMdSerialInit()), mb, SLOT(slotMdSerialInit()));
-    connect(this, SIGNAL(sigMdSerialClose()), mb, SLOT(slotMdSerialClose()));
-    connect(this, SIGNAL(sigMdBeforeTigh(uint*)), mb, SLOT(slotMdBeforeTigh(uint*)));
-    connect(this, SIGNAL(sigMdSerialCtrl(uint,int*)), mb, SLOT(slotMdSerialCtrl(uint,int*)));
-    connect(this, SIGNAL(sigTeach()), mb, SLOT(slotMdTeachStart()));
-    connect(this, SIGNAL(sigStopTeach()), mb, SLOT(slotMdTeachStop()));
-    connect(this, SIGNAL(sigReplay()), mb, SLOT(slotMdReplayTeach()));
-    // connect the modbus signals with mainwindow
-    connect(mb, SIGNAL(sigMdStopplot()), this, SLOT(slotStopplot()));
-    connect(mb, SIGNAL(sigMdStartplot()), this, SLOT(slotStartplot()));
+    // connect the mainwindow signals with motorcontrol
+    connect(this, SIGNAL(sigDisableMotor()), motorctrl, SLOT(slotDisableMotor()));
+    connect(this, SIGNAL(sigMdBeforeTigh(uint*)), motorctrl, SLOT(slotMdBeforeTigh(uint*)));
+    connect(this, SIGNAL(sigMdSerialCtrl(uint,int*)), motorctrl, SLOT(slotMdSerialCtrl(uint,int*)));
+    connect(this, SIGNAL(sigMdTeachStart()), motorctrl, SLOT(slotMdTeachStart()));
+    connect(this, SIGNAL(sigMdTeachStop()), motorctrl, SLOT(slotMdTeachStop()));
+    connect(this, SIGNAL(sigMdReplayTeach()), motorctrl, SLOT(slotMdReplayTeach()));
+
+    qDebug()<<"mainwindow the trhead is"<<QThread::currentThreadId();
 
 }
 
 MainWindow::~MainWindow()
 {
+    if(!threadModbus->isRunning())
+        return;
+    threadModbus->quit();
+    threadModbus->wait();
     getsensordata->terminate();
     getsensordata->wait();
     delete getsensordata;
@@ -336,7 +341,7 @@ void MainWindow::Plot_Init()
     ui->emgFitPlot->graph(1)->setName("fit curve");
 
     plot_timer=new QTimer(this);
-    plot_timerdly = TIME_PLOT_INTERVAL;
+    //plot_timerdly = TIME_PLOT_INTERVAL;
     //connect(plot_timer,SIGNAL(timeout()),this,SLOT(plot()));
 
 }
@@ -457,8 +462,7 @@ void MainWindow::setActionsEnable(bool status)
 //
 void MainWindow::on_actionOpen_triggered()
 {
-    emit sigMdSerialInit();
-    //tensioncontrol->start();
+    threadModbus->start();
     ui->actionOpen->setEnabled(false);
 
     setActionsEnable(true);
@@ -467,19 +471,16 @@ void MainWindow::on_actionOpen_triggered()
 //
 void MainWindow::on_actionClose_triggered()
 {
-    //plot_timer->stop();
-    //serial.close();
-
+    emit sigModbusClose();
     ui->actionOpen->setEnabled(true);
-
     setActionsEnable(false);
-
     ui->actionSave->setEnabled(true);
     ui->actionExit->setEnabled(true);
-
     ui->statusBar->showMessage(tr(""));
-
-    emit sigMdSerialClose();
+    if(!threadModbus->isRunning())
+        return;
+    threadModbus->quit();
+    threadModbus->wait();
 }
 
 
@@ -491,7 +492,6 @@ void MainWindow::on_actionExit_triggered()
 //save to excel file
 void MainWindow::on_actionSave_triggered()
 {
-    //rece_timer->stop();
     plot_timer->stop();
     unsigned int i;
 
@@ -981,16 +981,10 @@ void MainWindow::plot()
             elbow_y[receive_count_angle]*3.14/180,
             elbow_z[receive_count_angle]*3.14/180);
 
-    //linkdisplay->adjustPos(0,0,0,0,0,3.14/3);
-
-
     QPen pen;
     pen.setStyle(Qt::SolidLine);
     pen.setWidth(3);
     pen.setBrush(Qt::blue);
-
-    //qDebug()<<"plotXrange is:"<<plotXrange;
-
 
     // test, only paint the latest one hundred data;
     unsigned int plotlength = 100;
@@ -1023,7 +1017,7 @@ void MainWindow::plot()
             shoulYPlot[p] = shoulder_y[i];
             shoulZPlot[p] = shoulder_z[i];
             p++;
-        }
+        }     
 
         for(int i=time_x_mocount[receive_count_mocount]-plotlength; i<time_x_mocount[receive_count_mocount]; i++)
         {
@@ -1073,7 +1067,6 @@ void MainWindow::plot()
         ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
         ui->qCustomPlot6->replot();
 
-
         // angle data plot
         ui->qCustomPlot7->graph(0)->setData(time_x_plot,elbowXPlot);
         ui->qCustomPlot7->graph(0)->setPen(pen);
@@ -1111,7 +1104,6 @@ void MainWindow::plot()
         ui->qCustomPlot12->yAxis->setRange(-120,120);
         ui->qCustomPlot12->replot();
 
-
         ui->Motor1Plot->graph(0)->setData(time_x_plot,Mot1CntPlot);
         ui->Motor1Plot->graph(0)->setPen(pen);
         ui->Motor1Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
@@ -1148,138 +1140,6 @@ void MainWindow::plot()
         ui->Motor6Plot->yAxis->setRange(min_motor_count[5],max_motor_count[5]*1.1);
         ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
     }
-
-
-    /*
-    ui->qCustomPlot->graph(0)->setData(time_x_tension,tension_y);
-    ui->qCustomPlot->graph(0)->setPen(pen);
-    ui->qCustomPlot->xAxis->setRange(0,time_x_tension[receive_count_tension]);
-    ui->qCustomPlot->yAxis->setRange(0,max_tension[0]*1.1);
-    ui->qCustomPlot->replot();
-
-    ui->qCustomPlot2->graph(0)->setData(time_x_tension,tension_y2);
-    ui->qCustomPlot2->graph(0)->setPen(pen);
-    ui->qCustomPlot2->xAxis->setRange(0,time_x_tension[receive_count_tension]);
-    ui->qCustomPlot2->yAxis->setRange(0,max_tension[1]*1.1);
-    ui->qCustomPlot2->replot();
-
-    ui->qCustomPlot3->graph(0)->setData(time_x_tension,tension_y3);
-    ui->qCustomPlot3->graph(0)->setPen(pen);
-    ui->qCustomPlot3->xAxis->setRange(0,time_x_tension[receive_count_tension]);
-    ui->qCustomPlot3->yAxis->setRange(0,max_tension[2]*1.1);
-    ui->qCustomPlot3->replot();
-
-    ui->qCustomPlot4->graph(0)->setData(time_x_tension,tension_y4);
-    ui->qCustomPlot4->graph(0)->setPen(pen);
-    ui->qCustomPlot4->xAxis->setRange(0,time_x_tension[receive_count_tension]);
-    ui->qCustomPlot4->yAxis->setRange(0,max_tension[3]*1.1);
-    ui->qCustomPlot4->replot();
-
-    ui->qCustomPlot5->graph(0)->setData(time_x_tension,tension_y5);
-    ui->qCustomPlot5->graph(0)->setPen(pen);
-    ui->qCustomPlot5->xAxis->setRange(0,time_x_tension[receive_count_tension]);
-    ui->qCustomPlot5->yAxis->setRange(0,max_tension[4]*1.1);
-    ui->qCustomPlot5->replot();
-
-    // pass data points to graphs:
-    ui->qCustomPlot6->graph(0)->setData(time_x_tension,tension_y6);
-    // let the ranges scale themselves so graph 0 fits perfectly in the visible area:
-    //ui->qCustomPlot6->graph(0)->rescaleAxes();
-
-    ui->qCustomPlot6->graph(0)->setPen(pen);
-    ui->qCustomPlot6->xAxis->setRange(receive_count_tension,50,Qt::AlignRight);
-    //ui->qCustomPlot6->xAxis->setRange(plotXrange,time_x_tension[receive_count_tension]);
-    ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
-    ui->qCustomPlot6->replot();
-
-    /*
-    // Elbow and Shoulder angle figure
-    ui->qCustomPlot7->graph(0)->setData(time_x_angle,elbow_x);
-    ui->qCustomPlot7->graph(0)->setPen(pen);
-    ui->qCustomPlot7->xAxis->setRange(0,time_x_angle[receive_count_angle]);
-    ui->qCustomPlot7->yAxis->setRange(-120,120);
-    ui->qCustomPlot7->replot();
-
-    ui->qCustomPlot8->graph(0)->setData(time_x_angle,elbow_y);
-    ui->qCustomPlot8->graph(0)->setPen(pen);
-    ui->qCustomPlot8->xAxis->setRange(0,time_x_angle[receive_count_angle]);
-    ui->qCustomPlot8->yAxis->setRange(-120,120);
-    ui->qCustomPlot8->replot();
-
-    ui->qCustomPlot9->graph(0)->setData(time_x_angle,elbow_z);
-    ui->qCustomPlot9->graph(0)->setPen(pen);
-    ui->qCustomPlot9->xAxis->setRange(0,time_x_angle[receive_count_angle]);
-    ui->qCustomPlot9->yAxis->setRange(-120,120);
-    ui->qCustomPlot9->replot();
-
-    ui->qCustomPlot10->graph(0)->setData(time_x_angle,shoulder_x);
-    ui->qCustomPlot10->graph(0)->setPen(pen);
-    ui->qCustomPlot10->xAxis->setRange(0,time_x_angle[receive_count_angle]);
-    ui->qCustomPlot10->yAxis->setRange(-120,120);
-    ui->qCustomPlot10->replot();
-
-    ui->qCustomPlot11->graph(0)->setData(time_x_angle,shoulder_y);
-    ui->qCustomPlot11->graph(0)->setPen(pen);
-    ui->qCustomPlot11->xAxis->setRange(0,time_x_angle[receive_count_angle]);
-    ui->qCustomPlot11->yAxis->setRange(-120,120);
-    ui->qCustomPlot11->replot();
-
-    ui->qCustomPlot12->graph(0)->setData(time_x_angle,shoulder_z);
-    ui->qCustomPlot12->graph(0)->setPen(pen);
-    ui->qCustomPlot12->xAxis->setRange(0,time_x_angle[receive_count_angle]);
-    ui->qCustomPlot12->yAxis->setRange(-120,120);
-    ui->qCustomPlot12->replot();
-
-    // Elbow surface pressure figure
-    ui->elbpresPlot->graph(0)->setData(time_x_surpressure,surpressure_elbow);
-    ui->elbpresPlot->xAxis->setRange(0,receive_count_pressure);
-    ui->elbpresPlot->yAxis->setRange(0,5);
-    ui->elbpresPlot->replot();
-
-    // Shoulder surface pressure figure
-    ui->shopresPlot->graph(0)->setData(time_x_surpressure,surpressure_shou1);
-    ui->shopresPlot->graph(1)->setData(time_x_surpressure,surpressure_shou2);
-    ui->shopresPlot->xAxis->setRange(0,receive_count_pressure);
-    ui->shopresPlot->yAxis->setRange(0,5);
-    ui->shopresPlot->replot();
-
-    ui->Motor1Plot->graph(0)->setData(time_x_mocount,Motor1Count);
-    ui->Motor1Plot->graph(0)->setPen(pen);
-    ui->Motor1Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
-    ui->Motor1Plot->yAxis->setRange(min_motor_count[0],max_motor_count[0]*1.1);
-    ui->Motor1Plot->replot();
-
-    ui->Motor2Plot->graph(0)->setData(time_x_mocount,Motor2Count);
-    ui->Motor2Plot->graph(0)->setPen(pen);
-    ui->Motor2Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
-    ui->Motor2Plot->yAxis->setRange(min_motor_count[1],max_motor_count[1]*1.1);
-    ui->Motor2Plot->replot();
-
-    ui->Motor3Plot->graph(0)->setData(time_x_mocount,Motor3Count);
-    ui->Motor3Plot->graph(0)->setPen(pen);
-    ui->Motor3Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
-    ui->Motor3Plot->yAxis->setRange(min_motor_count[2],max_motor_count[2]*1.1);
-    ui->Motor3Plot->replot();
-
-    ui->Motor4Plot->graph(0)->setData(time_x_mocount,Motor4Count);
-    ui->Motor4Plot->graph(0)->setPen(pen);
-    ui->Motor4Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
-    ui->Motor4Plot->yAxis->setRange(min_motor_count[3],max_motor_count[3]*1.1);
-    ui->Motor4Plot->replot();
-
-    ui->Motor5Plot->graph(0)->setData(time_x_mocount,Motor5Count);
-    ui->Motor5Plot->graph(0)->setPen(pen);
-    ui->Motor5Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
-    ui->Motor5Plot->yAxis->setRange(min_motor_count[4],max_motor_count[4]*1.1);
-    ui->Motor5Plot->replot(QCustomPlot::rpQueuedReplot);
-
-    ui->Motor6Plot->graph(0)->setData(time_x_mocount,Motor6Count);
-    ui->Motor6Plot->graph(0)->setPen(pen);
-    ui->Motor6Plot->xAxis->setRange(0,time_x_mocount[receive_count_mocount]);
-    ui->Motor6Plot->yAxis->setRange(min_motor_count[5],max_motor_count[5]*1.1);
-    ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
-    */
-
 }
 
 /*****************************/
@@ -1377,7 +1237,13 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[2] = ui->sendMsgLineEdit9->text().toInt();
         sendData[3] = ui->sendMsgLineEdit10->text().toUInt();
         sendData[4] = ui->circlelineEdit->text().toUInt();
-        emit sigMdSerialCtrl(TensionOrAngle, sendData);
+        if(sendData[4] == 0)
+        {
+            QMessageBox::critical(this,tr("wrong operation"),tr("circle can not be zero"),QMessageBox::Ok);
+            return;
+        }
+        else
+            emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
     // CABEL TENSION MODE
     else if(ui->cabel_RadioButton->isChecked())
@@ -1401,14 +1267,13 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[0] = ui->PosXlineEdit->text().toInt();
         sendData[1] = ui->PosYlineEdit->text().toInt();
         sendData[2] = ui->PosZlineEdit->text().toInt();
-        sendData[3] = ui->vellineEdit->text().toUInt();
-        sendData[4] = ui->acclineEdit->text().toUInt();
         emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
     // LINEAR CONTROL MODE
     else if(ui->Linear_RadioButton->isChecked())
     {
         TensionOrAngle = 3;
+        sendData[0] = ui->circlelineEdit->text().toUInt();
         emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
 
@@ -1445,7 +1310,6 @@ void MainWindow::on_actionStopMeasure_triggered()
     getsensordata->terminate();
     getsensordata->wait();
     ui->actionSave->setEnabled(true);
-    plot_timer->stop();
     ui->actionStopMeasure->setEnabled(false);
     ui->actionStartMeasure->setEnabled(true);
 }
@@ -1468,31 +1332,19 @@ void MainWindow::on_BeforeTightenButton_clicked()
 
 }
 
-void MainWindow::slotStopplot()
-{
-    // stop the plot
-    plot_timer->stop();
-}
-
-void MainWindow::slotStartplot()
-{
-    // start the plot
-    //plot_timer->start();
-}
-
 void MainWindow::on_TeachButton_clicked()
 {
-    emit slotMdTeachStart();
+    emit sigMdTeachStart();
 }
 
 void MainWindow::on_StopteachButton_clicked()
 {
-    emit slotMdTeachStop();
+    emit sigMdTeachStop();
 }
 
 void MainWindow::on_ReplayButton_clicked()
 {
-    emit slotMdReplayTeach();
+    emit sigMdReplayTeach();
 }
 
 void MainWindow::on_pushButton_Listen_clicked()
@@ -1590,4 +1442,13 @@ void MainWindow::slotEmgThetaFit(double *fiteff, double *bufferX, double *buffer
 void MainWindow::on_StopMotorButton_clicked()
 {
     emit sigDisableMotor();
+}
+
+void MainWindow::modMessage(QString kind, QString message)
+{
+
+    if(kind == "noerror")
+        QMessageBox::information(this, kind, message);
+    if(kind == "error")
+        QMessageBox::critical(this, kind, message, QMessageBox::Ok);
 }

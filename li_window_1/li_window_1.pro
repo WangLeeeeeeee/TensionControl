@@ -34,7 +34,8 @@ SOURCES += main.cpp\
     linkdisplay.cpp \
     scatterdatamodifier.cpp \
     emg_tcp.cpp \
-    modbus.cpp
+    modbus.cpp \
+    motorcontrol.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -49,7 +50,8 @@ HEADERS  += mainwindow.h \
     linkdisplay.h \
     scatterdatamodifier.h \
     emg_tcp.h \
-    modbus.h
+    modbus.h \
+    motorcontrol.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui

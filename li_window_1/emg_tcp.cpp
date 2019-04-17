@@ -82,8 +82,6 @@ double testImu[] = {0,1,2,3,5,6,8,9,10,11,12,11,12,11,13,15,16,17,20,24,26,27,28
 
 #define ParaBuffer(Buffer,Row,Col) (*(Buffer + (Row) * (SizeSrc + 1) + (Col)))
 
-
-
 EMG_server::EMG_server(QObject* parent):QObject(parent)
 {
     server = new QTcpServer(this);
@@ -95,8 +93,8 @@ EMG_server::EMG_server(QObject* parent):QObject(parent)
     connect(posbackTimer,SIGNAL(timeout()),this,SLOT(slotposBack()));
     //tenctrl = new TensionControl;
     //connect(this, SIGNAL(sigEmgTensionctrl(uint*)), tenctrl, SLOT(slotEmgTenctrl(uint*)));
-    mbctrl = new modbus;
-    connect(this, SIGNAL(sigEmgTensionctrl(uint*)), mbctrl, SLOT(slotEmgTenctrl(uint*)));
+//    motorctrl = new motorcontrol;
+//    connect(this, SIGNAL(sigEmgTensionctrl(uint*)), motorctrl, SLOT(slotEmgTenctrl(uint*)));
 }
 
 

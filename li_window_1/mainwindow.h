@@ -17,11 +17,12 @@
 #include "plotcurves.h"
 #include "linkdisplay.h"
 #include "emg_tcp.h"
-#include "modbus.h"
+//#include "modbus.h"
+//#include "motorcontrol.h"
 
 class VRDisplay;
-//class MotorControl;
-//class TensionControl;
+class modbus;
+class motorcontrol;
 
 
 // set the plot interval
@@ -63,46 +64,34 @@ private slots:
     void setLine9EditValue();
     void setLine10EditValue();
     void Plot_Init();
-    void slotStopplot();
-    void slotStartplot();
     void slotEmgThetaFit(double* fiteff, double* bufferX, double* bufferY, unsigned int dimension, int sizenum);
-
     void on_VRDisplay_clicked();
-
     void on_sendmsgButton_clicked();
-
     void on_actionStartMeasure_triggered();
-
     void on_actionStopMeasure_triggered();
-
     void on_BeforeTightenButton_clicked();
-
     void on_TeachButton_clicked();
-
     void on_StopteachButton_clicked();
-
     void on_ReplayButton_clicked();
-
     void on_pushButton_Listen_clicked();
-
     void on_pushButton_Start_clicked();
-
     void on_pushButton_Trigger_clicked();
-
     void on_StopMotorButton_clicked();
+    void modMessage(QString kind, QString message);
 
 private:
+    Ui::MainWindow *ui;
     aboutdialog aboutdlg;
-    //QSerialPort serial; // declare a serial com
     QTimer *plot_timer;
     unsigned int plot_timerdly;//set the serial port receive/send interval
     GetSensordata *getsensordata;
-    //MotorControl *motorcontrol;
     VRDisplay *vrdisplay;
-    //TensionControl *tensioncontrol;
     EMG_server* emg_server;
+    motorcontrol* motorctrl;
+
+    // modbus thread
+    QThread* threadModbus;
     modbus *mb;
-    Ui::MainWindow *ui;
 
     // 3D surface
     Q3DScatter *graph = new Q3DScatter();
@@ -118,14 +107,15 @@ signals:
     void sigEmgTrigger();
 
     // for modbus
+    void sigModbusClose();
+
+    // for motorcontrol
     void sigDisableMotor();
-    void sigMdSerialInit();
-    void sigMdSerialClose();
     void sigMdBeforeTigh(unsigned int *Data);
     void sigMdSerialCtrl(unsigned int TensionOrAngle,int *Data);
-    void slotMdTeachStart();
-    void slotMdTeachStop();
-    void slotMdReplayTeach();
+    void sigMdTeachStart();
+    void sigMdTeachStop();
+    void sigMdReplayTeach();
 
 };
 

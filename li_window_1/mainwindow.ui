@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1400</width>
-    <height>850</height>
+    <height>868</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -36,7 +36,7 @@
           <x>690</x>
           <y>280</y>
           <width>671</width>
-          <height>441</height>
+          <height>451</height>
          </rect>
         </property>
         <property name="font">
@@ -305,8 +305,8 @@
            <rect>
             <x>10</x>
             <y>240</y>
-            <width>411</width>
-            <height>151</height>
+            <width>301</width>
+            <height>181</height>
            </rect>
           </property>
           <property name="font">
@@ -426,57 +426,25 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="layoutWidget">
+          <widget class="QWidget" name="">
            <property name="geometry">
             <rect>
-             <x>288</x>
-             <y>26</y>
-             <width>113</width>
-             <height>83</height>
+             <x>10</x>
+             <y>150</y>
+             <width>111</width>
+             <height>23</height>
             </rect>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_3">
+           <layout class="QHBoxLayout" name="horizontalLayout_17">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_15">
-              <item>
-               <widget class="QLabel" name="label_4">
-                <property name="text">
-                 <string>VELOC</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="vellineEdit"/>
-              </item>
-             </layout>
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>CIRCLE</string>
+              </property>
+             </widget>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_16">
-              <item>
-               <widget class="QLabel" name="label_5">
-                <property name="text">
-                 <string>ACCEL</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="acclineEdit"/>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_17">
-              <item>
-               <widget class="QLabel" name="label_12">
-                <property name="text">
-                 <string>CIRCLE</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="circlelineEdit"/>
-              </item>
-             </layout>
+             <widget class="QLineEdit" name="circlelineEdit"/>
             </item>
            </layout>
           </widget>
@@ -484,8 +452,8 @@
          <widget class="QPushButton" name="BeforeTightenButton">
           <property name="geometry">
            <rect>
-            <x>510</x>
-            <y>340</y>
+            <x>550</x>
+            <y>250</y>
             <width>111</width>
             <height>31</height>
            </rect>
@@ -697,10 +665,10 @@
            </layout>
           </widget>
          </widget>
-         <widget class="QWidget" name="">
+         <widget class="QWidget" name="layoutWidget">
           <property name="geometry">
            <rect>
-            <x>300</x>
+            <x>290</x>
             <y>200</y>
             <width>241</width>
             <height>41</height>
@@ -730,41 +698,23 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="">
+         <widget class="QPushButton" name="sendmsgButton">
           <property name="geometry">
            <rect>
-            <x>450</x>
-            <y>280</y>
-            <width>171</width>
+            <x>340</x>
+            <y>290</y>
+            <width>91</width>
             <height>41</height>
            </rect>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_31">
-           <item>
-            <widget class="QPushButton" name="sendmsgButton">
-             <property name="font">
-              <font>
-               <pointsize>12</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>SEND</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="StopMotorButton">
-             <property name="font">
-              <font>
-               <pointsize>12</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string>StopMotor</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>SEND</string>
+          </property>
          </widget>
         </widget>
         <widget class="QWidget" name="tab_2">
@@ -873,6 +823,24 @@
           </layout>
          </item>
         </layout>
+       </widget>
+       <widget class="QPushButton" name="StopMotorButton">
+        <property name="geometry">
+         <rect>
+          <x>1150</x>
+          <y>90</y>
+          <width>101</width>
+          <height>51</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>StopMotor</string>
+        </property>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_4">

@@ -50,5 +50,12 @@ QThread 未定义基类
 
 在析构函数中不能调用虚函数！！！
 
+主线程的绘图界面刷新会影响modbus或者串口的收发数据的频率甚至使其断开连接。
+
 若想在点击右上角窗口关闭时执行某个函数，可以使用void MainWindow::closeEvent(QCloseEvent *event)函数，在函数中调用或执行命令
 但：可以发送信号到槽函数，不能调用串口发送数据，例如想要在关闭界面时给电机驱动器发送失能指令，发送不了。
+
+错误：D:\SFSetupPath\VisualStudio2015\VC\include\sal.h:2361: error: C2144: 语法错误:“int”的前面应有“;”
+D:\SFSetupPath\VisualStudio2015\VC\include\sal.h:2361: error: C4430: 缺少类型说明符 - 假定为 int。注意: C++ 不支持默认 int：
+错误原因：网上大部分说的是在类的声明或者其他某个地方没有加上英文“；”或者是将英文“；”错写成了中文“；”，找了很长时间才发现是由于不小心在qcustomplot.c文件中的
+第一行打了几个“c”，总之就是一些不小心造成的错误。

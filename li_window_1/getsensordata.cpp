@@ -88,8 +88,7 @@ GetSensordata::GetSensordata(QObject *parent):QThread(parent)
 //
 void GetSensordata::run()
 {
-    qDebug()<<"GetSensordata Thread is running"<<endl;
-
+    qDebug()<<"GetSensor run:"<<QThread::currentThreadId();
     ErrorCode ret = Success;
 
     // PCI-1784 initialize
@@ -145,7 +144,6 @@ void GetSensordata::run()
         surpressure_shou1[0] = 0;
         surpressure_shou2[0] = 0;
         time_x_surpressure[0] = 0;
-
 
     }
     while(false);
@@ -205,10 +203,9 @@ void GetSensordata::run()
    }
    while(false);
 
-
    while(1)
    {
-
+        qDebug()<<"GetSensor run:"<<QThread::currentThreadId();
         // Checks, if conncted
         if((lpms1->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) && (lpms2->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED))
         {
@@ -246,7 +243,6 @@ void GetSensordata::run()
             }
         }
 
-
         // Step 6: The device is acquiring data.
         wfAiCtrl->Start();
 
@@ -266,7 +262,6 @@ void GetSensordata::run()
         Motor4Count[receive_count_mocount] = Motor4Count[receive_count_mocount-1] + udCount[3];
         Motor5Count[receive_count_mocount] = Motor5Count[receive_count_mocount-1] + udCount1[0];
         Motor6Count[receive_count_mocount] = Motor6Count[receive_count_mocount-1] + udCount1[1];
-        //qDebug()<<"the motor6 count is:"<<Motor6Count[receive_count_mocount];
 
         // Find the maxium of motor encorder count to set the range of the customplot
         max_motor_count[0] = (max_motor_count[0] > Motor1Count[receive_count_mocount]) ? max_motor_count[0] : Motor1Count[receive_count_mocount];
@@ -287,11 +282,6 @@ void GetSensordata::run()
         time_x_mocount[receive_count_mocount] = receive_count_mocount;
         udCounterCtrl->setEnabled(false);
         udCounterCtrl1->setEnabled(false);
-//        qDebug()<<"timex_mocount is:"<<time_x_mocount[receive_count_mocount];
-//        qDebug()<<"time_x_angle is:"<<time_x_angle[receive_count_angle];
-//        qDebug()<<"time_x_tension is:"<<time_x_tension[receive_count_tension];
-//        qDebug()<<"time_x_surpressure is:"<<time_x_surpressure[receive_count_pressure];
-//        qDebug()<<"udCount0 is:"<<udCount[0];
    }
 }
 
@@ -307,6 +297,7 @@ void GetSensordata::CheckError(ErrorCode errorCode)
 
 void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * userParam)
 {
+    qDebug()<<"GetSensor onstoppedEvent: "<<QThread::currentThreadId();
     WaveformAiCtrl * waveformAiCtrl = NULL;
     waveformAiCtrl = (WaveformAiCtrl *)sender;
     int32 returnedCount = 0;
@@ -407,15 +398,6 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
     if((tension_y6[receive_count_tension]>5000)||(tension_y6[receive_count_tension]<-5000))
         tension_y6[receive_count_tension] = tension_y6[receive_count_tension-1];
 
-//    qDebug()<<"tensiony:"<<tension_y[receive_count_tension];
-//    if(tension_y[receive_count_tension]>50)
-//        qDebug()<<"unnormal data";
-//    qDebug()<<"tensiony2:"<<tension_y2[receive_count_tension];
-//    qDebug()<<"tensiony3:"<<tension_y3[receive_count_tension];
-//    qDebug()<<"tensiony4:"<<tension_y4[receive_count_tension];
-//    qDebug()<<"tensiony5:"<<tension_y5[receive_count_tension];
-//    qDebug()<<"tensiony6:"<<tension_y6[receive_count_tension];
-
     // Find the maxium of tension to set the range of the customplot
     if(receive_count_tension<50)
     {
@@ -443,12 +425,7 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
             max_tension[5] = (max_tension[5] > tension_y6[i]) ? max_tension[5] : tension_y6[i];
         }
     }
-
-//    for(int i=0; i<6; i++)
-//    {
-//        if(max_tension[i] > 1000)
-//            qDebug()<<"wow, it's out of the normal range:"<<receive_count_tension;
-//    }
+    //qDebug()<<"now the count is:"<<receive_count_tension;
 
 }
 
@@ -461,13 +438,10 @@ void GetSensordata::delay(int mseconds)
 
 void GetSensordata::slotSendDataToPlot()
 {
-//    if((receive_count_tension!=0)&&(receive_count_angle!=0)&&(receive_count_mocount!=0))
-//    {
-//        emit sigPlotTrigger();
-//    }
-        if((receive_count_tension!=0)&&(receive_count_mocount!=0))
-        {
-            emit sigPlotTrigger();
-        }
+    qDebug()<<"GetSensor slotSendDataToPlot: "<<QThread::currentThreadId();
+    if((receive_count_tension!=0)&&(receive_count_mocount!=0))
+    {
+        emit sigPlotTrigger();
+    }
 }
 
