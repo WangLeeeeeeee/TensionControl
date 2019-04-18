@@ -23,6 +23,7 @@
 class VRDisplay;
 class modbus;
 class motorcontrol;
+class encoderRead;
 
 
 // set the plot interval
@@ -79,11 +80,13 @@ private slots:
     void on_StopMotorButton_clicked();
     void modMessage(QString kind, QString message);
 
+    // from encoder read
+    void slotEncoderPlot();
+
 private:
     Ui::MainWindow *ui;
     aboutdialog aboutdlg;
-    QTimer *plot_timer;
-    unsigned int plot_timerdly;//set the serial port receive/send interval
+
     GetSensordata *getsensordata;
     VRDisplay *vrdisplay;
     EMG_server* emg_server;
@@ -92,6 +95,13 @@ private:
     // modbus thread
     QThread* threadModbus;
     modbus *mb;
+
+    // read encoder thread
+    encoderRead* encoRe;
+    QThread* threadReadEncoder;
+
+    QTimer* readEncoderTimer;
+    unsigned int readEncoderInterval = 50;
 
     // 3D surface
     Q3DScatter *graph = new Q3DScatter();
@@ -116,6 +126,7 @@ signals:
     void sigMdTeachStart();
     void sigMdTeachStop();
     void sigMdReplayTeach();
+
 
 };
 

@@ -8,7 +8,6 @@
 unsigned int receive_count_tension = 0;
 unsigned int receive_count_angle = 0;
 unsigned int receive_count_pressure = 0;
-unsigned int receive_count_mocount = 0;
 
 //----------------------------------------------------------------------------------
 // Y-axis: six cable tension data(N), surface pressure, IMU data(rad), Four Motor encoder
@@ -16,24 +15,22 @@ unsigned int receive_count_mocount = 0;
 // Y-Range: MaxTension
 //----------------------------------------------------------------------------------
 unsigned int Datalength = 131072;
-QVector<double> time_x_tension(Datalength),time_x_angle(Datalength),time_x_surpressure(Datalength),time_x_mocount(Datalength);
+QVector<double> time_x_tension(Datalength),time_x_angle(Datalength),time_x_surpressure(Datalength);
 QVector<double> tension_y(Datalength),tension_y2(Datalength),tension_y3(Datalength);
 QVector<double> tension_y4(Datalength),tension_y5(Datalength),tension_y6(Datalength);
 QVector<double> surpressure_elbow(Datalength),surpressure_shou1(Datalength),surpressure_shou2(Datalength);
 QVector<double> elbow_x(Datalength),elbow_y(Datalength),elbow_z(Datalength);
 QVector<double> shoulder_x(Datalength),shoulder_y(Datalength),shoulder_z(Datalength);
-QVector<double> Motor1Count(Datalength),Motor2Count(Datalength),Motor3Count(Datalength),Motor4Count(Datalength),Motor5Count(Datalength),Motor6Count(Datalength);
+
 double max_tension[6] = {0, 0, 0, 0, 0, 0};
-double max_motor_count[6]={0, 0, 0, 0, 0, 0};
-double min_motor_count[6] = {0, 0, 0, 0, 0, 0};
 
 //----------------------------------------------------------------------------------
 // Tension calibration parameter
 //----------------------------------------------------------------------------------
 //double TENSION_K[6] = {995.94, 989.03, 1000.8, 1001.1, 1129.9, 993.33};
 //double TENSION_B[6] = {203.71, 12.242, 52.057, -80.687, -320.2, -61.373};
-double TENSION_K[6] = {995.94, 989.03, 1000.8, 1001.1, 1380.4, 993.33};
-double TENSION_B[6] = {203.71, 12.242, 52.057, -80.687, -880.8, -61.373};
+double TENSION_K[6] = {995.94, 989.03, 1000.8, 1001.1, 1008.1, 993.33};
+double TENSION_B[6] = {203.71, 12.242, 52.057, -80.687, 54.165, -61.373};
 
 //-----------------------------------------------------------------------------------
 // Configure the following parameters before running the PCI-1716L
@@ -88,7 +85,6 @@ GetSensordata::GetSensordata(QObject *parent):QThread(parent)
 //
 void GetSensordata::run()
 {
-    qDebug()<<"GetSensor run:"<<QThread::currentThreadId();
     ErrorCode ret = Success;
 
     // PCI-1784 initialize
@@ -131,14 +127,6 @@ void GetSensordata::run()
            ret = udChannel1->getItem(i).setCountingType(PulseDirection);
            CheckError(ret);
         }
-
-        Motor1Count[0] = 0;
-        Motor2Count[0] = 0;
-        Motor3Count[0] = 0;
-        Motor4Count[0] = 0;
-        Motor5Count[0] = 0;
-        Motor6Count[0] = 0;
-        time_x_mocount[0] = 0;
 
         surpressure_elbow[0] = 0;
         surpressure_shou1[0] = 0;
@@ -205,13 +193,10 @@ void GetSensordata::run()
 
    while(1)
    {
-        qDebug()<<"GetSensor run:"<<QThread::currentThreadId();
+        //qDebug()<<"GetSensor run:"<<QThread::currentThreadId();
         // Checks, if conncted
         if((lpms1->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) && (lpms2->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED))
         {
-            // Reset the Orientation
-            //lpms1->resetOrientationOffset();
-            //lpms2->resetOrientationOffset();
 
             // Read the euler angle
             lpms1->getEulerAngle(ElbowAngle);
@@ -245,43 +230,7 @@ void GetSensordata::run()
 
         // Step 6: The device is acquiring data.
         wfAiCtrl->Start();
-
-        // Step 5: Start UpDown Counter
-        ret= udCounterCtrl->setEnabled(true);
-        ret = udCounterCtrl1->setEnabled(true);
-
         msleep(20);// every 10ms collect once
-
-        int32 udCount[4],udCount1[4];
-        ret = udCounterCtrl->Read(4,udCount);
-        ret = udCounterCtrl1->Read(2,udCount1);
-        receive_count_mocount ++;
-        Motor1Count[receive_count_mocount] = Motor1Count[receive_count_mocount-1] + udCount[0];
-        Motor2Count[receive_count_mocount] = Motor2Count[receive_count_mocount-1] + udCount[1];
-        Motor3Count[receive_count_mocount] = Motor3Count[receive_count_mocount-1] + udCount[2];
-        Motor4Count[receive_count_mocount] = Motor4Count[receive_count_mocount-1] + udCount[3];
-        Motor5Count[receive_count_mocount] = Motor5Count[receive_count_mocount-1] + udCount1[0];
-        Motor6Count[receive_count_mocount] = Motor6Count[receive_count_mocount-1] + udCount1[1];
-
-        // Find the maxium of motor encorder count to set the range of the customplot
-        max_motor_count[0] = (max_motor_count[0] > Motor1Count[receive_count_mocount]) ? max_motor_count[0] : Motor1Count[receive_count_mocount];
-        max_motor_count[1] = (max_motor_count[1] > Motor2Count[receive_count_mocount]) ? max_motor_count[1] : Motor2Count[receive_count_mocount];
-        max_motor_count[2] = (max_motor_count[2] > Motor3Count[receive_count_mocount]) ? max_motor_count[2] : Motor3Count[receive_count_mocount];
-        max_motor_count[3] = (max_motor_count[3] > Motor4Count[receive_count_mocount]) ? max_motor_count[3] : Motor4Count[receive_count_mocount];
-        max_motor_count[4] = (max_motor_count[4] > Motor5Count[receive_count_mocount]) ? max_motor_count[4] : Motor5Count[receive_count_mocount];
-        max_motor_count[5] = (max_motor_count[5] > Motor6Count[receive_count_mocount]) ? max_motor_count[5] : Motor6Count[receive_count_mocount];
-
-        // Find the minium of motor encorder count to set the range of the customplot
-        min_motor_count[0] = (min_motor_count[0] < Motor1Count[receive_count_mocount]) ? min_motor_count[0] : Motor1Count[receive_count_mocount];
-        min_motor_count[1] = (min_motor_count[1] < Motor2Count[receive_count_mocount]) ? min_motor_count[1] : Motor2Count[receive_count_mocount];
-        min_motor_count[2] = (min_motor_count[2] < Motor3Count[receive_count_mocount]) ? min_motor_count[2] : Motor3Count[receive_count_mocount];
-        min_motor_count[3] = (min_motor_count[3] < Motor4Count[receive_count_mocount]) ? min_motor_count[3] : Motor4Count[receive_count_mocount];
-        min_motor_count[4] = (min_motor_count[4] < Motor5Count[receive_count_mocount]) ? min_motor_count[4] : Motor5Count[receive_count_mocount];
-        min_motor_count[5] = (min_motor_count[5] < Motor6Count[receive_count_mocount]) ? min_motor_count[5] : Motor6Count[receive_count_mocount];
-
-        time_x_mocount[receive_count_mocount] = receive_count_mocount;
-        udCounterCtrl->setEnabled(false);
-        udCounterCtrl1->setEnabled(false);
    }
 }
 
@@ -297,7 +246,7 @@ void GetSensordata::CheckError(ErrorCode errorCode)
 
 void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * userParam)
 {
-    qDebug()<<"GetSensor onstoppedEvent: "<<QThread::currentThreadId();
+    //qDebug()<<"GetSensor onstoppedEvent: "<<QThread::currentThreadId();
     WaveformAiCtrl * waveformAiCtrl = NULL;
     waveformAiCtrl = (WaveformAiCtrl *)sender;
     int32 returnedCount = 0;
@@ -438,8 +387,8 @@ void GetSensordata::delay(int mseconds)
 
 void GetSensordata::slotSendDataToPlot()
 {
-    qDebug()<<"GetSensor slotSendDataToPlot: "<<QThread::currentThreadId();
-    if((receive_count_tension!=0)&&(receive_count_mocount!=0))
+    //qDebug()<<"GetSensor slotSendDataToPlot: "<<QThread::currentThreadId();
+    if(receive_count_tension!=0)
     {
         emit sigPlotTrigger();
     }

@@ -24,7 +24,7 @@ unsigned int ControlMode = 0; // control mode
 //---------------------------------------------------
 double thetaStart[4] = {0,0,0,0}; // 关节角规划的起始角度
 double thetaEnd[4] = {0,0,0,0}; // 关节角规划的终止角度（由界面设定决定）
-unsigned int jointIntervalTime = 100; // 关节角运动定时器周期ms（关节角规划的detaT） 注意：这个周期同时也是modbus发送zhi'li指令的周期，不能太小
+unsigned int jointIntervalTime = 100; // 关节角运动定时器周期ms（关节角规划的detaT） 注意：这个周期同时也是modbus发送指令的周期，不能太小
 bool InverseJoint = 0; // 来回运行
 unsigned int jointCount = 0; // 关节角运动当前时间=jointCount*detaT
 unsigned int jointCycleCount = 0; // 关节角当前运行来回计数
@@ -118,8 +118,10 @@ void motorcontrol::InitialMotor()
 void motorcontrol::slotMdSerialCtrl(uint tensionOrAngle, int *Data)
 {
     qDebug()<<"motorcontrol slotmdSerialCtrl: "<<QThread::currentThreadId();
+
     switch(tensionOrAngle){
     case TENSIONCONTROL:
+        ControlMode = TENSIONCONTROL;
         cycleJointTimer->stop();
         linearControlTimer->stop();
         tensionCtrlTimer->start(tensionIntervalTime);
@@ -131,34 +133,28 @@ void motorcontrol::slotMdSerialCtrl(uint tensionOrAngle, int *Data)
             AimTension[i] = Data[i];
         break;
     case JOINTANGLECONTROL:
+        ControlMode = JOINTANGLECONTROL;
         linearControlTimer->stop();
         tensionCtrlTimer->stop();
         cycleJointTimer->start(jointIntervalTime);
-        emit sigMotorControl(2,MODESELECT,VELOCITYMODE,0);
-        emit sigMotorControl(3,MODESELECT,VELOCITYMODE,0);
-        emit sigMotorControl(4,MODESELECT,VELOCITYMODE,0);
-        emit sigMotorControl(5,MODESELECT,VELOCITYMODE,0);
-        emit sigMotorControl(1,MODESELECT,TORQUEMODE,0);
-        emit sigMotorControl(6,MODESELECT,TORQUEMODE,0);
-        emit sigMotorControl(1,TORQUESET,-120,0);
-        emit sigMotorControl(6,TORQUESET,-100,0);
-        /*
-        for(int i=0; i<6; i++)// 将驱动器设置为速度模式,必须在驱动器失能状态下才能改变模式
-        {
-            emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);
-        }
-        */
+        for(int i=0; i<6; i++)// 将驱动器设置为速度模式
+            emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);       
         InitialCableLen(initAngle); // 初始化绳长
         for(int i=0; i<4; i++)
             thetaEnd[i] = Data[i]*3.14/180; // 设置目标关节角
         setJointCirCount = Data[4]; // 设置来回的循环数
         break;
-    case PTPCONTROL:
+    case JOINTWITHTENSION:
+        ControlMode = JOINTWITHTENSION;
         for(int i=0; i<6; i++)// 将驱动器设置为速度模式
             emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);
         InitialCableLen(initAngle);
+        for(int i=0; i<4; i++)
+            thetaEnd[i] = Data[i]*3.14/180; // 设置目标关节角
+        setJointCirCount = Data[4]; // 设置来回的循环数
         break;
     case LINEARCONTROL:
+        ControlMode = LINEARCONTROL;
         cycleJointTimer->stop();
         tensionCtrlTimer->stop();
         linearControlTimer->start(lineIntervalTime);
@@ -170,6 +166,7 @@ void motorcontrol::slotMdSerialCtrl(uint tensionOrAngle, int *Data)
         InitialCableLen(initAngle);
         break;
     case JOINTTORQUECONTROL:
+        ControlMode = JOINTTORQUECONTROL;
         for(int i=0; i<6; i++) // 将驱动器设置为转矩模式
             emit sigMotorControl(i+1,MODESELECT,TORQUEMODE,0);
         tensionCtrlTimer->stop();
@@ -403,14 +400,23 @@ void motorcontrol::CirculJoint()
             aimCircle[i] = cableLenDeta[i]/(2*pi*rollRadius); // 计算间隔的电机转动圈数
             vel[i] = double(60*aimCircle[i])/double(inteTime); // 计算电机转速
         }
-        emit sigMotorControl(2,SPEEDSET,qint32(vel[1]*1000),1);
-        emit sigMotorControl(3,SPEEDSET,qint32(vel[2]*1000),1);
-        emit sigMotorControl(4,SPEEDSET,qint32(vel[3]*1000),1);
-        emit sigMotorControl(5,SPEEDSET,qint32(vel[4]*1000),1);
-        /*
         for(int i=0; i<6; i++)
         {
-            emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
+            if(ControlMode == JOINTANGLECONTROL) // 如果是单纯的角度位置模式
+                emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
+            if(ControlMode == JOINTWITHTENSION)
+            {
+                if(vel[i] > 0) // 如果是速度大于0则使用力矩模式
+                {
+                    emit sigMotorControl(i+1,MODESELECT,TORQUEMODE,0);
+                    emit sigMotorControl(i+1,TORQUESET,-80,0);
+                }
+                else
+                {
+                    emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);
+                    emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1);
+                }
+            }
             if((i==5)||(i==6))
             {
                 qDebug()<<"vel"<<i<<"is"<<qint32(vel[i]*1000);
@@ -418,7 +424,6 @@ void motorcontrol::CirculJoint()
                 qDebug()<<"tempAngle[3] is:"<<theta[3];
             }
         }
-        */
     }
 }
 

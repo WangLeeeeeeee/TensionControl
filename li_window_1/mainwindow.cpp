@@ -7,6 +7,7 @@
 #include "vrdisplay.h"
 #include "modbus.h"
 #include "motorcontrol.h"
+#include "encoderread.h"
 #include <QLayout>
 
 QVector<float> fiteffRecord;
@@ -26,10 +27,21 @@ MainWindow::MainWindow(QWidget *parent) :
     emg_server = new EMG_server;
     mb = new modbus;
     motorctrl = new motorcontrol;
+    encoRe = new encoderRead;
 
-    // 创建子线程
+    // 创建modbus子线程
     threadModbus = new QThread(this);
     mb->moveToThread(threadModbus);
+
+    // 创建读编码器子线程
+    readEncoderTimer = new QTimer(this);
+    threadReadEncoder = new QThread(this);
+    encoRe->moveToThread(threadReadEncoder);
+    threadReadEncoder->start();
+    connect(readEncoderTimer, SIGNAL(timeout()), encoRe, SLOT(slotReadEncoder()));
+    connect(encoRe, SIGNAL(sigReadEncoder(uint,int,uint)), mb, SLOT(readModbus(uint,int,uint)));
+    connect(mb, SIGNAL(sigModReadData(QString)), encoRe, SLOT(slotDataToEncoder(QString)));
+    connect(encoRe, SIGNAL(sigPlotEncoder()), this, SLOT(slotEncoderPlot()));
 
     // 3D link module visualization
     QSize screenSize = graph->screen()->size();
@@ -80,6 +92,10 @@ MainWindow::~MainWindow()
         return;
     threadModbus->quit();
     threadModbus->wait();
+    if(!threadReadEncoder->isRunning())
+        return;
+    threadReadEncoder->quit();
+    threadReadEncoder->wait();
     getsensordata->terminate();
     getsensordata->wait();
     delete getsensordata;
@@ -134,8 +150,8 @@ void MainWindow::Plot_Init()
     ui->emgFitPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectAxes |
                                      QCP::iSelectLegend | QCP::iSelectPlottables);
 
-    QFont fontTick("Times New Roman", 10, 75);
-    QFont fontLabel("Times New Roman", 10, 50);
+    QFont fontTick("Times New Roman", 5, 75);
+    QFont fontLabel("Times New Roman", 7, 50);
 
     ui->qCustomPlot->addGraph();
     ui->qCustomPlot->graph(0)->setPen(QPen(Qt::red));
@@ -197,7 +213,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot7->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot7->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot7->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot7->xAxis->setLabel("Time");
+    //ui->qCustomPlot7->xAxis->setLabel("Time");
     ui->qCustomPlot7->yAxis->setLabel("ElbowX");
 
     ui->qCustomPlot8->addGraph();
@@ -206,7 +222,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot8->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot8->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot8->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot8->xAxis->setLabel("Time");
+    //ui->qCustomPlot8->xAxis->setLabel("Time");
     ui->qCustomPlot8->yAxis->setLabel("ElbowY");
 
     ui->qCustomPlot9->addGraph();
@@ -215,7 +231,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot9->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot9->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot9->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot9->xAxis->setLabel("Time");
+    //ui->qCustomPlot9->xAxis->setLabel("Time");
     ui->qCustomPlot9->yAxis->setLabel("ElbowZ");
 
     ui->qCustomPlot10->addGraph();
@@ -224,7 +240,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot10->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot10->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot10->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot10->xAxis->setLabel("Time");
+    //ui->qCustomPlot10->xAxis->setLabel("Time");
     ui->qCustomPlot10->yAxis->setLabel("ShoulderX");
 
     ui->qCustomPlot11->addGraph();
@@ -233,7 +249,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot11->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot11->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot11->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot11->xAxis->setLabel("Time");
+    //ui->qCustomPlot11->xAxis->setLabel("Time");
     ui->qCustomPlot11->yAxis->setLabel("ShoulderY");
 
     ui->qCustomPlot12->addGraph();
@@ -242,7 +258,7 @@ void MainWindow::Plot_Init()
     ui->qCustomPlot12->yAxis->setTickLabelFont(fontTick);
     ui->qCustomPlot12->xAxis->setLabelFont(fontLabel);
     ui->qCustomPlot12->yAxis->setLabelFont(fontLabel);
-    ui->qCustomPlot12->xAxis->setLabel("Time");
+    //ui->qCustomPlot12->xAxis->setLabel("Time");
     ui->qCustomPlot12->yAxis->setLabel("ShoulderZ");
 
     ui->Motor1Plot->addGraph();
@@ -251,7 +267,7 @@ void MainWindow::Plot_Init()
     ui->Motor1Plot->yAxis->setTickLabelFont(fontTick);
     ui->Motor1Plot->xAxis->setLabelFont(fontLabel);
     ui->Motor1Plot->yAxis->setLabelFont(fontLabel);
-    ui->Motor1Plot->xAxis->setLabel("Time");
+    //ui->Motor1Plot->xAxis->setLabel("Time");
     ui->Motor1Plot->yAxis->setLabel("angle");
 
     ui->Motor2Plot->addGraph();
@@ -260,7 +276,7 @@ void MainWindow::Plot_Init()
     ui->Motor2Plot->yAxis->setTickLabelFont(fontTick);
     ui->Motor2Plot->xAxis->setLabelFont(fontLabel);
     ui->Motor2Plot->yAxis->setLabelFont(fontLabel);
-    ui->Motor2Plot->xAxis->setLabel("Time");
+    //ui->Motor2Plot->xAxis->setLabel("Time");
     ui->Motor2Plot->yAxis->setLabel("angle");
 
     ui->Motor3Plot->addGraph();
@@ -269,7 +285,7 @@ void MainWindow::Plot_Init()
     ui->Motor3Plot->yAxis->setTickLabelFont(fontTick);
     ui->Motor3Plot->xAxis->setLabelFont(fontLabel);
     ui->Motor3Plot->yAxis->setLabelFont(fontLabel);
-    ui->Motor3Plot->xAxis->setLabel("Time");
+    //ui->Motor3Plot->xAxis->setLabel("Time");
     ui->Motor3Plot->yAxis->setLabel("angle");
 
     ui->Motor4Plot->addGraph();
@@ -278,7 +294,7 @@ void MainWindow::Plot_Init()
     ui->Motor4Plot->yAxis->setTickLabelFont(fontTick);
     ui->Motor4Plot->xAxis->setLabelFont(fontLabel);
     ui->Motor4Plot->yAxis->setLabelFont(fontLabel);
-    ui->Motor4Plot->xAxis->setLabel("Time");
+    //ui->Motor4Plot->xAxis->setLabel("Time");
     ui->Motor4Plot->yAxis->setLabel("angle");
 
     ui->Motor5Plot->addGraph();
@@ -287,7 +303,7 @@ void MainWindow::Plot_Init()
     ui->Motor5Plot->yAxis->setTickLabelFont(fontTick);
     ui->Motor5Plot->xAxis->setLabelFont(fontLabel);
     ui->Motor5Plot->yAxis->setLabelFont(fontLabel);
-    ui->Motor5Plot->xAxis->setLabel("Time");
+    //ui->Motor5Plot->xAxis->setLabel("Time");
     ui->Motor5Plot->yAxis->setLabel("angle");
 
     ui->Motor6Plot->addGraph();
@@ -296,7 +312,7 @@ void MainWindow::Plot_Init()
     ui->Motor6Plot->yAxis->setTickLabelFont(fontTick);
     ui->Motor6Plot->xAxis->setLabelFont(fontLabel);
     ui->Motor6Plot->yAxis->setLabelFont(fontLabel);
-    ui->Motor6Plot->xAxis->setLabel("Time");
+    //ui->Motor6Plot->xAxis->setLabel("Time");
     ui->Motor6Plot->yAxis->setLabel("angle");
 
     ui->elbpresPlot->addGraph();
@@ -305,11 +321,11 @@ void MainWindow::Plot_Init()
     ui->elbpresPlot->yAxis->setTickLabelFont(fontTick);
     ui->elbpresPlot->xAxis->setLabelFont(fontLabel);
     ui->elbpresPlot->yAxis->setLabelFont(fontLabel);
-    ui->elbpresPlot->xAxis->setLabel("Time");
+    //ui->elbpresPlot->xAxis->setLabel("Time");
     ui->elbpresPlot->yAxis->setLabel("elbow_press");
 
     ui->shopresPlot->legend->setVisible(true);
-    ui->shopresPlot->xAxis->setLabel("time");
+    //ui->shopresPlot->xAxis->setLabel("time");
     ui->shopresPlot->yAxis->setLabel("shou_press()");
     ui->shopresPlot->xAxis->setTickLabelFont(fontTick);
     ui->shopresPlot->yAxis->setTickLabelFont(fontTick);
@@ -339,10 +355,6 @@ void MainWindow::Plot_Init()
     ui->emgFitPlot->addGraph();
     ui->emgFitPlot->graph(1)->setPen(QPen(Qt::green));
     ui->emgFitPlot->graph(1)->setName("fit curve");
-
-    plot_timer=new QTimer(this);
-    //plot_timerdly = TIME_PLOT_INTERVAL;
-    //connect(plot_timer,SIGNAL(timeout()),this,SLOT(plot()));
 
 }
 
@@ -481,6 +493,10 @@ void MainWindow::on_actionClose_triggered()
         return;
     threadModbus->quit();
     threadModbus->wait();
+    if(!threadReadEncoder->isRunning())
+        return;
+    threadReadEncoder->quit();
+    threadReadEncoder->wait();
 }
 
 
@@ -492,7 +508,6 @@ void MainWindow::on_actionExit_triggered()
 //save to excel file
 void MainWindow::on_actionSave_triggered()
 {
-    plot_timer->stop();
     unsigned int i;
 
     QAxObject *pApplication = NULL;
@@ -899,8 +914,6 @@ void MainWindow::on_actionSave_triggered()
 
 void MainWindow::on_actionClean_triggered()
 {
-    plot_timer->stop();
-
     ui->qCustomPlot->clearGraphs();
     ui->qCustomPlot->replot();
 
@@ -988,17 +1001,18 @@ void MainWindow::plot()
 
     // test, only paint the latest one hundred data;
     unsigned int plotlength = 100;
-    QVector<double> time_x_plot(plotlength),tensionPlot(plotlength),tension2Plot(plotlength),tension3Plot(plotlength),tension4Plot(plotlength),tension5Plot(100),tension6Plot(plotlength);
+    QVector<double> tension_x_plot(plotlength);
+    QVector<double> angle_x_plot(plotlength);
+    QVector<double> tensionPlot(plotlength),tension2Plot(plotlength),tension3Plot(plotlength),tension4Plot(plotlength),tension5Plot(plotlength),tension6Plot(plotlength);
     QVector<double> elbowXPlot(plotlength),elbowYPlot(plotlength),elbowZPlot(plotlength),shoulXPlot(plotlength),shoulYPlot(plotlength),shoulZPlot(plotlength);
-    QVector<double> Mot1CntPlot(plotlength),Mot2CntPlot(plotlength),Mot3CntPlot(plotlength),Mot4CntPlot(plotlength),Mot5CntPlot(plotlength),Mot6CntPlot(plotlength);
     unsigned int k = 0;
     unsigned int p = 0;
-    unsigned int s = 0;
+
     if(time_x_tension[receive_count_tension]>plotlength)
     {
         for(int i=time_x_tension[receive_count_tension]-plotlength; i<time_x_tension[receive_count_tension]; i++)
         {
-            time_x_plot[k] = i;
+            tension_x_plot[k] = i;
             tensionPlot[k] = tension_y[i];
             tension2Plot[k] = tension_y2[i];
             tension3Plot[k] = tension_y3[i];
@@ -1007,9 +1021,48 @@ void MainWindow::plot()
             tension6Plot[k] = tension_y6[i];
             k++;
         }
+        // tension data plot
+        ui->qCustomPlot->graph(0)->setData(tension_x_plot,tensionPlot);
+        ui->qCustomPlot->graph(0)->setPen(pen);
+        ui->qCustomPlot->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot->yAxis->setRange(0,max_tension[0]*1.1);
+        ui->qCustomPlot->replot();
 
+        ui->qCustomPlot2->graph(0)->setData(tension_x_plot,tension2Plot);
+        ui->qCustomPlot2->graph(0)->setPen(pen);
+        ui->qCustomPlot2->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot2->yAxis->setRange(0,max_tension[1]*1.1);
+        ui->qCustomPlot2->replot();
+
+        ui->qCustomPlot3->graph(0)->setData(tension_x_plot,tension3Plot);
+        ui->qCustomPlot3->graph(0)->setPen(pen);
+        ui->qCustomPlot3->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot3->yAxis->setRange(0,max_tension[2]*1.1);
+        ui->qCustomPlot3->replot();
+
+        ui->qCustomPlot4->graph(0)->setData(tension_x_plot,tension4Plot);
+        ui->qCustomPlot4->graph(0)->setPen(pen);
+        ui->qCustomPlot4->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot4->yAxis->setRange(0,max_tension[3]*1.1);
+        ui->qCustomPlot4->replot();
+
+        ui->qCustomPlot5->graph(0)->setData(tension_x_plot,tension5Plot);
+        ui->qCustomPlot5->graph(0)->setPen(pen);
+        ui->qCustomPlot5->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot5->yAxis->setRange(0,max_tension[4]*1.1);
+        ui->qCustomPlot5->replot();
+
+        ui->qCustomPlot6->graph(0)->setData(tension_x_plot,tension6Plot);
+        ui->qCustomPlot6->graph(0)->setPen(pen);
+        ui->qCustomPlot6->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
+        ui->qCustomPlot6->replot();
+    }
+    if(time_x_angle[receive_count_tension]>plotlength)
+    {
         for(int i=time_x_angle[receive_count_angle]-plotlength; i<time_x_angle[receive_count_angle]; i++)
         {
+            angle_x_plot[p] = i;
             elbowXPlot[p] = elbow_x[i];
             elbowYPlot[p] = elbow_y[i];
             elbowZPlot[p] = elbow_z[i];
@@ -1017,128 +1070,43 @@ void MainWindow::plot()
             shoulYPlot[p] = shoulder_y[i];
             shoulZPlot[p] = shoulder_z[i];
             p++;
-        }     
-
-        for(int i=time_x_mocount[receive_count_mocount]-plotlength; i<time_x_mocount[receive_count_mocount]; i++)
-        {
-            Mot1CntPlot[s] = Motor1Count[i];
-            Mot2CntPlot[s] = Motor2Count[i];
-            Mot3CntPlot[s] = Motor3Count[i];
-            Mot4CntPlot[s] = Motor4Count[i];
-            Mot5CntPlot[s] = Motor5Count[i];
-            Mot6CntPlot[s] = Motor6Count[i];
-            s++;
         }
-
-        // tension data plot
-        ui->qCustomPlot->graph(0)->setData(time_x_plot,tensionPlot);
-        ui->qCustomPlot->graph(0)->setPen(pen);
-        ui->qCustomPlot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->qCustomPlot->yAxis->setRange(0,max_tension[0]*1.1);
-        ui->qCustomPlot->replot();
-
-        ui->qCustomPlot2->graph(0)->setData(time_x_plot,tension2Plot);
-        ui->qCustomPlot2->graph(0)->setPen(pen);
-        ui->qCustomPlot2->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->qCustomPlot2->yAxis->setRange(0,max_tension[1]*1.1);
-        ui->qCustomPlot2->replot();
-
-        ui->qCustomPlot3->graph(0)->setData(time_x_plot,tension3Plot);
-        ui->qCustomPlot3->graph(0)->setPen(pen);
-        ui->qCustomPlot3->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->qCustomPlot3->yAxis->setRange(0,max_tension[2]*1.1);
-        ui->qCustomPlot3->replot();
-
-        ui->qCustomPlot4->graph(0)->setData(time_x_plot,tension4Plot);
-        ui->qCustomPlot4->graph(0)->setPen(pen);
-        ui->qCustomPlot4->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->qCustomPlot4->yAxis->setRange(0,max_tension[3]*1.1);
-        ui->qCustomPlot4->replot();
-
-        ui->qCustomPlot5->graph(0)->setData(time_x_plot,tension5Plot);
-        ui->qCustomPlot5->graph(0)->setPen(pen);
-        ui->qCustomPlot5->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->qCustomPlot5->yAxis->setRange(0,max_tension[4]*1.1);
-        ui->qCustomPlot5->replot();
-
-        ui->qCustomPlot6->graph(0)->setData(time_x_plot,tension6Plot);
-        ui->qCustomPlot6->graph(0)->setPen(pen);
-        ui->qCustomPlot6->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
-        ui->qCustomPlot6->replot();
-
         // angle data plot
-        ui->qCustomPlot7->graph(0)->setData(time_x_plot,elbowXPlot);
+        ui->qCustomPlot7->graph(0)->setData(angle_x_plot,elbowXPlot);
         ui->qCustomPlot7->graph(0)->setPen(pen);
-        ui->qCustomPlot7->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot7->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
         ui->qCustomPlot7->yAxis->setRange(-120,120);
         ui->qCustomPlot7->replot();
 
-        ui->qCustomPlot8->graph(0)->setData(time_x_plot,elbowYPlot);
+        ui->qCustomPlot8->graph(0)->setData(angle_x_plot,elbowYPlot);
         ui->qCustomPlot8->graph(0)->setPen(pen);
-        ui->qCustomPlot8->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot8->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
         ui->qCustomPlot8->yAxis->setRange(-120,120);
         ui->qCustomPlot8->replot();
 
-        ui->qCustomPlot9->graph(0)->setData(time_x_plot,elbowZPlot);
+        ui->qCustomPlot9->graph(0)->setData(angle_x_plot,elbowZPlot);
         ui->qCustomPlot9->graph(0)->setPen(pen);
-        ui->qCustomPlot9->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot9->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
         ui->qCustomPlot9->yAxis->setRange(-120,120);
         ui->qCustomPlot9->replot();
 
-        ui->qCustomPlot10->graph(0)->setData(time_x_plot,shoulXPlot);
+        ui->qCustomPlot10->graph(0)->setData(angle_x_plot,shoulXPlot);
         ui->qCustomPlot10->graph(0)->setPen(pen);
-        ui->qCustomPlot10->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot10->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
         ui->qCustomPlot10->yAxis->setRange(-120,120);
         ui->qCustomPlot10->replot();
 
-        ui->qCustomPlot11->graph(0)->setData(time_x_plot,shoulYPlot);
+        ui->qCustomPlot11->graph(0)->setData(angle_x_plot,shoulYPlot);
         ui->qCustomPlot11->graph(0)->setPen(pen);
-        ui->qCustomPlot11->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot11->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
         ui->qCustomPlot11->yAxis->setRange(-120,120);
         ui->qCustomPlot11->replot();
 
-        ui->qCustomPlot12->graph(0)->setData(time_x_plot,shoulZPlot);
+        ui->qCustomPlot12->graph(0)->setData(angle_x_plot,shoulZPlot);
         ui->qCustomPlot12->graph(0)->setPen(pen);
-        ui->qCustomPlot12->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
+        ui->qCustomPlot12->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
         ui->qCustomPlot12->yAxis->setRange(-120,120);
         ui->qCustomPlot12->replot();
-
-        ui->Motor1Plot->graph(0)->setData(time_x_plot,Mot1CntPlot);
-        ui->Motor1Plot->graph(0)->setPen(pen);
-        ui->Motor1Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->Motor1Plot->yAxis->setRange(min_motor_count[0],max_motor_count[0]*1.1);
-        ui->Motor1Plot->replot();
-
-        ui->Motor2Plot->graph(0)->setData(time_x_plot,Mot2CntPlot);
-        ui->Motor2Plot->graph(0)->setPen(pen);
-        ui->Motor2Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->Motor2Plot->yAxis->setRange(min_motor_count[1],max_motor_count[1]*1.1);
-        ui->Motor2Plot->replot();
-
-        ui->Motor3Plot->graph(0)->setData(time_x_plot,Mot3CntPlot);
-        ui->Motor3Plot->graph(0)->setPen(pen);
-        ui->Motor3Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->Motor3Plot->yAxis->setRange(min_motor_count[2],max_motor_count[2]*1.1);
-        ui->Motor3Plot->replot();
-
-        ui->Motor4Plot->graph(0)->setData(time_x_plot,Mot4CntPlot);
-        ui->Motor4Plot->graph(0)->setPen(pen);
-        ui->Motor4Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->Motor4Plot->yAxis->setRange(min_motor_count[3],max_motor_count[3]*1.1);
-        ui->Motor4Plot->replot();
-
-        ui->Motor5Plot->graph(0)->setData(time_x_plot,Mot5CntPlot);
-        ui->Motor5Plot->graph(0)->setPen(pen);
-        ui->Motor5Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->Motor5Plot->yAxis->setRange(min_motor_count[4],max_motor_count[4]*1.1);
-        ui->Motor5Plot->replot(QCustomPlot::rpQueuedReplot);
-
-        ui->Motor6Plot->graph(0)->setData(time_x_plot,Mot6CntPlot);
-        ui->Motor6Plot->graph(0)->setPen(pen);
-        ui->Motor6Plot->xAxis->setRange(time_x_plot[0],time_x_plot[plotlength-1]);
-        ui->Motor6Plot->yAxis->setRange(min_motor_count[5],max_motor_count[5]*1.1);
-        ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
     }
 }
 
@@ -1260,14 +1228,22 @@ void MainWindow::on_sendmsgButton_clicked()
         sendData[8] = ui->TensionI->text().toUInt(); // 100*ki
         emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
-    // PTP CONTROL MODE
-    else if(ui->Position_RadioButton->isChecked())
+    // JOINT WITH TENSION CONTROL MODE
+    else if(ui->JointWithTension_RadioButton->isChecked())
     {
         TensionOrAngle = 2;
-        sendData[0] = ui->PosXlineEdit->text().toInt();
-        sendData[1] = ui->PosYlineEdit->text().toInt();
-        sendData[2] = ui->PosZlineEdit->text().toInt();
-        emit sigMdSerialCtrl(TensionOrAngle, sendData);
+        sendData[0] = ui->sendMsgLineEdit7->text().toInt();
+        sendData[1] = ui->sendMsgLineEdit8->text().toInt();
+        sendData[2] = ui->sendMsgLineEdit9->text().toInt();
+        sendData[3] = ui->sendMsgLineEdit10->text().toUInt();
+        sendData[4] = ui->circlelineEdit->text().toUInt();
+        if(sendData[4] == 0)
+        {
+            QMessageBox::critical(this,tr("wrong operation"),tr("circle can not be zero"),QMessageBox::Ok);
+            return;
+        }
+        else
+            emit sigMdSerialCtrl(TensionOrAngle, sendData);
     }
     // LINEAR CONTROL MODE
     else if(ui->Linear_RadioButton->isChecked())
@@ -1299,14 +1275,20 @@ void MainWindow::on_sendmsgButton_clicked()
 
 void MainWindow::on_actionStartMeasure_triggered()
 {
+    if(ui->actionOpen->isEnabled())
+    {
+        QMessageBox::critical(this,tr("wrong operation"),tr("open com first!!!"),QMessageBox::Ok);
+        return;
+    }
+    readEncoderTimer->start(readEncoderInterval);
     getsensordata->start();
-    //plot_timer->start(plot_timerdly);
     ui->actionStartMeasure->setEnabled(false);
     ui->actionStopMeasure->setEnabled(true);
 }
 
 void MainWindow::on_actionStopMeasure_triggered()
 {
+    readEncoderTimer->stop();
     getsensordata->terminate();
     getsensordata->wait();
     ui->actionSave->setEnabled(true);
@@ -1382,7 +1364,6 @@ void MainWindow::on_pushButton_Trigger_clicked()
 
 void MainWindow::slotEmgThetaFit(double *fiteff, double *bufferX, double *bufferY, unsigned int dimension, int sizenum)
 {
-    //plot_timer->stop();
     //QVector<double> x_dot(200),y_dot(200);
     for(int i=0; i<10; i++)
         fiteffRecord.append(fiteff[i]); // record the fit value
@@ -1451,4 +1432,67 @@ void MainWindow::modMessage(QString kind, QString message)
         QMessageBox::information(this, kind, message);
     if(kind == "error")
         QMessageBox::critical(this, kind, message, QMessageBox::Ok);
+}
+
+void MainWindow::slotEncoderPlot()
+{
+    unsigned int plotlength = 100;
+    QVector<double> Mot1CntPlot(plotlength),Mot2CntPlot(plotlength),Mot3CntPlot(plotlength),Mot4CntPlot(plotlength),Mot5CntPlot(plotlength),Mot6CntPlot(plotlength);
+    QVector<double> encoder_x_plot(plotlength);
+    unsigned int s = 0;
+    QPen pen;
+    pen.setStyle(Qt::SolidLine);
+    pen.setWidth(3);
+    pen.setBrush(Qt::blue);
+
+    if(time_x_mocount[receive_count_mocount-1]>plotlength)
+    {
+        for(int i=time_x_mocount[receive_count_mocount-1]-plotlength; i<time_x_mocount[receive_count_mocount-1]; i++)
+        {
+            encoder_x_plot[s] = i;
+            Mot1CntPlot[s] = Motor1Count[i];
+            Mot2CntPlot[s] = Motor2Count[i];
+            Mot3CntPlot[s] = Motor3Count[i];
+            Mot4CntPlot[s] = Motor4Count[i];
+            Mot5CntPlot[s] = Motor5Count[i];
+            Mot6CntPlot[s] = Motor6Count[i];
+            s++;
+        }
+
+        ui->Motor1Plot->graph(0)->setData(encoder_x_plot,Mot1CntPlot);
+        ui->Motor1Plot->graph(0)->setPen(pen);
+        ui->Motor1Plot->xAxis->setRange(encoder_x_plot[0],encoder_x_plot[plotlength-1]);
+        ui->Motor1Plot->yAxis->setRange(min_motor_count[0],max_motor_count[0]*1.1);
+        ui->Motor1Plot->replot();
+
+        ui->Motor2Plot->graph(0)->setData(encoder_x_plot,Mot2CntPlot);
+        ui->Motor2Plot->graph(0)->setPen(pen);
+        ui->Motor2Plot->xAxis->setRange(encoder_x_plot[0],encoder_x_plot[plotlength-1]);
+        ui->Motor2Plot->yAxis->setRange(min_motor_count[1],max_motor_count[1]*1.1);
+        ui->Motor2Plot->replot();
+
+        ui->Motor3Plot->graph(0)->setData(encoder_x_plot,Mot3CntPlot);
+        ui->Motor3Plot->graph(0)->setPen(pen);
+        ui->Motor3Plot->xAxis->setRange(encoder_x_plot[0],encoder_x_plot[plotlength-1]);
+        ui->Motor3Plot->yAxis->setRange(min_motor_count[2],max_motor_count[2]*1.1);
+        ui->Motor3Plot->replot();
+
+        ui->Motor4Plot->graph(0)->setData(encoder_x_plot,Mot4CntPlot);
+        ui->Motor4Plot->graph(0)->setPen(pen);
+        ui->Motor4Plot->xAxis->setRange(encoder_x_plot[0],encoder_x_plot[plotlength-1]);
+        ui->Motor4Plot->yAxis->setRange(min_motor_count[3],max_motor_count[3]*1.1);
+        ui->Motor4Plot->replot();
+
+        ui->Motor5Plot->graph(0)->setData(encoder_x_plot,Mot5CntPlot);
+        ui->Motor5Plot->graph(0)->setPen(pen);
+        ui->Motor5Plot->xAxis->setRange(encoder_x_plot[0],encoder_x_plot[plotlength-1]);
+        ui->Motor5Plot->yAxis->setRange(min_motor_count[4],max_motor_count[4]*1.1);
+        ui->Motor5Plot->replot(QCustomPlot::rpQueuedReplot);
+
+        ui->Motor6Plot->graph(0)->setData(encoder_x_plot,Mot6CntPlot);
+        ui->Motor6Plot->graph(0)->setPen(pen);
+        ui->Motor6Plot->xAxis->setRange(encoder_x_plot[0],encoder_x_plot[plotlength-1]);
+        ui->Motor6Plot->yAxis->setRange(min_motor_count[5],max_motor_count[5]*1.1);
+        ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
+    }
 }

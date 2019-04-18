@@ -102,19 +102,13 @@ void modbus::readReady()
                                           unit.registerType() <= QModbusDataUnit::Coils ? 10 : 16));
             const QString Data = tr("%1").arg(QString::number(unit.value(i),
                                                                        unit.registerType() <= QModbusDataUnit::Coils ? 10 : 16));
-            qDebug()<<"read data is:"<<entry;   //显示数据entry
+            //qDebug()<<"read data is:"<<entry;   //显示数据entry
             emit sigModReadData(Data);
         }
     } else if(reply->error() == QModbusDevice::ProtocolError) {
         emit sigModMessage("error","Read response error: "+reply->errorString()+" Mobus exception:"+reply->rawResult().exceptionCode());
-//        QMessageBox::warning(0, tr("error"), tr("Read response error: %1 (Mobus exception: 0x%2)").
-//                             arg(reply->errorString()).
-//                             arg(reply->rawResult().exceptionCode(), -1, 16), QMessageBox::Ok);
     } else {
         emit sigModMessage("error","Read response error: "+reply->errorString()+" code:"+reply->rawResult().exceptionCode());
-//        QMessageBox::warning(0, tr("error"), tr("Read response error: %1 (code: 0x%2)").
-//                             arg(reply->errorString()).
-//                             arg(reply->error(), -1, 16), QMessageBox::Ok);
     }
 
     reply->deleteLater();
@@ -156,22 +150,8 @@ void modbus::writeModbus(uint Seraddress, int Startaddress, qint32 Data, bool wr
         }
     } else {
         emit sigModMessage("error","Write error: "+modbusDevice->errorString());
-        //QMessageBox::warning(0, tr("error"), tr("Write error: ") + modbusDevice->errorString(), QMessageBox::Ok);
     }
 }
 
-
-//---------------------------------------
-// Function: read Holding Register
-// Input parameter: no
-// Output parameter: no
-/*
-//---------------------------------------
-void modbus::slotModbusRead()   //read按钮的槽事件
-{
-    //读增量编码器
-    readModbus(1,0x0b07,2);
-}
-*/
 
 

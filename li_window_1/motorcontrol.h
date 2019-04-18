@@ -2,6 +2,7 @@
 #define MOTORCONTROL_H
 
 #include "getsensordata.h"
+#include "encoderread.h"
 #include <QTimer>
 
 // 一些基本的电机驱动器的指令
@@ -15,7 +16,7 @@
 // 定义控制模式
 #define TENSIONCONTROL 0
 #define JOINTANGLECONTROL 1
-#define PTPCONTROL 2
+#define JOINTWITHTENSION 2
 #define LINEARCONTROL 3
 #define JOINTTORQUECONTROL 4
 
