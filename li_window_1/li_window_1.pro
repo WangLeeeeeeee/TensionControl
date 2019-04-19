@@ -29,14 +29,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     qcustomplot.cpp \
     aboutdialog.cpp \
-    getsensordata.cpp \
     vrdisplay.cpp \
     linkdisplay.cpp \
     scatterdatamodifier.cpp \
     emg_tcp.cpp \
     modbus.cpp \
     motorcontrol.cpp \
-    encoderread.cpp
+    encoderread.cpp \
+    tensionread.cpp \
+    imuread.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -46,14 +47,15 @@ HEADERS  += mainwindow.h \
     LpmsDefinitions.h \
     LpmsSensorI.h \
     LpmsSensorManagerI.h \
-    getsensordata.h \
     vrdisplay.h \
     linkdisplay.h \
     scatterdatamodifier.h \
     emg_tcp.h \
     modbus.h \
     motorcontrol.h \
-    encoderread.h
+    encoderread.h \
+    tensionread.h \
+    imuread.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui

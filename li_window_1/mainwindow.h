@@ -13,7 +13,7 @@
 #include <QSlider>
 #include "qcustomplot.h"
 #include "aboutdialog.h"
-#include "getsensordata.h"
+//#include "getsensordata.h"
 #include "plotcurves.h"
 #include "linkdisplay.h"
 #include "emg_tcp.h"
@@ -24,6 +24,8 @@ class VRDisplay;
 class modbus;
 class motorcontrol;
 class encoderRead;
+class tensionRead;
+class IMURead;
 
 
 // set the plot interval
@@ -53,7 +55,6 @@ private slots:
     void on_actionExit_triggered();
     void on_actionSave_triggered();
     void on_actionClean_triggered();
-    void plot();
     void setLine1EditValue();
     void setLine2EditValue();
     void setLine3EditValue();
@@ -82,12 +83,16 @@ private slots:
 
     // from encoder read
     void slotEncoderPlot();
+    // from tension read
+    void slotTensionPlot();
+    // from imu read
+    void slotIMUPlot();
 
 private:
     Ui::MainWindow *ui;
     aboutdialog aboutdlg;
 
-    GetSensordata *getsensordata;
+//    GetSensordata *getsensordata;
     VRDisplay *vrdisplay;
     EMG_server* emg_server;
     motorcontrol* motorctrl;
@@ -99,9 +104,20 @@ private:
     // read encoder thread
     encoderRead* encoRe;
     QThread* threadReadEncoder;
-
     QTimer* readEncoderTimer;
     unsigned int readEncoderInterval = 50;
+
+    // read tension thread
+    tensionRead* tenRe;
+    QThread* threadReadTension;
+    QTimer* readTensionTimer;
+    unsigned int readTensionInterval = 50;
+
+    // read IMU data thread
+    IMURead* imuRe;
+    QThread* threadReadIMU;
+    QTimer* readIMUTimer;
+    unsigned int readIMUInterval = 50;
 
     // 3D surface
     Q3DScatter *graph = new Q3DScatter();

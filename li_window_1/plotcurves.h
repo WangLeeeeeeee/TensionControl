@@ -3,7 +3,6 @@
 
 
 #include <QThread>
-#include "getsensordata.h"
 #include "ui_mainwindow.h"
 #include <QMainWindow>
 

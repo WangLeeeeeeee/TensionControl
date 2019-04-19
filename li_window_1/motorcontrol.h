@@ -1,9 +1,13 @@
 #ifndef MOTORCONTROL_H
 #define MOTORCONTROL_H
 
-#include "getsensordata.h"
+//#include "getsensordata.h"
 #include "encoderread.h"
+#include "tensionread.h"
+#include "imuread.h"
 #include <QTimer>
+#include <QDebug>
+#include <QtCore/qmath.h>
 
 // 一些基本的电机驱动器的指令
 #define MODESELECT 0x3100

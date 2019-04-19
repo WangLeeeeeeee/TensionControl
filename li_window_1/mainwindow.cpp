@@ -8,6 +8,8 @@
 #include "modbus.h"
 #include "motorcontrol.h"
 #include "encoderread.h"
+#include "tensionread.h"
+#include "imuread.h"
 #include <QLayout>
 
 QVector<float> fiteffRecord;
@@ -22,16 +24,21 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusBar->showMessage(QString("welcome to use upper limb console"));
 
     // Instantiation object
-    getsensordata = new GetSensordata;
     vrdisplay = new VRDisplay;
     emg_server = new EMG_server;
     mb = new modbus;
     motorctrl = new motorcontrol;
     encoRe = new encoderRead;
+    tenRe = new tensionRead;
+    imuRe = new IMURead;
 
     // 创建modbus子线程
     threadModbus = new QThread(this);
     mb->moveToThread(threadModbus);
+    connect(threadModbus, &QThread::started, mb, &modbus::slotMdSerialInit, Qt::DirectConnection);
+    connect(mb, SIGNAL(sigModMessage(QString,QString)), this, SLOT(modMessage(QString,QString)));
+    connect(this, SIGNAL(sigModbusClose()), mb, SLOT(slotMdSerialClose()));
+    connect(motorctrl, SIGNAL(sigMotorControl(uint,int,qint32,bool)), mb, SLOT(writeModbus(uint,int,qint32,bool)));
 
     // 创建读编码器子线程
     readEncoderTimer = new QTimer(this);
@@ -42,6 +49,22 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(encoRe, SIGNAL(sigReadEncoder(uint,int,uint)), mb, SLOT(readModbus(uint,int,uint)));
     connect(mb, SIGNAL(sigModReadData(QString)), encoRe, SLOT(slotDataToEncoder(QString)));
     connect(encoRe, SIGNAL(sigPlotEncoder()), this, SLOT(slotEncoderPlot()));
+
+    // 创建读拉力传感器子线程
+    readTensionTimer = new QTimer(this);
+    threadReadTension = new QThread(this);
+    tenRe->moveToThread(threadReadTension);
+    connect(threadReadTension, &QThread::started, tenRe, &tensionRead::slotReadTensionInit, Qt::DirectConnection);
+    connect(readTensionTimer, SIGNAL(timeout()), tenRe, SLOT(slotReadTension()));
+    connect(tenRe, SIGNAL(sigPlotTension()), this, SLOT(slotTensionPlot()));
+
+    // 创建读IMU传感器子线程
+    readIMUTimer = new QTimer(this);
+    threadReadIMU = new QThread(this);
+    imuRe->moveToThread(threadReadIMU);
+    connect(threadReadIMU, &QThread::started, imuRe, &IMURead::slotIMUInit, Qt::DirectConnection);
+    connect(readIMUTimer, SIGNAL(timeout()), imuRe, SLOT(slotIMURead()));
+    connect(imuRe, SIGNAL(sigPlotIMU()), this, SLOT(slotIMUPlot()));
 
     // 3D link module visualization
     QSize screenSize = graph->screen()->size();
@@ -57,12 +80,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->linkWidget->setWindowTitle(QStringLiteral("Link model"));
     ui->linkWidget->show();
 
-    // 通过信号与槽调用子线程
-    connect(threadModbus, &QThread::started, mb, &modbus::slotMdSerialInit, Qt::DirectConnection);
-    connect(mb, SIGNAL(sigModMessage(QString,QString)), this, SLOT(modMessage(QString,QString)));
-    connect(this, SIGNAL(sigModbusClose()), mb, SLOT(slotMdSerialClose()));
-    connect(motorctrl, SIGNAL(sigMotorControl(uint,int,qint32,bool)), mb, SLOT(writeModbus(uint,int,qint32,bool)));
-
     // connect the maindow signal with vr com
     connect(this,SIGNAL(sigVRSerialOpen()), vrdisplay, SLOT(slotVRSerialOpen()));
 
@@ -70,9 +87,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sigEmgStart()), emg_server, SLOT(slotEmgStart()));
     connect(this, SIGNAL(sigEmgTrigger()), emg_server, SLOT(slotEmgTrigger()));
     connect(emg_server, SIGNAL(sigEmgThetaFit(double*,double*,double*,uint,int)), this, SLOT(slotEmgThetaFit(double*,double*,double*,uint,int)));
-
-    // connect the getsensordata signals with mainwindow
-    connect(getsensordata, SIGNAL(sigPlotTrigger()), this, SLOT(plot()));
 
     // connect the mainwindow signals with motorcontrol
     connect(this, SIGNAL(sigDisableMotor()), motorctrl, SLOT(slotDisableMotor()));
@@ -92,14 +106,21 @@ MainWindow::~MainWindow()
         return;
     threadModbus->quit();
     threadModbus->wait();
+
     if(!threadReadEncoder->isRunning())
         return;
     threadReadEncoder->quit();
     threadReadEncoder->wait();
-    getsensordata->terminate();
-    getsensordata->wait();
-    delete getsensordata;
-    getsensordata = 0;
+
+    if(!threadReadTension->isRunning())
+        return;
+    threadReadTension->quit();
+    threadReadTension->wait();
+
+    if(!threadReadIMU->isRunning())
+        return;
+    threadReadIMU->quit();
+    threadReadIMU->wait();
     delete ui;
 }
 
@@ -493,10 +514,21 @@ void MainWindow::on_actionClose_triggered()
         return;
     threadModbus->quit();
     threadModbus->wait();
+
     if(!threadReadEncoder->isRunning())
         return;
     threadReadEncoder->quit();
     threadReadEncoder->wait();
+
+    if(!threadReadTension->isRunning())
+        return;
+    threadReadTension->quit();
+    threadReadTension->wait();
+
+    if(!threadReadIMU->isRunning())
+        return;
+    threadReadIMU->quit();
+    threadReadIMU->wait();
 }
 
 
@@ -687,6 +719,7 @@ void MainWindow::on_actionSave_triggered()
     vars.clear();
 
 
+    /*
     for(i=0; i<receive_count_angle; i++)
     {
         QList<QVariant> rows;
@@ -867,6 +900,7 @@ void MainWindow::on_actionSave_triggered()
     user_range20->setProperty("Value",res_20);
     vars.clear();
 
+    /*
     // the emg data and the relevant elbow angle
     for(i=0; i<emgsaveLen; i++)
     {
@@ -903,6 +937,7 @@ void MainWindow::on_actionSave_triggered()
     QAxObject *user_range23 = pSheet->querySubObject("Range(const QString&)",RangeStr);
     user_range23->setProperty("Value",res_23);
     vars.clear();
+    */
 
 
     //excel
@@ -981,136 +1016,7 @@ void MainWindow::on_actionClean_triggered()
     for(int i=0;i<6;i++)
         max_tension[i]=0;
     ui->statusBar->showMessage(tr("data cleaned"));
-
 }
-
-void MainWindow::plot()
-{
-
-    linkdisplay->adjustPos(shoulder_x[receive_count_angle]*3.14/180,
-            shoulder_y[receive_count_angle]*3.14/180,
-            shoulder_z[receive_count_angle]*3.14/180,
-            elbow_x[receive_count_angle]*3.14/180,
-            elbow_y[receive_count_angle]*3.14/180,
-            elbow_z[receive_count_angle]*3.14/180);
-
-    QPen pen;
-    pen.setStyle(Qt::SolidLine);
-    pen.setWidth(3);
-    pen.setBrush(Qt::blue);
-
-    // test, only paint the latest one hundred data;
-    unsigned int plotlength = 100;
-    QVector<double> tension_x_plot(plotlength);
-    QVector<double> angle_x_plot(plotlength);
-    QVector<double> tensionPlot(plotlength),tension2Plot(plotlength),tension3Plot(plotlength),tension4Plot(plotlength),tension5Plot(plotlength),tension6Plot(plotlength);
-    QVector<double> elbowXPlot(plotlength),elbowYPlot(plotlength),elbowZPlot(plotlength),shoulXPlot(plotlength),shoulYPlot(plotlength),shoulZPlot(plotlength);
-    unsigned int k = 0;
-    unsigned int p = 0;
-
-    if(time_x_tension[receive_count_tension]>plotlength)
-    {
-        for(int i=time_x_tension[receive_count_tension]-plotlength; i<time_x_tension[receive_count_tension]; i++)
-        {
-            tension_x_plot[k] = i;
-            tensionPlot[k] = tension_y[i];
-            tension2Plot[k] = tension_y2[i];
-            tension3Plot[k] = tension_y3[i];
-            tension4Plot[k] = tension_y4[i];
-            tension5Plot[k] = tension_y5[i];
-            tension6Plot[k] = tension_y6[i];
-            k++;
-        }
-        // tension data plot
-        ui->qCustomPlot->graph(0)->setData(tension_x_plot,tensionPlot);
-        ui->qCustomPlot->graph(0)->setPen(pen);
-        ui->qCustomPlot->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
-        ui->qCustomPlot->yAxis->setRange(0,max_tension[0]*1.1);
-        ui->qCustomPlot->replot();
-
-        ui->qCustomPlot2->graph(0)->setData(tension_x_plot,tension2Plot);
-        ui->qCustomPlot2->graph(0)->setPen(pen);
-        ui->qCustomPlot2->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
-        ui->qCustomPlot2->yAxis->setRange(0,max_tension[1]*1.1);
-        ui->qCustomPlot2->replot();
-
-        ui->qCustomPlot3->graph(0)->setData(tension_x_plot,tension3Plot);
-        ui->qCustomPlot3->graph(0)->setPen(pen);
-        ui->qCustomPlot3->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
-        ui->qCustomPlot3->yAxis->setRange(0,max_tension[2]*1.1);
-        ui->qCustomPlot3->replot();
-
-        ui->qCustomPlot4->graph(0)->setData(tension_x_plot,tension4Plot);
-        ui->qCustomPlot4->graph(0)->setPen(pen);
-        ui->qCustomPlot4->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
-        ui->qCustomPlot4->yAxis->setRange(0,max_tension[3]*1.1);
-        ui->qCustomPlot4->replot();
-
-        ui->qCustomPlot5->graph(0)->setData(tension_x_plot,tension5Plot);
-        ui->qCustomPlot5->graph(0)->setPen(pen);
-        ui->qCustomPlot5->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
-        ui->qCustomPlot5->yAxis->setRange(0,max_tension[4]*1.1);
-        ui->qCustomPlot5->replot();
-
-        ui->qCustomPlot6->graph(0)->setData(tension_x_plot,tension6Plot);
-        ui->qCustomPlot6->graph(0)->setPen(pen);
-        ui->qCustomPlot6->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
-        ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
-        ui->qCustomPlot6->replot();
-    }
-    if(time_x_angle[receive_count_tension]>plotlength)
-    {
-        for(int i=time_x_angle[receive_count_angle]-plotlength; i<time_x_angle[receive_count_angle]; i++)
-        {
-            angle_x_plot[p] = i;
-            elbowXPlot[p] = elbow_x[i];
-            elbowYPlot[p] = elbow_y[i];
-            elbowZPlot[p] = elbow_z[i];
-            shoulXPlot[p] = shoulder_x[i];
-            shoulYPlot[p] = shoulder_y[i];
-            shoulZPlot[p] = shoulder_z[i];
-            p++;
-        }
-        // angle data plot
-        ui->qCustomPlot7->graph(0)->setData(angle_x_plot,elbowXPlot);
-        ui->qCustomPlot7->graph(0)->setPen(pen);
-        ui->qCustomPlot7->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
-        ui->qCustomPlot7->yAxis->setRange(-120,120);
-        ui->qCustomPlot7->replot();
-
-        ui->qCustomPlot8->graph(0)->setData(angle_x_plot,elbowYPlot);
-        ui->qCustomPlot8->graph(0)->setPen(pen);
-        ui->qCustomPlot8->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
-        ui->qCustomPlot8->yAxis->setRange(-120,120);
-        ui->qCustomPlot8->replot();
-
-        ui->qCustomPlot9->graph(0)->setData(angle_x_plot,elbowZPlot);
-        ui->qCustomPlot9->graph(0)->setPen(pen);
-        ui->qCustomPlot9->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
-        ui->qCustomPlot9->yAxis->setRange(-120,120);
-        ui->qCustomPlot9->replot();
-
-        ui->qCustomPlot10->graph(0)->setData(angle_x_plot,shoulXPlot);
-        ui->qCustomPlot10->graph(0)->setPen(pen);
-        ui->qCustomPlot10->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
-        ui->qCustomPlot10->yAxis->setRange(-120,120);
-        ui->qCustomPlot10->replot();
-
-        ui->qCustomPlot11->graph(0)->setData(angle_x_plot,shoulYPlot);
-        ui->qCustomPlot11->graph(0)->setPen(pen);
-        ui->qCustomPlot11->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
-        ui->qCustomPlot11->yAxis->setRange(-120,120);
-        ui->qCustomPlot11->replot();
-
-        ui->qCustomPlot12->graph(0)->setData(angle_x_plot,shoulZPlot);
-        ui->qCustomPlot12->graph(0)->setPen(pen);
-        ui->qCustomPlot12->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
-        ui->qCustomPlot12->yAxis->setRange(-120,120);
-        ui->qCustomPlot12->replot();
-    }
-}
-
-/*****************************/
 
 void MainWindow::setLine1EditValue()
 {
@@ -1280,8 +1186,11 @@ void MainWindow::on_actionStartMeasure_triggered()
         QMessageBox::critical(this,tr("wrong operation"),tr("open com first!!!"),QMessageBox::Ok);
         return;
     }
-    readEncoderTimer->start(readEncoderInterval);
-    getsensordata->start();
+//    readEncoderTimer->start(readEncoderInterval);
+    threadReadTension->start();
+    readTensionTimer->start(readTensionInterval);
+    threadReadIMU->start();
+    readIMUTimer->start(readIMUInterval);
     ui->actionStartMeasure->setEnabled(false);
     ui->actionStopMeasure->setEnabled(true);
 }
@@ -1289,8 +1198,8 @@ void MainWindow::on_actionStartMeasure_triggered()
 void MainWindow::on_actionStopMeasure_triggered()
 {
     readEncoderTimer->stop();
-    getsensordata->terminate();
-    getsensordata->wait();
+    readTensionTimer->stop();
+    readIMUTimer->stop();
     ui->actionSave->setEnabled(true);
     ui->actionStopMeasure->setEnabled(false);
     ui->actionStartMeasure->setEnabled(true);
@@ -1494,5 +1403,143 @@ void MainWindow::slotEncoderPlot()
         ui->Motor6Plot->xAxis->setRange(encoder_x_plot[0],encoder_x_plot[plotlength-1]);
         ui->Motor6Plot->yAxis->setRange(min_motor_count[5],max_motor_count[5]*1.1);
         ui->Motor6Plot->replot(QCustomPlot::rpQueuedReplot);
+    }
+}
+
+void MainWindow::slotTensionPlot()
+{
+    QPen pen;
+    pen.setStyle(Qt::SolidLine);
+    pen.setWidth(3);
+    pen.setBrush(Qt::blue);
+
+    // test, only paint the latest one hundred data;
+    unsigned int plotlength = 100;
+    QVector<double> tension_x_plot(plotlength);
+    QVector<double> tensionPlot(plotlength),tension2Plot(plotlength),tension3Plot(plotlength),tension4Plot(plotlength),tension5Plot(plotlength),tension6Plot(plotlength);
+    unsigned int k = 0;
+
+    if(time_x_tension[receive_count_tension]>plotlength)
+    {
+        for(int i=time_x_tension[receive_count_tension]-plotlength; i<time_x_tension[receive_count_tension]; i++)
+        {
+            tension_x_plot[k] = i;
+            tensionPlot[k] = tension_y[i];
+            tension2Plot[k] = tension_y2[i];
+            tension3Plot[k] = tension_y3[i];
+            tension4Plot[k] = tension_y4[i];
+            tension5Plot[k] = tension_y5[i];
+            tension6Plot[k] = tension_y6[i];
+            k++;
+        }
+        // tension data plot
+        ui->qCustomPlot->graph(0)->setData(tension_x_plot,tensionPlot);
+        ui->qCustomPlot->graph(0)->setPen(pen);
+        ui->qCustomPlot->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot->yAxis->setRange(0,max_tension[0]*1.1);
+        ui->qCustomPlot->replot();
+
+        ui->qCustomPlot2->graph(0)->setData(tension_x_plot,tension2Plot);
+        ui->qCustomPlot2->graph(0)->setPen(pen);
+        ui->qCustomPlot2->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot2->yAxis->setRange(0,max_tension[1]*1.1);
+        ui->qCustomPlot2->replot();
+
+        ui->qCustomPlot3->graph(0)->setData(tension_x_plot,tension3Plot);
+        ui->qCustomPlot3->graph(0)->setPen(pen);
+        ui->qCustomPlot3->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot3->yAxis->setRange(0,max_tension[2]*1.1);
+        ui->qCustomPlot3->replot();
+
+        ui->qCustomPlot4->graph(0)->setData(tension_x_plot,tension4Plot);
+        ui->qCustomPlot4->graph(0)->setPen(pen);
+        ui->qCustomPlot4->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot4->yAxis->setRange(0,max_tension[3]*1.1);
+        ui->qCustomPlot4->replot();
+
+        ui->qCustomPlot5->graph(0)->setData(tension_x_plot,tension5Plot);
+        ui->qCustomPlot5->graph(0)->setPen(pen);
+        ui->qCustomPlot5->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot5->yAxis->setRange(0,max_tension[4]*1.1);
+        ui->qCustomPlot5->replot();
+
+        ui->qCustomPlot6->graph(0)->setData(tension_x_plot,tension6Plot);
+        ui->qCustomPlot6->graph(0)->setPen(pen);
+        ui->qCustomPlot6->xAxis->setRange(tension_x_plot[0],tension_x_plot[plotlength-1]);
+        ui->qCustomPlot6->yAxis->setRange(0,max_tension[5]*1.1);
+        ui->qCustomPlot6->replot();
+    }
+}
+
+void MainWindow::slotIMUPlot()
+{
+    qDebug()<<"enter slotIMUPlot"<<QThread::currentThreadId();
+    linkdisplay->adjustPos(shoulder_x[receive_count_angle]*3.14/180,
+            shoulder_y[receive_count_angle]*3.14/180,
+            shoulder_z[receive_count_angle]*3.14/180,
+            elbow_x[receive_count_angle]*3.14/180,
+            elbow_y[receive_count_angle]*3.14/180,
+            elbow_z[receive_count_angle]*3.14/180);
+
+    QPen pen;
+    pen.setStyle(Qt::SolidLine);
+    pen.setWidth(3);
+    pen.setBrush(Qt::blue);
+
+    // test, only paint the latest one hundred data;
+    unsigned int plotlength = 100;
+    QVector<double> angle_x_plot(plotlength);
+    QVector<double> elbowXPlot(plotlength),elbowYPlot(plotlength),elbowZPlot(plotlength),shoulXPlot(plotlength),shoulYPlot(plotlength),shoulZPlot(plotlength);
+    unsigned int p = 0;
+
+    if(time_x_angle[receive_count_angle]>plotlength)
+    {
+        for(int i=time_x_angle[receive_count_angle]-plotlength; i<time_x_angle[receive_count_angle]; i++)
+        {
+            angle_x_plot[p] = i;
+            elbowXPlot[p] = elbow_x[i];
+            elbowYPlot[p] = elbow_y[i];
+            elbowZPlot[p] = elbow_z[i];
+            shoulXPlot[p] = shoulder_x[i];
+            shoulYPlot[p] = shoulder_y[i];
+            shoulZPlot[p] = shoulder_z[i];
+            p++;
+        }
+        // angle data plot
+        ui->qCustomPlot7->graph(0)->setData(angle_x_plot,elbowXPlot);
+        ui->qCustomPlot7->graph(0)->setPen(pen);
+        ui->qCustomPlot7->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
+        ui->qCustomPlot7->yAxis->setRange(-120,120);
+        ui->qCustomPlot7->replot();
+
+        ui->qCustomPlot8->graph(0)->setData(angle_x_plot,elbowYPlot);
+        ui->qCustomPlot8->graph(0)->setPen(pen);
+        ui->qCustomPlot8->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
+        ui->qCustomPlot8->yAxis->setRange(-120,120);
+        ui->qCustomPlot8->replot();
+
+        ui->qCustomPlot9->graph(0)->setData(angle_x_plot,elbowZPlot);
+        ui->qCustomPlot9->graph(0)->setPen(pen);
+        ui->qCustomPlot9->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
+        ui->qCustomPlot9->yAxis->setRange(-120,120);
+        ui->qCustomPlot9->replot();
+
+        ui->qCustomPlot10->graph(0)->setData(angle_x_plot,shoulXPlot);
+        ui->qCustomPlot10->graph(0)->setPen(pen);
+        ui->qCustomPlot10->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
+        ui->qCustomPlot10->yAxis->setRange(-120,120);
+        ui->qCustomPlot10->replot();
+
+        ui->qCustomPlot11->graph(0)->setData(angle_x_plot,shoulYPlot);
+        ui->qCustomPlot11->graph(0)->setPen(pen);
+        ui->qCustomPlot11->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
+        ui->qCustomPlot11->yAxis->setRange(-120,120);
+        ui->qCustomPlot11->replot();
+
+        ui->qCustomPlot12->graph(0)->setData(angle_x_plot,shoulZPlot);
+        ui->qCustomPlot12->graph(0)->setPen(pen);
+        ui->qCustomPlot12->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
+        ui->qCustomPlot12->yAxis->setRange(-120,120);
+        ui->qCustomPlot12->replot();
     }
 }

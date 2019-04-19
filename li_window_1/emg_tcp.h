@@ -4,9 +4,10 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTimer>
-#include "getsensordata.h"
+#include <QTime>
 //#include "modbus.h"
 #include "motorcontrol.h"
+#include "imuread.h"
 //#include "tensioncontrol.h"
 //class TensionControl;
 //class modbus;

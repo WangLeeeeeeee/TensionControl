@@ -25,7 +25,7 @@ private:
     unsigned int encoderNumber = 0;
     QTimer *encoderTimer;
 public slots:
-    void slotReadEncoder(); // 接受到mainwindow 的startMearsure
+    void slotReadEncoder(); // 接受到mainwindow 的定时采集编码器信号
     void slotDataToEncoder(QString data); // 接受到modbus 的readData信号
 signals:
     void sigReadEncoder(uint Seraddress, int Startaddress, uint number);

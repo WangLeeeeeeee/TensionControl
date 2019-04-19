@@ -5,8 +5,8 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QtSerialPort/QSerialPort>
-#include "getsensordata.h"
 #include "mainwindow.h"
+#include "imuread.h"
 
 
 // set the com send interval

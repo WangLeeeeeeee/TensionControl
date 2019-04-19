@@ -1,34 +1,27 @@
-#include "getsensordata.h"
-#include <QElapsedTimer>
-
+#include "tensionread.h"
 
 //----------------------------------------------------------------------------------
-// Receive data(including: six tension, two IMU, one surface pressure, four motor angle) count
+// Receive data(including: six tension) count
 //----------------------------------------------------------------------------------
 unsigned int receive_count_tension = 0;
-unsigned int receive_count_angle = 0;
 unsigned int receive_count_pressure = 0;
 
 //----------------------------------------------------------------------------------
-// Y-axis: six cable tension data(N), surface pressure, IMU data(rad), Four Motor encoder
+// Y-axis: six cable tension data(N)
 // X-axis: time(every 50ms)
 // Y-Range: MaxTension
 //----------------------------------------------------------------------------------
-unsigned int Datalength = 131072;
-QVector<double> time_x_tension(Datalength),time_x_angle(Datalength),time_x_surpressure(Datalength);
-QVector<double> tension_y(Datalength),tension_y2(Datalength),tension_y3(Datalength);
-QVector<double> tension_y4(Datalength),tension_y5(Datalength),tension_y6(Datalength);
-QVector<double> surpressure_elbow(Datalength),surpressure_shou1(Datalength),surpressure_shou2(Datalength);
-QVector<double> elbow_x(Datalength),elbow_y(Datalength),elbow_z(Datalength);
-QVector<double> shoulder_x(Datalength),shoulder_y(Datalength),shoulder_z(Datalength);
+unsigned int Tensionlength = 131072;
+QVector<double> time_x_tension(Tensionlength),time_x_surpressure(Tensionlength);
+QVector<double> tension_y(Tensionlength),tension_y2(Tensionlength),tension_y3(Tensionlength);
+QVector<double> tension_y4(Tensionlength),tension_y5(Tensionlength),tension_y6(Tensionlength);
+QVector<double> surpressure_elbow(Tensionlength),surpressure_shou1(Tensionlength),surpressure_shou2(Tensionlength);
 
 double max_tension[6] = {0, 0, 0, 0, 0, 0};
 
 //----------------------------------------------------------------------------------
 // Tension calibration parameter
 //----------------------------------------------------------------------------------
-//double TENSION_K[6] = {995.94, 989.03, 1000.8, 1001.1, 1129.9, 993.33};
-//double TENSION_B[6] = {203.71, 12.242, 52.057, -80.687, -320.2, -61.373};
 double TENSION_K[6] = {995.94, 989.03, 1000.8, 1001.1, 1008.1, 993.33};
 double TENSION_B[6] = {203.71, 12.242, 52.057, -80.687, 54.165, -61.373};
 
@@ -46,105 +39,22 @@ const int32  sectionCount = 1;
 #define USER_BUFFER_SIZE channelCount*sampleCount
 double       Data[USER_BUFFER_SIZE];
 
-//-----------------------------------------------------------------------------------
-// Configure the following parameters before running the PCI-1784
-//-----------------------------------------------------------------------------------
-int32       udchannelStart = 0;
-int32       udchannelCount = 4;
 
-//----------------------------------------------------------------------------------
-// Configure the IMU parameter
-//----------------------------------------------------------------------------------
-float ElbowAngle[3];
-float ShoulderAngle[3];
-ImuData Lpms1_Data;
-ImuData Lpms2_Data;
-
-//LpmsSensorI* lpms1;
-//LpmsSensorI* lpms2;
-
-// use for delay
-bool SenFlag = 0;
-
-unsigned int recordflag = 0;
-double elbowXinit,elbowYinit,elbowZinit;
-double shoulderXinit,shoulderYinit,shoulderZinit;
-
-
-GetSensordata::GetSensordata(QObject *parent):QThread(parent)
+tensionRead::tensionRead()
 {
-    //udCounterCtrl = UdCounterCtrl::Create();
-    //WaveformAiCtrl * wfAiCtrl = WaveformAiCtrl::Create();
-    getsensorTimer = new QTimer(this);
-    QObject::connect(getsensorTimer, SIGNAL(timeout()), this, SLOT(slotSendDataToPlot()));
-    getsensorTimer->start(100);
-
+    qDebug()<<"tensionRead tensionRead: "<<QThread::currentThreadId();
 }
 
-//----------------------------------------------------------------------------------
-//
-void GetSensordata::run()
+void tensionRead::slotReadTensionInit()
 {
-    ErrorCode ret = Success;
+    qDebug()<<"tensionRead slotReadTensionInit: "<<QThread::currentThreadId();
+     ErrorCode ret = Success;
 
-    // PCI-1784 initialize
-    // Step 1: Create a 'UdCounterCtrl' for UpDown Counter function.
-   UdCounterCtrl* udCounterCtrl = UdCounterCtrl::Create();
-   UdCounterCtrl* udCounterCtrl1 = UdCounterCtrl::Create();
+      // Step 2: Set the notification event Handler by which we can known the state of operation effectively.
+     wfAiCtrl->addStoppedHandler(OnStoppedEvent, NULL);
 
-    do
-    {
-         //Attention do not use the data collect card by two device once!!!
-        // Step 2: Select a device by device number or device description and specify the access mode.
-        // in this example we use ModeWrite mode so that we can fully control the device, including configuring, sampling, etc.
-        DeviceInformation devInfo1(deviceDescription1);
-        DeviceInformation devInfo2(deviceDescription2);
-        ret = udCounterCtrl->setSelectedDevice(devInfo1);
-        CheckError(ret);
-        ret = udCounterCtrl1->setSelectedDevice(devInfo2);
-        CheckError(ret);
-
-        // Step 3: Set necessary parameters
-        ret = udCounterCtrl->setChannelStart(udchannelStart);
-        CheckError(ret);
-        ret = udCounterCtrl->setChannelCount(udchannelCount);
-        CheckError(ret);
-        ret = udCounterCtrl1->setChannelStart(udchannelStart);
-        CheckError(ret);
-        ret = udCounterCtrl1->setChannelCount(udchannelCount);
-        CheckError(ret);
-
-        // Step 4: Set counting type for UpDown Counter
-        Array<UdChannel>*udChannel = udCounterCtrl->getChannels();
-        for(int i = udchannelStart; i < udchannelStart + udchannelCount; i++)
-        {
-           ret = udChannel->getItem(i).setCountingType(PulseDirection);
-           CheckError(ret);
-        }
-        Array<UdChannel>*udChannel1 = udCounterCtrl1->getChannels();
-        for(int i = udchannelStart; i < udchannelStart + udchannelCount; i++)
-        {
-           ret = udChannel1->getItem(i).setCountingType(PulseDirection);
-           CheckError(ret);
-        }
-
-        surpressure_elbow[0] = 0;
-        surpressure_shou1[0] = 0;
-        surpressure_shou2[0] = 0;
-        time_x_surpressure[0] = 0;
-
-    }
-    while(false);
-
-    // PCI-1716 initialize
-    // Step 1: Create a 'WaveformAiCtrl' for buffered AI function.
-    WaveformAiCtrl * wfAiCtrl = WaveformAiCtrl::Create();
-
-     // Step 2: Set the notification event Handler by which we can known the state of operation effectively.
-    wfAiCtrl->addStoppedHandler(OnStoppedEvent, NULL);
-
-    do
-    {
+     do
+     {
         // Step 3: Select a device by device number or device description and specify the access mode.
         // in this example we use ModeWrite mode so that we can fully control the device, including configuring, sampling, etc.
         DeviceInformation devInfo(deviceDescription);
@@ -152,101 +62,61 @@ void GetSensordata::run()
         CheckError(ret);
 
         // Step 4: Set necessary parameters for Buffered AI operation,
-      Conversion* conversion = wfAiCtrl->getConversion();
-      ret = conversion->setChannelStart(startChannel);
-      CheckError(ret);
-      ret = conversion->setChannelCount(channelCount);
-      CheckError(ret);
-      ret = conversion->setClockRate(clockRate);
-      CheckError(ret);
+        Conversion* conversion = wfAiCtrl->getConversion();
+        ret = conversion->setChannelStart(startChannel);
+        CheckError(ret);
+        ret = conversion->setChannelCount(channelCount);
+        CheckError(ret);
+        ret = conversion->setClockRate(clockRate);
+        CheckError(ret);
         Record* record = wfAiCtrl->getRecord();
-      ret = record->setSectionLength(sectionLength);
-      CheckError(ret);
-      ret = record->setSectionCount(sectionCount);//The sectionCount is nonzero value, which means 'One Buffered' mode.
-      CheckError(ret);
-
-      // Step 5: start Asynchronous Buffered AI, 'Asynchronous' means the method returns immediately
-      // after the acquisition has been started. The StoppedHandler's 'StoppedEvent' method will be called
-      // after the acquisition is completed.
-      printf("Asynchronous finite acquisition is in progress.\n");
-      ret = wfAiCtrl->Prepare();
+        ret = record->setSectionLength(sectionLength);
+        CheckError(ret);
+        ret = record->setSectionCount(sectionCount);//The sectionCount is nonzero value, which means 'One Buffered' mode.
         CheckError(ret);
 
-      tension_y[0] = 0;
-      tension_y2[0] = 0;
-      tension_y3[0] = 0;
-      tension_y4[0] = 0;
-      tension_y5[0] = 0;
-      tension_y6[0] = 0;
-      time_x_tension[0] = 0;
+        // Step 5: start Asynchronous Buffered AI, 'Asynchronous' means the method returns immediately
+        // after the acquisition has been started. The StoppedHandler's 'StoppedEvent' method will be called
+        // after the acquisition is completed.
+        //printf("Asynchronous finite acquisition is in progress.\n");
+        qDebug()<<"Asynchronous finite acquisition is in progress.";
+        ret = wfAiCtrl->Prepare();
+        CheckError(ret);
 
-      elbow_x[0] = 0;
-      elbow_y[0] = 0;
-      elbow_z[0] = 0;
-      shoulder_x[0] = 0;
-      shoulder_y[0] = 0;
-      shoulder_z[0] = 0;
-      time_x_angle[0] = 0;
-
-   }
-   while(false);
-
-   while(1)
-   {
-        //qDebug()<<"GetSensor run:"<<QThread::currentThreadId();
-        // Checks, if conncted
-        if((lpms1->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) && (lpms2->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED))
-        {
-
-            // Read the euler angle
-            lpms1->getEulerAngle(ElbowAngle);
-            lpms2->getEulerAngle(ShoulderAngle);
-            Lpms1_Data = lpms1->getCurrentData();
-            Lpms2_Data = lpms2->getCurrentData();
-
-            // Recors the first data
-            if(recordflag < 4)
-            {
-                recordflag++;
-                elbowXinit += ElbowAngle[0];
-                elbowYinit += ElbowAngle[1];
-                elbowZinit += ElbowAngle[2];
-                shoulderXinit += ShoulderAngle[0];
-                shoulderYinit += ShoulderAngle[1];
-                shoulderZinit += ShoulderAngle[2];
-            }
-            else
-            {
-                receive_count_angle++;
-                elbow_x[receive_count_angle] = ElbowAngle[0]-elbowXinit/4;
-                elbow_y[receive_count_angle] = ElbowAngle[1]-elbowYinit/4;
-                elbow_z[receive_count_angle] = ElbowAngle[2]-elbowZinit/4;
-                shoulder_x[receive_count_angle] = ShoulderAngle[0]-shoulderXinit/4;
-                shoulder_y[receive_count_angle] = ShoulderAngle[1]-shoulderYinit/4;
-                shoulder_z[receive_count_angle] = ShoulderAngle[2]-shoulderZinit/4;
-                time_x_angle[receive_count_angle] = receive_count_angle;
-            }
-        }
-
-        // Step 6: The device is acquiring data.
-        wfAiCtrl->Start();
-        msleep(20);// every 10ms collect once
-   }
+        tension_y[0] = 0;
+        tension_y2[0] = 0;
+        tension_y3[0] = 0;
+        tension_y4[0] = 0;
+        tension_y5[0] = 0;
+        tension_y6[0] = 0;
+        time_x_tension[0] = 0;
+    }
+    while(false);
 }
 
-void GetSensordata::CheckError(ErrorCode errorCode)
+void tensionRead::slotReadTension()
+{
+//    qDebug()<<"tensionRead slotReadTension: "<<QThread::currentThreadId();
+    // Step 6: The device is acquiring data.
+    wfAiCtrl->Start();
+    if(receive_count_tension > 0)
+        emit sigPlotTension();
+}
+
+void tensionRead::CheckError(ErrorCode errorCode)
 {
     if (errorCode != Success)
     {
         QString message = QObject::tr("Sorry, there are some errors occurred, Error Code: 0x") +
             QString::number(errorCode, 16).right(8).toUpper();
-        QMessageBox::information(0, "Warning Information", message);
+        qDebug()<<"Warning Information"<<message;
+        //QMessageBox::information(0, "Warning Information", message);
     }
 }
 
-void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * userParam)
+void tensionRead::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * userParam)
 {
-    //qDebug()<<"GetSensor onstoppedEvent: "<<QThread::currentThreadId();
+//    qDebug()<<"tensionRead onstoppedEvent: "<<QThread::currentThreadId();
     WaveformAiCtrl * waveformAiCtrl = NULL;
     waveformAiCtrl = (WaveformAiCtrl *)sender;
     int32 returnedCount = 0;
@@ -364,7 +234,7 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
             max_tension[i] = 0;
         }
         // find the latest fifty tension value max
-        for(int i=receive_count_tension-50; i<receive_count_tension; i++)
+        for(unsigned int i=receive_count_tension-50; i<receive_count_tension; i++)
         {
             max_tension[0] = (max_tension[0] > tension_y[i])  ? max_tension[0] : tension_y[i];
             max_tension[1] = (max_tension[1] > tension_y2[i]) ? max_tension[1] : tension_y2[i];
@@ -374,23 +244,6 @@ void GetSensordata::OnStoppedEvent(void * sender, BfdAiEventArgs * args, void * 
             max_tension[5] = (max_tension[5] > tension_y6[i]) ? max_tension[5] : tension_y6[i];
         }
     }
-    //qDebug()<<"now the count is:"<<receive_count_tension;
-
+    // 这里不能发射信号，显示：非静态成员函数的非法调用
+    //emit tenRead->sigPlotTension();
 }
-
-void GetSensordata::delay(int mseconds)
-{
-    QTime dieTime=QTime::currentTime().addMSecs(mseconds);
-    while( QTime::currentTime() < dieTime )
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-}
-
-void GetSensordata::slotSendDataToPlot()
-{
-    //qDebug()<<"GetSensor slotSendDataToPlot: "<<QThread::currentThreadId();
-    if(receive_count_tension!=0)
-    {
-        emit sigPlotTrigger();
-    }
-}
-

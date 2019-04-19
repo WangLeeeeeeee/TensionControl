@@ -13,7 +13,7 @@ encoderRead::encoderRead()
 
 void encoderRead::slotReadEncoder()
 {
-    //qDebug()<<"encodeeRead slotReadEncoder: "<<QThread::currentThreadId();
+    qDebug()<<"encodeeRead slotReadEncoder: "<<QThread::currentThreadId();
     Motor1Count[0] = 0;
     Motor2Count[0] = 0;
     Motor3Count[0] = 0;
