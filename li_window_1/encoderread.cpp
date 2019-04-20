@@ -13,7 +13,7 @@ encoderRead::encoderRead()
 
 void encoderRead::slotReadEncoder()
 {
-    qDebug()<<"encodeeRead slotReadEncoder: "<<QThread::currentThreadId();
+    //qDebug()<<"encodeeRead slotReadEncoder: "<<QThread::currentThreadId();
     Motor1Count[0] = 0;
     Motor2Count[0] = 0;
     Motor3Count[0] = 0;
@@ -34,14 +34,14 @@ void encoderRead::slotDataToEncoder(QString data)
         bool ok;
         count1 = str1.toInt(&ok,16);
         HighOrLow = 1;
-        qDebug()<<"low data is:"<<count1;
+        //qDebug()<<"low data is:"<<count1;
     }
     else
     {
         QString str2 = tr("%1").arg(data);
         bool ok;
         count2 = str2.toInt(&ok,16);
-        qDebug()<<"high data is:"<<count2;
+        //qDebug()<<"high data is:"<<count2;
         count3 = count1 + count2*pow(16,4);  //count3是编码器返回的整形值
         if(count3>500000) //电机反转，编码器数值溢出
             count3 = count3 - 4294967295;
@@ -80,7 +80,7 @@ void encoderRead::slotDataToEncoder(QString data)
         default:
             break;
         }
-        qDebug()<<"encoder"<<encoderNumber<<"is: "<<count3;
+        //qDebug()<<"encoder"<<encoderNumber<<"is: "<<count3;
         time_x_mocount[receive_count_mocount] = receive_count_mocount;
         HighOrLow = 0;
     }

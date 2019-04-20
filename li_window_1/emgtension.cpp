@@ -1,43 +1,33 @@
-#include "emg_tcp.h"
-//#include "tensioncontrol.h"
-#include "modbus.h"
+#include "emgtension.h"
 
-unsigned int len = 131072;
+#define PORT 8090
+
+unsigned int AimAngle = 60;
 
 // 运动轨迹改成三次,拟合曲线外平滑不跳动
 double theta0_aim = 0;
 double thetaf_aim = 60.0;
 double tf_aim = 200.0; // aim time is 5 second(50 100 millisecond)
 
-// 保存拟合曲线数据
+// 保存
+unsigned int len = 131072;
 QVector<double> EmgDataSave(len),AngleElbow_emg(len);
-unsigned int emgsaveLen=0;
 QVector<float> fiteffRecord;
+unsigned int emgsaveLen=0;
 
-// 自动触发end
-
-// 给定阻力(三次曲线)
-double resisforce0 = 0;
-double resisforcef = 3000;
-double resist_tf = 20.0;
-
-// 记录系统采集时间
-int recordsecond = 0;
-
-
-
+// 拟合曲线的数据
 double elbXRecord_emg[131072];
 double elbYRecord_emg[131072];
 double elbZRecord_emg[131072];
 double shoXRecord_emg[131072];
 double shoYRecord_emg[131072];
 double shoZRecord_emg[131072];
-
-//QVector<double> emgValue(len);
-QVector<float> EMG_array;
-int emgRecordCout = 0;
 unsigned int imuRecordCout = 0;
-unsigned int emgTension[6] = {0,0,0,0,0,0};
+
+QVector<float> EMG_array;
+unsigned int emgRecordCout = 0;
+
+unsigned int emgAimTension[6] = {0,0,0,0,0,0};
 unsigned int emgdataLength=50;
 unsigned int polyRank=6;
 bool receiveFlag=0;
@@ -46,8 +36,6 @@ double fitEfficient[20];
 double prefitEfficient[20];
 double elbowLastMax = 0;
 double elbowLastMin = 0;
-
-unsigned int triggerTimes = 1;
 
 double testEmg[] = {0.344731, 0.159619, 0.306073, 0.286254, 0.228736, 0.235155, 0.458003, 0.298763, 0.235687, 0.192039, 0.12551, 0.473019, 0.236293, 0.374413, 0.393713, 0.197504,
                     0.282371, 0.313201, 0.326407, 0.235456, 0.271036, 0.249283, 0.192322, 0.530665, 0.290591, 0.377142, 0.411442, 0.217107, 0.269897, 0.227633, 0.191032, 0.216026,
@@ -80,66 +68,49 @@ double testEmg[] = {0.344731, 0.159619, 0.306073, 0.286254, 0.228736, 0.235155, 
                     0.250255, 0.309179,0.30647, 0.278444, 0.266897, 0.359687, 0.285739, 0.301662, 0.323365, 0.452064, 0.30958, 0.36651, 0.281447, 0.359799, 0.277404, 0.407353};
 double testImu[] = {0,1,2,3,5,6,8,9,10,11,12,11,12,11,13,15,16,17,20,24,26,27,28,29,28,27,26,29,30,34,35,36,37,38,39,40,36,38,39,56,54,46,47,48,49,50,51,54,55,56,57,58,59,62,63,64,62,61,58,65,67,68};
 
-
 #define ParaBuffer(Buffer,Row,Col) (*(Buffer + (Row) * (SizeSrc + 1) + (Col)))
 
-EMG_server::EMG_server(QObject* parent):QObject(parent)
+emgTension::emgTension()
 {
+
+}
+
+void emgTension::slotEmgserverInit()
+{
+    qDebug()<<"emgTension slotEmgserverInit"<<QThread::currentThreadId();
     server = new QTcpServer(this);
-    server->listen(QHostAddress::Any, PORT);   
+    server->listen(QHostAddress::Any, PORT);
     connect(server,SIGNAL(newConnection()),this, SLOT(server_New_Connect()));
-    recordAngleTimer = new QTimer(this);
-    connect(recordAngleTimer,SIGNAL(timeout()),this,SLOT(slotRecord()));
-    posbackTimer = new QTimer(this);
-    connect(posbackTimer,SIGNAL(timeout()),this,SLOT(slotposBack()));
-    //tenctrl = new TensionControl;
-    //connect(this, SIGNAL(sigEmgTensionctrl(uint*)), tenctrl, SLOT(slotEmgTenctrl(uint*)));
-//    motorctrl = new motorcontrol;
-//    connect(this, SIGNAL(sigEmgTensionctrl(uint*)), motorctrl, SLOT(slotEmgTenctrl(uint*)));
 }
 
-
-EMG_server::~EMG_server()
-{
-    server->close();
-    server->deleteLater();
-}
-
-
-void EMG_server::Send_Data(const char *data)
-{
-    socket->write(data);
-    socket->flush();
-}
-
-
-
-void EMG_server::server_New_Connect()
+void emgTension::server_New_Connect()
 {
     qDebug() << "A Client connect!";
     //根据客户端连接获取服务端socket对象
     socket = server->nextPendingConnection();
     //连接QTcpSocket的信号槽，以读取新数据
-    connect(socket, &QTcpSocket::readyRead, this, & EMG_server::Read_Data);
-    connect(socket, &QTcpSocket::disconnected, this, &EMG_server::socket_Disconnected);
+    connect(socket, &QTcpSocket::readyRead, this, & emgTension::readEmgData);
+    connect(socket, &QTcpSocket::disconnected, this, &emgTension::socket_Disconnected);
 }
 
-
-void EMG_server::Read_Data()
+void emgTension::emgSendData(const char *data)
 {
-    recordAngleTimer->stop();
-    //Sleep(0.5);
-//    QTime current_time =QTime::currentTime();
-//    recordsecond = current_time.second() - recordsecond;
-//    qDebug()<<"recordsecond is:"<<recordsecond;
-    qDebug()<<"enter the read data";
+    socket->write(data);
+    socket->flush();
+}
+
+void emgTension::readEmgData()
+{
+    qDebug() << "emgTension readEmgData"<<QThread::currentThreadId();
+    // now stop record angle
+    emit sigStopEmgCtrl();
+
+    /*
     QByteArray buffer;
-    //QVector<float> EMG_array;
     char* buf_string;
     const char delim[] = " ,[]";
     char *p;
     //读取缓冲区数据
-        //socket->readyRead();
     buffer = socket->readAll();
     qDebug()<<"buffer is:"<<buffer;
     buf_string = buffer.data();//QByteArray to char
@@ -150,15 +121,12 @@ void EMG_server::Read_Data()
     while(p) {
         EMG_array.append(atof(p));//Add float into Qvecto
         p = strtok(NULL, delim);
-        //emgRecordCout++;
     }
-
     if(!buffer.isEmpty())
     {
         qDebug() <<  EMG_array;
         qDebug() << buffer;
     }
-
     // 检测是否有异常
     for(int i=0; i<EMG_array.size(); i++)
     {
@@ -168,9 +136,20 @@ void EMG_server::Read_Data()
             return;
       }
     }
+    */
 
-    //recordAngleTimer->stop();
-    //posbackTimer->start(100);
+    // test EMG!!!!
+    if(EMG_array.size() != 0)
+        EMG_array.clear();
+    for(int i=0; i<sizeof(testEmg) / sizeof(double); i++)
+    {
+        EMG_array.append(testEmg[i]);
+        //EMG_array[i] = testEmg[i];
+    }
+    imuRecordCout = sizeof(testImu) / sizeof(double);
+    emgRecordCout = sizeof(testEmg) / sizeof(double);
+
+    // 拟合数据
     // find the max angle and the min angle of last record
     for(unsigned int i=0; i<imuRecordCout; i++)
     {
@@ -180,26 +159,27 @@ void EMG_server::Read_Data()
             elbowLastMin = elbYRecord_emg[i];
     }
     receiveFlag = 1;
-
-    qDebug()<<"starting the fit";
+    emgRecordCout = EMG_array.size();
     // 多项式拟合 构建emg = c0 + c1*theta + c2*theta^2 + c3*theta^3
+    qDebug()<<"starting the fit";
     double *BufferY,*BufferX;
     BufferX = (double *)calloc(imuRecordCout , sizeof(double));
-    BufferY = (double *)calloc(imuRecordCout , sizeof(double));
+    BufferY = (double *)calloc(emgRecordCout , sizeof(double));
     qDebug()<<"imu record count is:"<<imuRecordCout;
     int sizenum;
     double P[Dimension+1];
 
     if(receiveFlag == 1)
     {
-        emgRecordCout = EMG_array.size();
         qDebug()<<"emgRecordCout is"<<emgRecordCout;
         if(imuRecordCout < emgRecordCout)
         {
             // 从后向前截取一段肌电信号和角度记录值
             for(unsigned int i=0; i<imuRecordCout; i++)
             {
-                BufferX[i] = elbYRecord_emg[i];
+                // test IMU
+                BufferX[i] = testImu[i];
+                //BufferX[i] = elbYRecord_emg[i];
                 BufferY[i] = 100*EMG_array[emgRecordCout-imuRecordCout+i];
 
                 // save the emg and the angle data
@@ -216,10 +196,12 @@ void EMG_server::Read_Data()
         }
         else
         {
-            // 从后向前截取一段角度信号和角度记录值
+            // 从后向前截取一段角度信号和肌电记录值
             for(unsigned int i=0; i<emgRecordCout; i++)
             {
-                BufferX[i] = elbYRecord_emg[imuRecordCout-emgRecordCout+i];
+                // test IMU
+                BufferX[i] = testImu[imuRecordCout-emgRecordCout+i];
+                //BufferX[i] = elbYRecord_emg[imuRecordCout-emgRecordCout+i];
                 BufferY[i] = 100*EMG_array[i];
 
                 // save the emg and the angle data
@@ -261,132 +243,9 @@ void EMG_server::Read_Data()
     }
 }
 
-
-void EMG_server::socket_Disconnected()
+void emgTension::slotRecordWithCtrl()
 {
-    qDebug() << "Disconnected!";
-}
-
-void EMG_server::slotEmgStart()
-{
-    QTime current_time =QTime::currentTime();
-    for(unsigned int i=0; i<imuRecordCout; i++)
-    {
-        elbYRecord_emg[i] = 0;
-    }
-    imuRecordCout = 0;
-    recordAngleTimer->start(100);
-    posbackTimer->stop();
-    recordsecond = current_time.second();
-}
-
-void EMG_server::slotEmgTrigger()
-{
-    /*
-    triggerTimes++;
-    recordAngleTimer->stop();
-    posbackTimer->start(100);
-    // find the max angle and the min angle of last record
-    for(unsigned int i=0; i<imuRecordCout; i++)
-    {
-        if(elbYRecord_emg[i]>elbowLastMax)
-            elbowLastMax = elbYRecord_emg[i];
-        if(elbYRecord_emg[i]<elbowLastMin)
-            elbowLastMin = elbYRecord_emg[i];
-    }
-    receiveFlag = 1;
-//    imuRecordCout = 46;
-    qDebug()<<"starting the fit";
-    // 多项式拟合 构建emg = c0 + c1*theta + c2*theta^2 + c3*theta^3
-    double *BufferY,*BufferX;
-    BufferX = (double *)calloc(imuRecordCout , sizeof(double));
-    BufferY = (double *)calloc(imuRecordCout , sizeof(double));
-    qDebug()<<"imu record count is:"<<imuRecordCout;
-    qDebug()<<"the testEMG size is:"<<sizeof(testEmg) / sizeof(double);
-    int i, sizenum;
-    double P[Dimension+1];
-
-    if(EMG_array.size() != 0)
-        EMG_array.clear();
-    for(int i=0; i<sizeof(testEmg) / sizeof(double); i++)
-    {
-        EMG_array.append(testEmg[i]);
-        //EMG_array[i] = testEmg[i];
-    }
-
-    if(receiveFlag == 1)
-    {
-        emgRecordCout = EMG_array.size();
-        qDebug()<<"emgRecordCout is"<<emgRecordCout;
-        // 从后向前截取一段肌电信号和角度记录值
-        /*
-        for(int i=emgRecordCout-Datanum; i<emgRecordCout; i++)
-        {
-            BufferX[i] = elbYRecord_emg[i];
-            BufferY[a] = EMG_array[i];
-            a++;
-        }
-        */
-
-    /*
-        for(unsigned int i=0; i<imuRecordCout; i++)
-        {
-            BufferX[i] = elbYRecord_emg[i]; // just for test
-            //BufferX[i] = testImu[i];
-            BufferY[i] = triggerTimes*EMG_array[emgRecordCout-imuRecordCout+i];
-
-            // save the emg and the angle data
-            EmgDataSave[emgsaveLen] = BufferY[i];
-            AngleElbow_emg[emgsaveLen] = BufferX[i];
-            emgsaveLen = emgsaveLen + 1;
-        }
-        // using 1000 as a sepreate flag
-        EmgDataSave[emgsaveLen] = 1000;
-        AngleElbow_emg[emgsaveLen] = 1000;
-        emgsaveLen = emgsaveLen + 1;
-
-        //sizenum = sizeof(BufferX)/ sizeof(BufferX[0]);	//	拟合数据的维数
-        sizenum = imuRecordCout;
-         qDebug()<<"sizenum is"<<sizenum;
-        Cal((const double*)BufferX, (const double*)BufferY, sizenum, sizeof(P) / sizeof(double), (double*)P);
-        for (i=0;i<Dimension+1;i++)				//这里是升序排列，Matlab是降序排列
-        {
-            fitEfficient[i] = P[i];
-            qDebug()<<"P"<<i<<"is"<<P[i];
-        }
-
-        // test the fit function
-        //QVector<double> sum;
-        for(int i=0; i<Dimension+1; i++)
-        {
-            fitEfficient[i] +=  prefitEfficient[i];
-            prefitEfficient[i] = fitEfficient[i];
-        }
-        double *sum;
-        sum = (double *)calloc(imuRecordCout , sizeof(double));
-        for(int j=0; j<sizenum; j++)
-        {
-            for(int i=0; i<Dimension+1; i++)
-            {
-                // use the first and second data test
-                sum[j] += fitEfficient[i]*qPow(BufferX[j],Dimension-i);
-            }
-            qDebug()<<"sum"<<j<<"is:"<<sum[j];
-        }
-        unsigned int dimension = Dimension;
-        emit sigEmgThetaFit(fitEfficient, BufferX, BufferY, dimension, sizenum);
-    }
-    */
-}
-
-void EMG_server::slotRecord()
-{
-    //qDebug()<<"imuRecord count is:"<<imuRecordCout;
-    QTime current_time =QTime::currentTime();
-    recordsecond = current_time.second();
-    //qDebug()<<"recordsecond is:"<<recordsecond;
-    //qDebug()<<"imuRecordCout is:"<<imuRecordCout;
-
+    qDebug()<<"emgTension slotRecordWithCtrl:"<<QThread::currentThreadId();
     // RECORD THE ANGLE
     double a;
     a = -elbow_y[receive_count_angle];
@@ -398,22 +257,13 @@ void EMG_server::slotRecord()
     shoZRecord_emg[imuRecordCout] = shoulder_z[receive_count_angle];
 
     // According the theta collected to calculate the emg value(based on the fit function)
+    // 更具当前角度计算对应的肌电信号值
     double fitTension=0;
     double theta;
     theta = elbYRecord_emg[imuRecordCout];
-    //theta = testImu[imuRecordCout] + 1.11;
+
     if(theta == 0) // the result of qPow(0,n) seems infinite
         theta = 1;
-    //qDebug()<<"theta is"<<theta;
-
-    // judge the angle if exceed the aim angle auto trigger
-    if(theta > 59)
-    {
-        slotEmgTrigger();
-        Send_Data("end");
-        recordAngleTimer->stop();
-        posbackTimer->start(50);
-    }
 
     // when the theta is out of the range of last record, the fit result maybe strange, so set it to zero
     // the strategy mentioned up is not very well, so changed it to below(let the result be the same as the margin)
@@ -427,35 +277,19 @@ void EMG_server::slotRecord()
         fitTension += fitEfficient[i]*qPow(theta,Dimension-i);
         //qDebug()<<"the fitEfficiet"<<i<<"is:"<<fitEfficient[i];
     }
+
+    // 肩关节给一定的张力
     for(int i=0; i<4; i++)
-        emgTension[i] = 300;
+        emgAimTension[i] = 100;
+    // 肘关节背后绳给阻力
     if((theta>30)&&(theta<60))
     {
-        emgTension[4] = 600+(theta-30)*150;
+        emgAimTension[5] = 100+(theta-30)*4;
     }
     else
-        emgTension[4] = 300;
-    //qDebug()<<"emgTension 4 is:"<<emgTension[4];
-    /*
-    // give a resist force
-    double aimResistForce;
-    double a0_re,a1_re,a2_re,a3_re;
-    unsigned int t_re;
-    a0_re = resisforce0;
-    a1_re = 0.0;
-    a2_re = 3*(resisforcef - resisforce0)/qPow(resist_tf,2);
-    a3_re = -2*(resisforcef - resisforce0)/qPow(resist_tf,3);
-    t_re = imuRecordCout;
-    if(t_re < resist_tf)
-    {
-       aimResistForce = a0_re + a1_re*t_re + a2_re*qPow(t_re,2) + a3_re*qPow(t_re,3);
-    }
-    else
-    {
-        aimResistForce = resisforcef;
-    }
-    emgTension[4] = aimResistForce;
-    */
+        emgAimTension[5] = 100;
+
+    // 计算当前的目标角度
     double aimElbowAngle; // cubic poly nomial theta
     double a0,a1,a2,a3;
     unsigned int t;
@@ -472,44 +306,52 @@ void EMG_server::slotRecord()
     {
         aimElbowAngle = thetaf_aim;
     }
+
+    // 根据当前角度与目标角度差计算当前应提供的张力
     //qDebug()<<"aim theta is:"<<aimElbowAngle;
     double detaTheta = 0;
     detaTheta = aimElbowAngle - theta;
     if(detaTheta < 0)
         detaTheta = -detaTheta;
-    fitTension = 300+10*fitTension*(detaTheta); // asist tension equal emg multiply deta theta
-    //qDebug()<<"fitTension is:"<<fitTension;
+    fitTension = 100+1*fitTension*(detaTheta); // asist tension equal emg multiply deta theta
+    qDebug()<<"fitTension is:"<<fitTension;
     if(fitTension < 0)
     {
         //qDebug()<<"the asist tension is less 0";
-        emgTension[5] = 200;
+        emgAimTension[4] = 100;
     }
     else
     {
-        emgTension[5] = fitTension;
+        emgAimTension[4] = fitTension;
     }
-    if(emgTension[5] > 7000)
+    if(emgAimTension[4] > 500)
     {
         //qDebug()<<"the asist tension is exceed 3000";
-        emgTension[5] = 7000;
+        emgAimTension[4] = 500;
     }
     imuRecordCout++;
-
-    // SET THE TENSION VALUE
-    emit sigEmgTensionctrl(emgTension);
-
+    for(int i=0; i<6; i++) // 将驱动器设置为转矩模式
+    {
+        emit sigEmgTensionctrl(i+1,0x3100,1,0);
+        emit sigEmgTensionctrl(i+1,0x0703,-emgAimTension[i]*0.5,0);  //发送转矩信号 ([-300.0 300.0])
+    }
+    // judge the angle if exceed the aim angle auto trigger
+    if(theta > AimAngle)
+    {
+        emgSendData("end");
+        emit sigStopEmgCtrl();
+        for(int i=0; i<6; i++) // 将驱动器设置为转矩模式
+            emit sigEmgTensionctrl(i+1,0x0703,-100,0);  //发送转矩信号 ([-300.0 300.0])
+    }
+    readEmgData();
 }
 
-void EMG_server::slotposBack()
+void emgTension::socket_Disconnected()
 {
-    // set all the tension to 100
-    for(int i=0; i<6; i++)
-        emgTension[i] = 300;
-
-    emit sigEmgTensionctrl(emgTension);
+    qDebug() << "Disconnected!";
 }
 
-int EMG_server::PrintPara(double* Para, int SizeSrc)
+int emgTension::PrintPara(double* Para, int SizeSrc)
 {
     int i, j;
     for (i = 0; i < SizeSrc; i++)
@@ -522,7 +364,7 @@ int EMG_server::PrintPara(double* Para, int SizeSrc)
     return 0;
 }
 
-int EMG_server::Cal(const double *BufferX, const double *BufferY, int Amount, int SizeSrc, double *ParaResK)
+int emgTension::Cal(const double *BufferX, const double *BufferY, int Amount, int SizeSrc, double *ParaResK)
 {
     double* ParaK = (double*)malloc(SizeSrc * (SizeSrc + 1) * sizeof(double));
     GetParaBuffer(ParaK, BufferX, BufferY, Amount, SizeSrc);
@@ -533,7 +375,7 @@ int EMG_server::Cal(const double *BufferX, const double *BufferY, int Amount, in
     return 0;
 }
 
-int EMG_server::GetParaBuffer(double *Para, const double *X, const double *Y, int Amount, int SizeSrc)
+int emgTension::GetParaBuffer(double *Para, const double *X, const double *Y, int Amount, int SizeSrc)
 {
     int i, j;
     for (i = 0; i < SizeSrc; i++)
@@ -551,7 +393,7 @@ int EMG_server::GetParaBuffer(double *Para, const double *X, const double *Y, in
     return 0;
 }
 
-int EMG_server::ParaDeal(double *Para, int SizeSrc)
+int emgTension::ParaDeal(double *Para, int SizeSrc)
 {
     PrintPara(Para, SizeSrc);
     Paralimit(Para, SizeSrc);
@@ -564,7 +406,7 @@ int EMG_server::ParaDeal(double *Para, int SizeSrc)
     return 0;
 }
 
-int EMG_server::ParaDealB(double *Para, int SizeSrc)
+int emgTension::ParaDealB(double *Para, int SizeSrc)
 {
     int i;
     for (i = 0; i < SizeSrc; i++)
@@ -581,7 +423,7 @@ int EMG_server::ParaDealB(double *Para, int SizeSrc)
     return 0;
 }
 
-int EMG_server::ParaPreDealB(double *Para, int SizeSrc, int OffSet)
+int emgTension::ParaPreDealB(double *Para, int SizeSrc, int OffSet)
 {
     int i, j;
     for (i = OffSet + 1; i < SizeSrc; i++)
@@ -595,7 +437,7 @@ int EMG_server::ParaPreDealB(double *Para, int SizeSrc, int OffSet)
     return 0;
 }
 
-int EMG_server::ParaDealA(double* Para, int SizeSrc)
+int emgTension::ParaDealA(double* Para, int SizeSrc)
 {
     int i;
     for (i = SizeSrc; i; i--)
@@ -604,7 +446,7 @@ int EMG_server::ParaDealA(double* Para, int SizeSrc)
     return 0;
 }
 
-int EMG_server::ParaPreDealA(double* Para, int SizeSrc, int Size)
+int emgTension::ParaPreDealA(double* Para, int SizeSrc, int Size)
 {
     int i, j;
     for (Size -= 1, i = 0; i < Size; i++)
@@ -618,7 +460,7 @@ int EMG_server::ParaPreDealA(double* Para, int SizeSrc, int Size)
     return 0;
 }
 
-int EMG_server::Paralimit(double* Para, int SizeSrc)
+int emgTension::Paralimit(double* Para, int SizeSrc)
 {
     int i;
     for (i = 0; i < SizeSrc; i++)
@@ -627,7 +469,7 @@ int EMG_server::Paralimit(double* Para, int SizeSrc)
     return 0;
 }
 
-int EMG_server::ParalimitRow(double* Para, int SizeSrc, int Row)
+int emgTension::ParalimitRow(double* Para, int SizeSrc, int Row)
 {
     int i;
     double Max, Min, Temp;
@@ -643,95 +485,4 @@ int EMG_server::ParalimitRow(double* Para, int SizeSrc, int Row)
     for (i = SizeSrc; i >= 0; i--)
         ParaBuffer(Para, Row, i) /= Max;
     return 0;
-}
-
-void EMG_server::polyfit(int n,double x[],double y[],int poly_n,double p[])
-{
-    int i,j;
-    double *tempx,*tempy,*sumxx,*sumxy,*ata;
-
-    tempx = (double *)calloc(n , sizeof(double));
-    sumxx = (double *)calloc((poly_n*2+1) , sizeof(double));
-    tempy = (double *)calloc(n , sizeof(double));
-    sumxy = (double *)calloc((poly_n+1) , sizeof(double));
-    ata = (double *)calloc( (poly_n+1)*(poly_n+1) , sizeof(double) );
-    for (i=0;i<n;i++)
-    {
-        tempx[i]=1;
-        tempy[i]=y[i];
-    }
-    for (i=0;i<2*poly_n+1;i++)
-    {
-        for (sumxx[i]=0,j=0;j<n;j++)
-        {
-            sumxx[i]+=tempx[j];
-            tempx[j]*=x[j];
-        }
-    }
-    for (i=0;i<poly_n+1;i++)
-    {
-        for (sumxy[i]=0,j=0;j<n;j++)
-        {
-            sumxy[i]+=tempy[j];
-            tempy[j]*=x[j];
-        }
-    }
-    for (i=0;i<poly_n+1;i++)
-    {
-        for (j=0;j<poly_n+1;j++)
-        {
-            ata[i*(poly_n+1)+j]=sumxx[i+j];
-        }
-    }
-    gauss_solve(poly_n+1,ata,p,sumxy);
-
-    free(tempx);
-    free(sumxx);
-    free(tempy);
-    free(sumxy);
-    free(ata);
-}
-
-void EMG_server::gauss_solve(int n,double A[],double x[],double b[])
-{
-    int i,j,k,r;
-    double max;
-    for (k=0;k<n-1;k++)
-    {
-        max=fabs(A[k*n+k]);					// find maxmum
-        r=k;
-        for (i=k+1;i<n-1;i++)
-        {
-            if (max<fabs(A[i*n+i]))
-            {
-                max=fabs(A[i*n+i]);
-                r=i;
-            }
-        }
-        if (r!=k)
-        {
-            for (i=0;i<n;i++)		//change array:A[k]&A[r]
-            {
-                max=A[k*n+i];
-                A[k*n+i]=A[r*n+i];
-                A[r*n+i]=max;
-            }
-            max=b[k];                    //change array:b[k]&b[r]
-            b[k]=b[r];
-            b[r]=max;
-        }
-
-        for (i=k+1;i<n;i++)
-        {
-            for (j=k+1;j<n;j++)
-                A[i*n+j]-=A[i*n+k]*A[k*n+j]/A[k*n+k];
-            b[i]-=A[i*n+k]*b[k]/A[k*n+k];
-        }
-    }
-
-    for (i=n-1;i>=0;x[i]/=A[i*n+i],i--)
-    {
-        for (j=i+1,x[i]=b[i];j<n;j++)
-            x[i]-=A[i*n+j]*x[j];
-    }
 }

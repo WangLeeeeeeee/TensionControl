@@ -10,7 +10,6 @@
 //#include "getsensordata.h"
 #include "plotcurves.h"
 #include "linkdisplay.h"
-#include "emg_tcp.h"
 //#include "modbus.h"
 //#include "motorcontrol.h"
 
@@ -21,6 +20,7 @@ class encoderRead;
 class tensionRead;
 class IMURead;
 class saveExcelFile;
+class emgTension;
 
 
 // set the plot interval
@@ -84,6 +84,8 @@ private slots:
     void slotIMUPlot();
     // from save data
     void slotReadData(int n, QString message);
+    // from emg control
+    void slotEmgCtrlStop();
 
 private:
     Ui::MainWindow *ui;
@@ -91,7 +93,6 @@ private:
 
 //    GetSensordata *getsensordata;
     VRDisplay *vrdisplay;
-    EMG_server* emg_server;
     motorcontrol* motorctrl;
 
     // modbus thread
@@ -120,6 +121,12 @@ private:
     saveExcelFile* saveExcel;
     QThread* threadSaveExcel;
 
+    // EMG Tension test thread
+    emgTension* emgTen;
+    QThread* threadEmgTen;
+    QTimer* emgTensionTimer;
+    unsigned int emgTensionInterval = 100;
+
     // 3D surface
     Q3DScatter *graph = new Q3DScatter();
     QWidget *container = QWidget::createWindowContainer(graph);
@@ -128,10 +135,6 @@ private:
 signals:
     // for com connect vr device
     void sigVRSerialOpen();
-
-    // for emg
-    void sigEmgStart();
-    void sigEmgTrigger();
 
     // for modbus
     void sigModbusClose();

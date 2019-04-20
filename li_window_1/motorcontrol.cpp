@@ -435,10 +435,12 @@ void motorcontrol::CirculJoint()
 void motorcontrol::slotMdTeachStart()
 {
     teachTimer->start(teachIntervalTime);
-    // 保持绳索上的张力一定
     for(int i=0; i<6; i++)
         AimTension[i] = 300;
-    tensionCtrlTimer->start(tensionIntervalTime);
+    // 保持绳索上的张力一定
+    for(int i=0; i<6; i++)
+        emit sigMotorControl(i+1,TORQUESET,-AimTension[i]*0.5,0);  //发送转矩信号 ([-300.0 300.0])
+    //tensionCtrlTimer->start(tensionIntervalTime);
 }
 
 //---------------------------------------
@@ -496,21 +498,17 @@ void motorcontrol::ReplayTeach()
     double vel[6];
     if(replayCount<teachRecordCout-1)
     {
-        /*
-        vel[0] = (MoRecord1[replayCount+1]-MoRecord1[replayCount])*10*60/512;
-        vel[1] = (MoRecord2[replayCount+1]-MoRecord2[replayCount])*10*60/512;
-        vel[2] = (MoRecord3[replayCount+1]-MoRecord3[replayCount])*10*60/512;
-        vel[3] = (MoRecord4[replayCount+1]-MoRecord4[replayCount])*10*60/512;
-        vel[4] = (MoRecord5[replayCount+1]-MoRecord5[replayCount])*10*60/512;
-        vel[5] = (MoRecord6[replayCount+1]-MoRecord6[replayCount])*10*60/512;
+        vel[0] = ((MoRecord1[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
+        vel[1] = ((MoRecord2[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
+        vel[2] = ((MoRecord3[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
+        vel[3] = ((MoRecord4[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
+        vel[4] = ((MoRecord5[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
+        vel[5] = ((MoRecord6[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
         qDebug()<<"the speed is:"<<vel[5]<<"n/min";
         for(int i=0; i<6; i++)
         {
-            SendData = QString::number(long(i)) + "V" + QString::number(long(vel[i])) + "\r";
-            //serial1->write(SendData.toLatin1());
-            qDebug()<<SendData<<endl;
+            emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
         }
-        */
         replayCount++;
     }
 }

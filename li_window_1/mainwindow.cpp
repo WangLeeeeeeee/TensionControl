@@ -10,6 +10,7 @@
 #include "tensionread.h"
 #include "imuread.h"
 #include "saveexcelfile.h"
+#include "emgtension.h"
 #include <QLayout>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -26,13 +27,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Instantiation object
     vrdisplay = new VRDisplay;
-    emg_server = new EMG_server;
     mb = new modbus;
     motorctrl = new motorcontrol;
     encoRe = new encoderRead;
     tenRe = new tensionRead;
     imuRe = new IMURead;
     saveExcel = new saveExcelFile;
+    emgTen = new emgTension;
 
     // 创建modbus子线程
     threadModbus = new QThread(this);
@@ -76,6 +77,18 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(saveExcel, SIGNAL(sigSavingProcess(int,QString)), this, SLOT(slotReadData(int,QString)));
     threadSaveExcel->start();
 
+    // 创建emgtension子线程
+    emgTensionTimer = new QTimer(this);
+    threadEmgTen = new QThread(this);
+    emgTen->moveToThread(threadEmgTen);
+    connect(threadEmgTen, &QThread::started, emgTen, &emgTension::slotEmgserverInit, Qt::DirectConnection);
+    connect(emgTensionTimer, SIGNAL(timeout()), emgTen, SLOT(slotRecordWithCtrl()));
+    connect(emgTen, SIGNAL(sigEmgThetaFit(double*,double*,double*,uint,int)), this, SLOT(slotEmgThetaFit(double*,double*,double*,uint,int)));
+    connect(emgTen, SIGNAL(sigEmgTensionctrl(uint,int,qint32,bool)), mb, SLOT(writeModbus(uint,int,qint32,bool)));
+    connect(emgTen, SIGNAL(sigStopEmgCtrl()), this, SLOT(slotEmgCtrlStop()));
+    threadEmgTen->start();
+
+
     // 3D link module visualization
     QSize screenSize = graph->screen()->size();
     container->setMinimumSize(QSize(screenSize.width()/4, screenSize.height()/4));
@@ -92,11 +105,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // connect the maindow signal with vr com
     connect(this,SIGNAL(sigVRSerialOpen()), vrdisplay, SLOT(slotVRSerialOpen()));
-
-    // connect the emg_tcp signals with mainwindows
-    connect(this, SIGNAL(sigEmgStart()), emg_server, SLOT(slotEmgStart()));
-    connect(this, SIGNAL(sigEmgTrigger()), emg_server, SLOT(slotEmgTrigger()));
-    connect(emg_server, SIGNAL(sigEmgThetaFit(double*,double*,double*,uint,int)), this, SLOT(slotEmgThetaFit(double*,double*,double*,uint,int)));
 
     // connect the mainwindow signals with motorcontrol
     connect(this, SIGNAL(sigDisableMotor()), motorctrl, SLOT(slotDisableMotor()));
@@ -136,6 +144,11 @@ MainWindow::~MainWindow()
     {
         threadSaveExcel->quit();
         threadSaveExcel->wait();
+    }
+    if(threadEmgTen->isRunning())
+    {
+        threadEmgTen->quit();
+        threadEmgTen->wait();
     }
     delete ui;
 }
@@ -567,6 +580,11 @@ void MainWindow::on_actionExit_triggered()
         threadSaveExcel->quit();
         threadSaveExcel->wait();
     }
+    if(threadEmgTen->isRunning())
+    {
+        threadEmgTen->quit();
+        threadEmgTen->wait();
+    }
     this->close();
 }
 
@@ -872,6 +890,7 @@ void MainWindow::on_ReplayButton_clicked()
 
 void MainWindow::on_pushButton_Listen_clicked()
 {
+    /*
     if(ui->pushButton_Listen->text() == tr("LISTEN"))
     {
         qDebug() << "Try to Listen!";
@@ -887,20 +906,30 @@ void MainWindow::on_pushButton_Listen_clicked()
         // disable the button
         ui->pushButton_Trigger->setEnabled(false);
     }
+    */
 }
 
 void MainWindow::on_pushButton_Start_clicked()
 {
+    if(ui->actionOpen->isEnabled())
+    {
+        QMessageBox::critical(this,tr("wrong operation"),tr("open com first!!!"),QMessageBox::Ok);
+        return;
+    }
+    if(ui->actionStartMeasure->isEnabled())
+    {
+        QMessageBox::critical(this,tr("wrong operation"),tr("click start mearsure first!!!"),QMessageBox::Ok);
+        return;
+    }
     qDebug() << "Start EMG!";
-    emg_server->Send_Data("start");
-    emit sigEmgStart();
+    //emgTen->emgSendData("start");
+    emgTensionTimer->start(emgTensionInterval);
 }
 
 void MainWindow::on_pushButton_Trigger_clicked()
 {
     qDebug() << "Send Trigger!";
-    emg_server->Send_Data("end");
-    emit sigEmgTrigger();
+    emgTen->emgSendData("end");
 }
 
 void MainWindow::slotEmgThetaFit(double *fiteff, double *bufferX, double *bufferY, unsigned int dimension, int sizenum)
@@ -908,6 +937,7 @@ void MainWindow::slotEmgThetaFit(double *fiteff, double *bufferX, double *buffer
     //QVector<double> x_dot(200),y_dot(200);
     for(int i=0; i<10; i++)
         fiteffRecord.append(fiteff[i]); // record the fit value
+    fiteffRecord.append(1000);
     QVector<double> x_dot;
     QVector<double> y_dot;
     for(int i=0; i<sizenum; i++)
@@ -1184,4 +1214,9 @@ void MainWindow::slotReadData(int n, QString message)
     {
         QMessageBox::information(this, "success", "Data saved.");
     }
+}
+
+void MainWindow::slotEmgCtrlStop()
+{
+    emgTensionTimer->stop();
 }

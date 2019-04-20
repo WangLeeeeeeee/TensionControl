@@ -114,7 +114,6 @@ void saveExcelFile::slotSaveFile()
         for(unsigned int j=0; j<receive_count_tension; j++)
         {
             numNow++;
-            qDebug()<<"numNow is:"<<numNow;
             emit sigSavingProcess(numNow*100/numAll,"saving");
             QList<QVariant> rows;
             switch(i){
@@ -148,14 +147,12 @@ void saveExcelFile::slotSaveFile()
         vars.clear();
     }
 
-    qDebug()<<"angle data number is:"<<receive_count_angle;
     // save angle data
     for(int i=0; i<6; i++)
     {
         for(unsigned int j=0; j<receive_count_angle; j++)
         {
             numNow++;
-            qDebug()<<"numNow is:"<<numNow;
             emit sigSavingProcess(numNow*100/numAll,"saving");
             QList<QVariant> rows;
             switch(i){
@@ -189,14 +186,12 @@ void saveExcelFile::slotSaveFile()
         vars.clear();
     }
 
-    qDebug()<<"encoder data number is:"<<receive_count_mocount;
     // save encoder data
     for(int i=0; i<6; i++)
     {
         for(unsigned int j=0; j<receive_count_mocount; j++)
         {
             numNow++;
-            qDebug()<<"numNow is:"<<numNow;
             emit sigSavingProcess(numNow*100/numAll,"saving");
             QList<QVariant> rows;
             switch(i){
@@ -232,17 +227,17 @@ void saveExcelFile::slotSaveFile()
     // save emg data
     for(int i=0; i<3; i++)
     {
-        for(int j=0; j<emgsaveLen; j++)
+        for(unsigned int j=0; j<emgsaveLen; j++)
         {
             numNow++;
             emit sigSavingProcess(numNow*100/numAll,"saving");
             QList<QVariant> rows;
             switch(i){
             case 0:
-                rows.append(EmgDataSave[i]);
+                rows.append(EmgDataSave[j]);
                 break;
             case 1:
-                rows.append(AngleElbow_emg[i]);
+                rows.append(AngleElbow_emg[j]);
                 break;
             default:
                 break;

@@ -63,3 +63,9 @@ D:\SFSetupPath\VisualStudio2015\VC\include\sal.h:2361: error: C4430: È±ÉÙÀàĞÍËµÃ
 ×¢Òâ£ºÈç¹ûĞÅºÅ·¢ËÍ£¬È´Ã»ÓĞ½øÈë²Ûº¯Êı£¬ÔòÓÖ¿ÉÄÜÊÇ²Ûº¯ÊıËùÔÚµÄÀàÖĞÎ´Ìí¼Ó¡°Q_OBJECT¡±
 
 ¼ÇÂ¼Ò»¸öÖÇÕÏµÄ´íÎó£ºconnectÊ±£¬²Ûº¯ÊıÒª¼Ó£¨£©£¬slotIMUPlot£º´íÎó£¬slotIMUPlot()£ºÕıÈ·£¬·ñÔòÔËĞĞ³ö´í£¬ĞÅºÅÓë²ÛÎŞ·¨¹ØÁª¡£
+
+¹ØÓÚÈçºÎÔÚ×ÓÏß³ÌÖĞµ¼Èëµ¼³öexcel£ºhttps://blog.csdn.net/q862343646/article/details/81119024
+
+¹ØÓÚÈçºÎ½áÊøÏß³Ì£ºhttps://blog.csdn.net/caoshangpa/article/details/62421334
+
+emit ĞÅºÅÏÔÊ¾·Ç¾²Ì¬³ÉÔ±º¯ÊıµÄ·Ç·¨µ÷ÓÃ£¬ÒªÃ´±ÜÃâ£¬ÒªÃ´£ºhttp://www.itdaan.com/blog/2014/04/22/5aca7c217b69adec8d30fce73db99482.html

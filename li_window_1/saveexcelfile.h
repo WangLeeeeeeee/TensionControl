@@ -12,7 +12,7 @@
 #include "imuread.h"
 #include "tensionread.h"
 #include "encoderread.h"
-#include "emg_tcp.h"
+#include "emgtension.h"
 
 class saveExcelFile: public QObject
 {

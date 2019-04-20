@@ -42,7 +42,6 @@ double       Data[USER_BUFFER_SIZE];
 
 tensionRead::tensionRead()
 {
-    qDebug()<<"tensionRead tensionRead: "<<QThread::currentThreadId();
 }
 
 void tensionRead::slotReadTensionInit()

@@ -32,13 +32,13 @@ SOURCES += main.cpp\
     vrdisplay.cpp \
     linkdisplay.cpp \
     scatterdatamodifier.cpp \
-    emg_tcp.cpp \
     modbus.cpp \
     motorcontrol.cpp \
     encoderread.cpp \
     tensionread.cpp \
     imuread.cpp \
-    saveexcelfile.cpp
+    saveexcelfile.cpp \
+    emgtension.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -51,13 +51,13 @@ HEADERS  += mainwindow.h \
     vrdisplay.h \
     linkdisplay.h \
     scatterdatamodifier.h \
-    emg_tcp.h \
     modbus.h \
     motorcontrol.h \
     encoderread.h \
     tensionread.h \
     imuread.h \
-    saveexcelfile.h
+    saveexcelfile.h \
+    emgtension.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui
