@@ -656,6 +656,32 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="">
+          <property name="geometry">
+           <rect>
+            <x>326</x>
+            <y>384</y>
+            <width>331</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="5,1">
+           <item>
+            <widget class="QProgressBar" name="saveDataProgressBar">
+             <property name="value">
+              <number>24</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="saveDataLabel">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
         <widget class="QWidget" name="tab_2">
          <attribute name="title">
@@ -740,7 +766,7 @@
          <string>StopMotor</string>
         </property>
        </widget>
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>10</x>

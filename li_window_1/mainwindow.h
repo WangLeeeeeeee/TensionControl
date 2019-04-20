@@ -4,13 +4,7 @@
 #include <QMainWindow>
 #include <QtCore>
 #include <QMessageBox>
-#include <QInputDialog>
-#include <QStandardItemModel>
-#include <QFile>
-#include <QFileDialog>
-#include <QInputDialog>
 #include <QTextStream>
-#include <QSlider>
 #include "qcustomplot.h"
 #include "aboutdialog.h"
 //#include "getsensordata.h"
@@ -26,6 +20,7 @@ class motorcontrol;
 class encoderRead;
 class tensionRead;
 class IMURead;
+class saveExcelFile;
 
 
 // set the plot interval
@@ -87,6 +82,8 @@ private slots:
     void slotTensionPlot();
     // from imu read
     void slotIMUPlot();
+    // from save data
+    void slotReadData(int n, QString message);
 
 private:
     Ui::MainWindow *ui;
@@ -119,6 +116,10 @@ private:
     QTimer* readIMUTimer;
     unsigned int readIMUInterval = 50;
 
+    // save EXCEL file thread
+    saveExcelFile* saveExcel;
+    QThread* threadSaveExcel;
+
     // 3D surface
     Q3DScatter *graph = new Q3DScatter();
     QWidget *container = QWidget::createWindowContainer(graph);
@@ -142,6 +143,9 @@ signals:
     void sigMdTeachStart();
     void sigMdTeachStop();
     void sigMdReplayTeach();
+
+    // for save excel file
+    void sigSaveExcel();
 
 
 };

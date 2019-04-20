@@ -37,7 +37,8 @@ SOURCES += main.cpp\
     motorcontrol.cpp \
     encoderread.cpp \
     tensionread.cpp \
-    imuread.cpp
+    imuread.cpp \
+    saveexcelfile.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
@@ -55,7 +56,8 @@ HEADERS  += mainwindow.h \
     motorcontrol.h \
     encoderread.h \
     tensionread.h \
-    imuread.h
+    imuread.h \
+    saveexcelfile.h
 
 FORMS    += mainwindow.ui \
     aboutdialog.ui

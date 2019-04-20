@@ -53,7 +53,7 @@ void IMURead::slotIMUInit()
 
 void IMURead::slotIMURead()
 {
-    qDebug()<<"IMURead slotIMURead"<<QThread::currentThreadId();
+    //qDebug()<<"IMURead slotIMURead"<<QThread::currentThreadId();
     if((lpms1->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED) && (lpms2->getConnectionStatus() == SENSOR_CONNECTION_CONNECTED))
     {
         // Read the euler angle
@@ -85,6 +85,5 @@ void IMURead::slotIMURead()
             time_x_angle[receive_count_angle] = receive_count_angle;
         }
         emit sigPlotIMU();
-        qDebug()<<"emit the sigPlotIMU";
     }
 }

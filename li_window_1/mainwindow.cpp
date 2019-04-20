@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include <QDebug>
 #include <QtGui>
-#include <ActiveQt/QAxObject>
 #include <qdebug.h>
 #include "vrdisplay.h"
 #include "modbus.h"
@@ -10,9 +9,8 @@
 #include "encoderread.h"
 #include "tensionread.h"
 #include "imuread.h"
+#include "saveexcelfile.h"
 #include <QLayout>
-
-QVector<float> fiteffRecord;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -23,6 +21,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle(QString("Upper Limb Console"));
     ui->statusBar->showMessage(QString("welcome to use upper limb console"));
 
+    ui->saveDataProgressBar->setRange(0,100);
+    ui->saveDataProgressBar->setValue(0);
+
     // Instantiation object
     vrdisplay = new VRDisplay;
     emg_server = new EMG_server;
@@ -31,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
     encoRe = new encoderRead;
     tenRe = new tensionRead;
     imuRe = new IMURead;
+    saveExcel = new saveExcelFile;
 
     // 创建modbus子线程
     threadModbus = new QThread(this);
@@ -65,6 +67,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(threadReadIMU, &QThread::started, imuRe, &IMURead::slotIMUInit, Qt::DirectConnection);
     connect(readIMUTimer, SIGNAL(timeout()), imuRe, SLOT(slotIMURead()));
     connect(imuRe, SIGNAL(sigPlotIMU()), this, SLOT(slotIMUPlot()));
+
+    // 创建保存EXCEL文件子线程
+    threadSaveExcel = new QThread(this);
+    saveExcel->moveToThread(threadSaveExcel);
+    connect(threadSaveExcel, &QThread::started, saveExcel, &saveExcelFile::slotInitExcel, Qt::DirectConnection);
+    connect(this, SIGNAL(sigSaveExcel()), saveExcel, SLOT(slotSaveFile()));
+    connect(saveExcel, SIGNAL(sigSavingProcess(int,QString)), this, SLOT(slotReadData(int,QString)));
+    threadSaveExcel->start();
 
     // 3D link module visualization
     QSize screenSize = graph->screen()->size();
@@ -102,25 +112,31 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    if(!threadModbus->isRunning())
-        return;
-    threadModbus->quit();
-    threadModbus->wait();
-
-    if(!threadReadEncoder->isRunning())
-        return;
-    threadReadEncoder->quit();
-    threadReadEncoder->wait();
-
-    if(!threadReadTension->isRunning())
-        return;
-    threadReadTension->quit();
-    threadReadTension->wait();
-
-    if(!threadReadIMU->isRunning())
-        return;
-    threadReadIMU->quit();
-    threadReadIMU->wait();
+    if(threadModbus->isRunning())
+    {
+        threadModbus->quit();
+        threadModbus->wait();
+    }
+    if(threadReadEncoder->isRunning())
+    {
+        threadReadEncoder->quit();
+        threadReadEncoder->wait();
+    }
+    if(threadReadTension->isRunning())
+    {
+        threadReadTension->quit();
+        threadReadTension->wait();
+    }
+    if(threadReadIMU->isRunning())
+    {
+        threadReadIMU->quit();
+        threadReadIMU->wait();
+    }
+    if(threadSaveExcel->isRunning())
+    {
+        threadSaveExcel->quit();
+        threadSaveExcel->wait();
+    }
     delete ui;
 }
 
@@ -510,440 +526,56 @@ void MainWindow::on_actionClose_triggered()
     ui->actionSave->setEnabled(true);
     ui->actionExit->setEnabled(true);
     ui->statusBar->showMessage(tr(""));
-    if(!threadModbus->isRunning())
-        return;
-    threadModbus->quit();
-    threadModbus->wait();
 
-    if(!threadReadEncoder->isRunning())
-        return;
-    threadReadEncoder->quit();
-    threadReadEncoder->wait();
-
-    if(!threadReadTension->isRunning())
-        return;
-    threadReadTension->quit();
-    threadReadTension->wait();
-
-    if(!threadReadIMU->isRunning())
-        return;
-    threadReadIMU->quit();
-    threadReadIMU->wait();
+    if(threadModbus->isRunning())
+    {
+        threadModbus->quit();
+        threadModbus->wait();
+    }
+    if(threadReadEncoder->isRunning())
+    {
+        threadReadEncoder->quit();
+        threadReadEncoder->wait();
+    }
 }
 
 
 void MainWindow::on_actionExit_triggered()
 {
+    if(threadModbus->isRunning())
+    {
+        threadModbus->quit();
+        threadModbus->wait();
+    }
+    if(threadReadEncoder->isRunning())
+    {
+        threadReadEncoder->quit();
+        threadReadEncoder->wait();
+    }
+    if(threadReadTension->isRunning())
+    {
+        threadReadTension->quit();
+        threadReadTension->wait();
+    }
+    if(threadReadIMU->isRunning())
+    {
+        threadReadIMU->quit();
+        threadReadIMU->wait();
+    }
+    if(threadSaveExcel->isRunning())
+    {
+        threadSaveExcel->quit();
+        threadSaveExcel->wait();
+    }
     this->close();
 }
 
 //save to excel file
 void MainWindow::on_actionSave_triggered()
 {
-    unsigned int i;
-
-    QAxObject *pApplication = NULL;
-    QAxObject *pWorkBooks = NULL;
-    QAxObject *pWorkBook = NULL;
-    QAxObject *pSheets = NULL;
-    QAxObject *pSheet = NULL;
-
-    pApplication = new QAxObject();
-    pApplication->setControl("Excel.Application");
-    pApplication->dynamicCall("SetVisible(bool)", false);
-    pApplication->setProperty("DisplayAlerts", false);
-    pWorkBooks = pApplication->querySubObject("Workbooks");
-
     QString filename=QFileDialog::getSaveFileName(this,tr(""),tr("test.xlsx"));
-    QFile file(filename);
-    if(file.exists())
-    {
-        pWorkBook = pWorkBooks->querySubObject("Open(const QString &)", filename);
-    }
-    else
-    {
-        pWorkBooks->dynamicCall("Add");
-        pWorkBook = pApplication->querySubObject("ActiveWorkBook");
-    }
-    pSheets = pWorkBook->querySubObject("Sheets");
-    pSheet = pSheets->querySubObject("Item(int)", 1);
-
-    QAxObject *cell_1 = pSheet->querySubObject("Cells(int, int)", 1, 1);
-    cell_1->dynamicCall("SetValue(const QVariant&)", QVariant("ten1(g)"));
-
-    QAxObject *cell_2 = pSheet->querySubObject("Cells(int, int)", 1, 2);
-    cell_2->dynamicCall("SetValue(const QVariant&)",QVariant("ten2(g)"));
-
-    QAxObject *cell_3 = pSheet->querySubObject("Cells(int, int)", 1, 3);
-    cell_3->dynamicCall("SetValue(const QVariant&)", QVariant("ten3(g)"));
-
-    QAxObject *cell_4 = pSheet->querySubObject("Cells(int, int)", 1, 4);
-    cell_4->dynamicCall("SetValue(const QVariant&)", QVariant("ten4(g)"));
-
-    QAxObject *cell_5 = pSheet->querySubObject("Cells(int, int)", 1, 5);
-    cell_5->dynamicCall("SetValue(const QVariant&)", QVariant("ten5(g)"));
-
-    QAxObject *cell_6 = pSheet->querySubObject("Cells(int, int)", 1, 6);
-    cell_6->dynamicCall("SetValue(const QVariant&)", QVariant("ten6(g)"));
-
-    QAxObject *cell_7 = pSheet->querySubObject("Cells(int, int)", 1, 7);
-    cell_7->dynamicCall("SetValue(const QVariant&)", QVariant("elbow_z"));
-
-    QAxObject *cell_8 = pSheet->querySubObject("Cells(int, int)", 1, 8);
-    cell_8->dynamicCall("SetValue(const QVariant&)", QVariant("elb_x"));
-
-    QAxObject *cell_9 = pSheet->querySubObject("Cells(int, int)", 1, 9);
-    cell_9->dynamicCall("SetValue(const QVariant&)", QVariant("elb_y"));
-
-    QAxObject *cell_10 = pSheet->querySubObject("Cells(int, int)", 1, 10);
-    cell_10->dynamicCall("SetValue(const QVariant&)", QVariant("sho_z"));
-
-    QAxObject *cell_11 = pSheet->querySubObject("Cells(int, int)", 1, 11);
-    cell_11->dynamicCall("SetValue(const QVariant&)", QVariant("sho_x"));
-
-    QAxObject *cell_12 = pSheet->querySubObject("Cells(int, int)", 1, 12);
-    cell_12->dynamicCall("SetValue(const QVariant&)", QVariant("sho_y"));
-
-    QAxObject *cell_13 = pSheet->querySubObject("Cells(int, int)", 1, 13);
-    cell_13->dynamicCall("SetValue(const QVariant&)", QVariant("moto_1"));
-
-    QAxObject *cell_14 = pSheet->querySubObject("Cells(int, int)", 1, 14);
-    cell_14->dynamicCall("SetValue(const QVariant&)", QVariant("moto_2"));
-
-    QAxObject *cell_15 = pSheet->querySubObject("Cells(int, int)", 1, 15);
-    cell_15->dynamicCall("SetValue(const QVariant&)", QVariant("moto_3"));
-
-    QAxObject *cell_16 = pSheet->querySubObject("Cells(int, int)", 1, 16);
-    cell_16->dynamicCall("SetValue(const QVariant&)", QVariant("moto_4"));
-
-    QAxObject *cell_17 = pSheet->querySubObject("Cells(int, int)", 1, 17);
-    cell_17->dynamicCall("SetValue(const QVariant&)", QVariant("moto_5"));
-
-    QAxObject *cell_18 = pSheet->querySubObject("Cells(int, int)", 1, 18);
-    cell_18->dynamicCall("SetValue(const QVariant&)", QVariant("moto_6"));
-
-    QAxObject *cell_19 = pSheet->querySubObject("Cells(int, int)", 1, 19);
-    cell_19->dynamicCall("SetValue(const QVariant&)", QVariant("elPre"));
-
-    QAxObject *cell_20 = pSheet->querySubObject("Cells(int, int)", 1, 20);
-    cell_20->dynamicCall("SetValue(const QVariant&)", QVariant("shoPre1"));
-
-    QAxObject *cell_21 = pSheet->querySubObject("Cells(int, int)", 1, 21);
-    cell_21->dynamicCall("SetValue(const QVariant&)", QVariant("shoPre2"));
-
-    QAxObject *cell_22 = pSheet->querySubObject("Cells(int, int)", 1, 22);
-    cell_22->dynamicCall("SetValue(const QVariant&)", QVariant("Emgvalue"));
-
-    QAxObject *cell_23 = pSheet->querySubObject("Cells(int, int)", 1, 23);
-    cell_23->dynamicCall("SetValue(const QVariant&)", QVariant("ElbowAngle_emg"));
-
-    QAxObject *cell_24 = pSheet->querySubObject("Cells(int, int)", 1, 24);
-    cell_24->dynamicCall("SetValue(const QVariant&)", QVariant("ElbowAngle_fit"));
-
-
-    // Change one-dimension to two-dimension array
-    // Using QVarient in excel
-    QVariantList vars;
-    QString RangeStr;
-
-    for(i=0; i<receive_count_tension; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(tension_y[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res(vars);
-    RangeStr = "A2:A" + QString::number(receive_count_tension+1);
-    QAxObject *user_range = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range->setProperty("Value",res);
-    vars.clear();
-
-    for(i=0; i<receive_count_tension; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(tension_y2[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_1(vars);
-    RangeStr = "B2:B" + QString::number(receive_count_tension+1);
-    QAxObject *user_range1 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range1->setProperty("Value",res_1);
-    vars.clear();
-
-    for(i=0; i<receive_count_tension; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(tension_y3[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_2(vars);
-    RangeStr = "C2:C" + QString::number(receive_count_tension+1);
-    QAxObject *user_range2 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range2->setProperty("Value",res_2);
-    vars.clear();
-
-    for(i=0; i<receive_count_tension; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(tension_y4[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_3(vars);
-    RangeStr = "D2:D" + QString::number(receive_count_tension+1);
-    QAxObject *user_range3 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range3->setProperty("Value",res_3);
-    vars.clear();
-
-    for(i=0; i<receive_count_tension; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(tension_y5[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_4(vars);
-    RangeStr = "E2:E" + QString::number(receive_count_tension+1);
-    QAxObject *user_range4 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range4->setProperty("Value",res_4);
-    vars.clear();
-
-    for(i=0; i<receive_count_tension; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(tension_y6[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_5(vars);
-    RangeStr = "F2:F" + QString::number(receive_count_tension+1);
-    QAxObject *user_range5 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range5->setProperty("Value",res_5);
-    vars.clear();
-
-
-    /*
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(elbow_z[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_6(vars);
-    RangeStr = "G2:G" + QString::number(receive_count_angle);
-    QAxObject *user_range6 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range6->setProperty("Value",res_6);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(elbow_x[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_7(vars);
-    RangeStr = "H2:H" + QString::number(receive_count_angle);
-    QAxObject *user_range7 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range7->setProperty("Value",res_7);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(elbow_y[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_8(vars);
-    RangeStr = "I2:I" + QString::number(receive_count_angle);
-    QAxObject *user_range8 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range8->setProperty("Value",res_8);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(shoulder_z[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_9(vars);
-    RangeStr = "J2:J" + QString::number(receive_count_angle);
-    QAxObject *user_range9 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range9->setProperty("Value",res_9);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(shoulder_x[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_10(vars);
-    RangeStr = "K2:K" + QString::number(receive_count_angle);
-    QAxObject *user_range10 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range10->setProperty("Value",res_10);
-    vars.clear();
-
-    for(i=0; i<receive_count_angle; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(shoulder_y[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_11(vars);
-    RangeStr = "L2:L" + QString::number(receive_count_angle);
-    QAxObject *user_range11 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range11->setProperty("Value",res_11);
-    vars.clear();
-
-    for(i=0; i<receive_count_mocount; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(Motor1Count[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_12(vars);
-    RangeStr = "M2:M" + QString::number(receive_count_mocount);
-    QAxObject *user_range12 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range12->setProperty("Value",res_12);
-    vars.clear();
-
-    for(i=0; i<receive_count_mocount; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(Motor2Count[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_13(vars);
-    RangeStr = "N2:N" + QString::number(receive_count_mocount);
-    QAxObject *user_range13 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range13->setProperty("Value",res_13);
-    vars.clear();
-
-    for(i=0; i<receive_count_mocount; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(Motor3Count[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_14(vars);
-    RangeStr = "O2:O" + QString::number(receive_count_mocount);
-    QAxObject *user_range14 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range14->setProperty("Value",res_14);
-    vars.clear();
-
-    for(i=0; i<receive_count_mocount; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(Motor4Count[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_15(vars);
-    RangeStr = "P2:P" + QString::number(receive_count_mocount);
-    QAxObject *user_range15 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range15->setProperty("Value",res_15);
-    vars.clear();
-
-    for(i=0; i<receive_count_mocount; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(Motor5Count[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_16(vars);
-    RangeStr = "Q2:Q" + QString::number(receive_count_mocount);
-    QAxObject *user_range16 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range16->setProperty("Value",res_16);
-    vars.clear();
-
-    for(i=0; i<receive_count_mocount; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(Motor6Count[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_17(vars);
-    RangeStr = "R2:R" + QString::number(receive_count_mocount);
-    QAxObject *user_range17 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range17->setProperty("Value",res_17);
-    vars.clear();
-
-    for(i=0; i<receive_count_pressure; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(surpressure_elbow[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_18(vars);
-    RangeStr = "S2:S" + QString::number(receive_count_pressure);
-    QAxObject *user_range18 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range18->setProperty("Value",res_18);
-    vars.clear();
-
-    for(i=0; i<receive_count_pressure; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(surpressure_shou1[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_19(vars);
-    RangeStr = "T2:T" + QString::number(receive_count_pressure);
-    QAxObject *user_range19 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range19->setProperty("Value",res_19);
-    vars.clear();
-
-    for(i=0; i<receive_count_pressure; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(surpressure_shou2[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_20(vars);
-    RangeStr = "U2:U" + QString::number(receive_count_pressure);
-    QAxObject *user_range20 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range20->setProperty("Value",res_20);
-    vars.clear();
-
-    /*
-    // the emg data and the relevant elbow angle
-    for(i=0; i<emgsaveLen; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(EmgDataSave[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_21(vars);
-    RangeStr = "V2:V" + QString::number(emgsaveLen);
-    QAxObject *user_range21 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range21->setProperty("Value",res_21);
-    vars.clear();
-
-    for(i=0; i<emgsaveLen; i++)
-    {
-        QList<QVariant> rows;
-        rows.append(AngleElbow_emg[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_22(vars);
-    RangeStr = "W2:W" + QString::number(emgsaveLen);
-    QAxObject *user_range22 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range22->setProperty("Value",res_22);
-    vars.clear();
-
-    for(i=0; i<fiteffRecord.size(); i++)
-    {
-        QList<QVariant> rows;
-        rows.append(fiteffRecord[i]);
-        vars.append(QVariant(rows));
-    }
-    QVariant res_23(vars);
-    RangeStr = "W2:W" + QString::number(fiteffRecord.length());
-    QAxObject *user_range23 = pSheet->querySubObject("Range(const QString&)",RangeStr);
-    user_range23->setProperty("Value",res_23);
-    vars.clear();
-    */
-
-
-    //excel
-    pWorkBook->dynamicCall("SaveAs(const QString &)", QDir::toNativeSeparators(filename));
-    pApplication->dynamicCall("Quit()");
-    delete pApplication;
+    saveExcel->setPath(filename);
+    emit sigSaveExcel();
 }
 
 
@@ -1186,7 +818,7 @@ void MainWindow::on_actionStartMeasure_triggered()
         QMessageBox::critical(this,tr("wrong operation"),tr("open com first!!!"),QMessageBox::Ok);
         return;
     }
-//    readEncoderTimer->start(readEncoderInterval);
+    readEncoderTimer->start(readEncoderInterval);
     threadReadTension->start();
     readTensionTimer->start(readTensionInterval);
     threadReadIMU->start();
@@ -1339,8 +971,8 @@ void MainWindow::modMessage(QString kind, QString message)
 
     if(kind == "noerror")
         QMessageBox::information(this, kind, message);
-    if(kind == "error")
-        QMessageBox::critical(this, kind, message, QMessageBox::Ok);
+//    if(kind == "error")
+//        QMessageBox::critical(this, kind, message, QMessageBox::Ok);
 }
 
 void MainWindow::slotEncoderPlot()
@@ -1473,7 +1105,7 @@ void MainWindow::slotTensionPlot()
 
 void MainWindow::slotIMUPlot()
 {
-    qDebug()<<"enter slotIMUPlot"<<QThread::currentThreadId();
+    //qDebug()<<"enter slotIMUPlot"<<QThread::currentThreadId();
     linkdisplay->adjustPos(shoulder_x[receive_count_angle]*3.14/180,
             shoulder_y[receive_count_angle]*3.14/180,
             shoulder_z[receive_count_angle]*3.14/180,
@@ -1541,5 +1173,15 @@ void MainWindow::slotIMUPlot()
         ui->qCustomPlot12->xAxis->setRange(angle_x_plot[0],angle_x_plot[plotlength-1]);
         ui->qCustomPlot12->yAxis->setRange(-120,120);
         ui->qCustomPlot12->replot();
+    }
+}
+
+void MainWindow::slotReadData(int n, QString message)
+{
+    ui->saveDataProgressBar->setValue(n);
+    ui->saveDataLabel->setText(message);
+    if(message == "finish")
+    {
+        QMessageBox::information(this, "success", "Data saved.");
     }
 }

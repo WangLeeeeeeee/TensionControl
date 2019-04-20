@@ -12,6 +12,7 @@ double tf_aim = 200.0; // aim time is 5 second(50 100 millisecond)
 // 保存拟合曲线数据
 QVector<double> EmgDataSave(len),AngleElbow_emg(len);
 unsigned int emgsaveLen=0;
+QVector<float> fiteffRecord;
 
 // 自动触发end
 

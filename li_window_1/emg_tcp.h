@@ -17,6 +17,7 @@
 
 extern QVector<double> EmgDataSave,AngleElbow_emg;
 extern unsigned int emgsaveLen;
+extern QVector<float> fiteffRecord;
 
 class EMG_server:public QObject
 {
