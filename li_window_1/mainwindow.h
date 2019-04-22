@@ -103,7 +103,7 @@ private:
     encoderRead* encoRe;
     QThread* threadReadEncoder;
     QTimer* readEncoderTimer;
-    unsigned int readEncoderInterval = 50;
+    unsigned int readEncoderInterval = 100;
 
     // read tension thread
     tensionRead* tenRe;

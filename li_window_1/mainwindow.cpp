@@ -993,6 +993,7 @@ void MainWindow::slotEmgThetaFit(double *fiteff, double *bufferX, double *buffer
 
 void MainWindow::on_StopMotorButton_clicked()
 {
+
     emit sigDisableMotor();
 }
 

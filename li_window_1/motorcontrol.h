@@ -24,6 +24,10 @@
 #define LINEARCONTROL 3
 #define JOINTTORQUECONTROL 4
 
+// 定义JOINTWITHTENSION下每根绳索的控制模式
+#define TENSION 1
+#define SPEED 0
+
 typedef struct ModPID
 {
     double KPTight;     // proportion of tight

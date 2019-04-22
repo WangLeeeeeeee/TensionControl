@@ -2,10 +2,14 @@
 
 // 走直线轨迹时的关节角度中间值
 // matlab: theta1:tempAngle[2] theta2:tempAngle[1] theta3:tempAngle[0] theta4:tempAngle[3]
-double Testq1[21] = {0, 0,	0.032,	0.037,	0.041,	0.045,	0.05,	0.056,	0.063,	0.072,	0.083,	0.095,	0.109,	0.125,	0.143,	0.163,	0.184,	0.208,	0.234,	0.254,	0.262};
-double Testq2[21] = {0, 0,	-0.095,	-0.147,	-0.188,	-0.222,	-0.253,	-0.28,	-0.304,	-0.326,	-0.345,	-0.361,	-0.376,	-0.387,	-0.396,	-0.402,	-0.405,	-0.405,	-0.401,	-0.395,	-0.393};
-double Testq3[21] = {0, 0,	0.017,	0.036,	0.055,	0.075,	0.095,	0.115,	0.136,	0.157,	0.179,	0.201,	0.224,	0.247,	0.27,	0.294,	0.318,	0.343,	0.368,	0.386,	0.393};
-double Testq4[21] = {0, 0,	0.229,	0.313,	0.374,	0.422,	0.461,	0.492,	0.518,	0.539,	0.555,	0.567,	0.575,	0.579,	0.579,	0.576,	0.569,	0.558,	0.543,	0.529,	0.524};
+//double Testq1[21] = {0, 0,	0.032,	0.037,	0.041,	0.045,	0.05,	0.056,	0.063,	0.072,	0.083,	0.095,	0.109,	0.125,	0.143,	0.163,	0.184,	0.208,	0.234,	0.254,	0.262};
+//double Testq2[21] = {0, 0,	-0.095,	-0.147,	-0.188,	-0.222,	-0.253,	-0.28,	-0.304,	-0.326,	-0.345,	-0.361,	-0.376,	-0.387,	-0.396,	-0.402,	-0.405,	-0.405,	-0.401,	-0.395,	-0.393};
+//double Testq3[21] = {0, 0,	0.017,	0.036,	0.055,	0.075,	0.095,	0.115,	0.136,	0.157,	0.179,	0.201,	0.224,	0.247,	0.27,	0.294,	0.318,	0.343,	0.368,	0.386,	0.393};
+//double Testq4[21] = {0, 0,	0.229,	0.313,	0.374,	0.422,	0.461,	0.492,	0.518,	0.539,	0.555,	0.567,	0.575,	0.579,	0.579,	0.576,	0.569,	0.558,	0.543,	0.529,	0.524};
+double Testq1[21] = {0,	0.036,	0.061,	0.075,	0.087,	0.097,	0.107,	0.114,	0.12,	0.124,	0.126,	0.125,	0.122,	0.116,	0.106,	0.091,	0.072,	0.045,	0.017,	0.004,	0.008};
+double Testq2[21] = {0,	-0.096,	-0.132,	-0.153,	-0.164,	-0.17,	-0.171,	-0.168,	-0.161,	-0.152,	-0.14,	-0.126,	-0.11,	-0.092,	-0.073,	-0.053,	-0.033,	-0.013,	-0.001,	0.002,	-0.005};
+double Testq3[21] = {0,	0.025,	0.051,	0.077,	0.104,	0.132,	0.159,	0.187,	0.215,	0.243,	0.272,	0.301,	0.33,	0.359,	0.389,	0.42,	0.452,	0.485,	0.513,	0.522,	0.515};
+double Testq4[21] = {0,	0.285,	0.391,	0.467,	0.525,	0.571,	0.608,	0.636,	0.658,	0.673,	0.681,	0.684,	0.681,	0.672,	0.657,	0.636,	0.607,	0.57,	0.536,	0.524,	0.536};
 unsigned int pointAll = 21;
 
 //---------------------------------------------------
@@ -29,12 +33,12 @@ bool InverseJoint = 0; // 来回运行
 unsigned int jointCount = 0; // 关节角运动当前时间=jointCount*detaT
 unsigned int jointCycleCount = 0; // 关节角当前运行来回计数
 unsigned int setJointCirCount = 0; // 界面设定的关节角来回数
-double thetaTf = 15.0; // 关节角规划的整个时间（t = thetaTf*JointIntervalTime）
+double thetaTf = 7.0; // 关节角规划的整个时间（t = thetaTf*JointIntervalTime）
 
 //---------------------------------------------------
 // 末端走直线轨迹相关参数
 //---------------------------------------------------
-unsigned int lineIntervalTime = 100; // 关节角运动定时器周期ms（关节角规划的detaT）
+unsigned int lineIntervalTime = 50; // 关节角运动定时器周期ms（关节角规划的detaT）
 bool InverseLine = 0; // 角度三次规划，是否到达目标角度
 unsigned int linearCount = 0; // 走直线轨迹时读取关节角度计数
 unsigned int lineCycleCount = 0; // 直线来回走的次数
@@ -49,8 +53,8 @@ QVector<double> elbowxRecord(length),elbowyRecord(length),elbowzRecord(length);
 QVector<double> shouxRecord(length),shouyRecord(length),shouzRecord(length);
 unsigned int teachRecordCout = 0;
 unsigned int replayCount = 0;
-unsigned int teachIntervalTime = 50;
-unsigned int replayIntervalTime = 50;
+unsigned int teachIntervalTime = 150;
+unsigned int replayIntervalTime = 150;
 
 //---------------------------------------------------
 // 张力控制相关参数
@@ -59,6 +63,12 @@ double AimTension[6] = {300,300,300,300,300,300}; // 目标张力值
 double ModTensionSensor[6]; // 当前张力值
 ModTensionPID Modtension_pid[6] = {{0.7,0.4,0,0,0,0,0},{0.7,0.4,0,0,0,0,0},{0.7,0.4,0,0,0,0,0},{0.7,0.4,0,0,0,0,0},{0.70,0.4,0.001,0.01,0,0,0},{0.55,0.19,0.001,0.01,0,0,0}};
 unsigned int tensionIntervalTime = 50;
+
+//---------------------------------------------------
+// 张力控制相关参数
+//---------------------------------------------------
+unsigned int JointWithTensionMode = 0; // 判断当前关节角决定使用哪根绳索使用张力控制，哪根绳索使用速度模式
+bool CableTensionOrSpeed[6] = {SPEED,SPEED,SPEED,SPEED,SPEED,SPEED}; // 定义每根绳索的控制模式张力或者速度
 
 //---------------------------------------------------
 // 关节力矩控制相关参数
@@ -146,8 +156,66 @@ void motorcontrol::slotMdSerialCtrl(uint tensionOrAngle, int *Data)
         break;
     case JOINTWITHTENSION:
         ControlMode = JOINTWITHTENSION;
-        for(int i=0; i<6; i++)// 将驱动器设置为速度模式
-            emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);
+        if((Data[0]>0)&&(Data[1]==0)&&(Data[2]==0)&&(Data[3]==0))// 肩关节外展
+            {
+            CableTensionOrSpeed[0] = TENSION;
+            CableTensionOrSpeed[1] = SPEED;
+            CableTensionOrSpeed[2] = SPEED;
+            CableTensionOrSpeed[3] = TENSION;
+            CableTensionOrSpeed[4] = TENSION;
+            CableTensionOrSpeed[5] = TENSION;
+        }
+        else if((Data[1]>0)&&(Data[0]==0)&&(Data[2]==0)&&(Data[3]==0))// 肩关节前屈
+            {
+            CableTensionOrSpeed[0] = SPEED;
+            CableTensionOrSpeed[1] = TENSION;
+            CableTensionOrSpeed[2] = TENSION;
+            CableTensionOrSpeed[3] = SPEED;
+            CableTensionOrSpeed[4] = SPEED;
+            CableTensionOrSpeed[5] = TENSION;
+        }
+        else if((Data[2]>0)&&(Data[0]==0)&&(Data[1]==0)&&(Data[3]==0))// 肩关节内旋
+            {
+            CableTensionOrSpeed[0] = TENSION;
+            CableTensionOrSpeed[1] = SPEED;
+            CableTensionOrSpeed[2] = TENSION;
+            CableTensionOrSpeed[3] = SPEED;
+            CableTensionOrSpeed[4] = SPEED;
+            CableTensionOrSpeed[5] = TENSION;
+        }
+        else if((Data[2]>0)&&(Data[0]==0)&&(Data[1]==0)&&(Data[3]==0))// 肩关节外旋
+            {
+            CableTensionOrSpeed[0] = SPEED;
+            CableTensionOrSpeed[1] = TENSION;
+            CableTensionOrSpeed[2] = SPEED;
+            CableTensionOrSpeed[3] = TENSION;
+            CableTensionOrSpeed[4] = SPEED;
+            CableTensionOrSpeed[5] = TENSION;
+        }
+        else if((Data[3]>0)&&(Data[0]==0)&&(Data[1]==0)&&(Data[2]==0))// 肘关节前屈
+            {
+            CableTensionOrSpeed[0] = TENSION;
+            CableTensionOrSpeed[1] = TENSION;
+            CableTensionOrSpeed[2] = TENSION;
+            CableTensionOrSpeed[3] = TENSION;
+            CableTensionOrSpeed[4] = SPEED;
+            CableTensionOrSpeed[5] = TENSION;
+        }
+        else{// 复合运动
+            for(int i=0; i<6; i++)// 将驱动器设置为速度模式
+                CableTensionOrSpeed[i] = SPEED;
+        }
+        for(int i=0; i<6; i++)
+        {
+            if(CableTensionOrSpeed[i] == TENSION)
+                emit sigMotorControl(i+1,MODESELECT,TORQUEMODE,0);
+            else
+                emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);
+        }
+
+        linearControlTimer->stop();
+        tensionCtrlTimer->stop();
+        cycleJointTimer->start(jointIntervalTime);
         InitialCableLen(initAngle);
         for(int i=0; i<4; i++)
             thetaEnd[i] = Data[i]*3.14/180; // 设置目标关节角
@@ -374,6 +442,7 @@ void motorcontrol::CirculJoint()
         InverseJoint = 0;
         for(int i=0; i<6; i++)// Stop all motor
         {
+            emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);
             emit sigMotorControl(i+1,SPEEDSET,0,1);
         }
         cycleJointTimer->stop();
@@ -400,28 +469,19 @@ void motorcontrol::CirculJoint()
             aimCircle[i] = cableLenDeta[i]/(2*pi*rollRadius); // 计算间隔的电机转动圈数
             vel[i] = double(60*aimCircle[i])/double(inteTime); // 计算电机转速
         }
-        for(int i=0; i<6; i++)
+        if(ControlMode == JOINTANGLECONTROL) // 如果是单纯的角度位置模式
         {
-            if(ControlMode == JOINTANGLECONTROL) // 如果是单纯的角度位置模式
+            for(int i=0; i<6; i++)
                 emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
-            if(ControlMode == JOINTWITHTENSION)
+        }
+        if(ControlMode == JOINTWITHTENSION)
+        {
+            for(int i=0; i<6; i++)
             {
-                if(vel[i] > 0) // 如果是速度大于0则使用力矩模式
-                {
-                    emit sigMotorControl(i+1,MODESELECT,TORQUEMODE,0);
-                    emit sigMotorControl(i+1,TORQUESET,-80,0);
-                }
+                if(CableTensionOrSpeed[i] == SPEED)
+                    emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
                 else
-                {
-                    emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);
-                    emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1);
-                }
-            }
-            if((i==5)||(i==6))
-            {
-                qDebug()<<"vel"<<i<<"is"<<qint32(vel[i]*1000);
-                qDebug()<<"cable 5"<<cableLen[i];
-                qDebug()<<"tempAngle[3] is:"<<theta[3];
+                    emit sigMotorControl(i+1,TORQUESET,-60,0); // 发送电机力矩指令
             }
         }
     }
@@ -436,10 +496,13 @@ void motorcontrol::slotMdTeachStart()
 {
     teachTimer->start(teachIntervalTime);
     for(int i=0; i<6; i++)
-        AimTension[i] = 300;
+        AimTension[i] = 80;
     // 保持绳索上的张力一定
     for(int i=0; i<6; i++)
-        emit sigMotorControl(i+1,TORQUESET,-AimTension[i]*0.5,0);  //发送转矩信号 ([-300.0 300.0])
+    {
+        emit sigMotorControl(i+1,MODESELECT,TORQUEMODE,0);
+        emit sigMotorControl(i+1,TORQUESET,-AimTension[i],0);  //发送转矩信号 ([-300.0 300.0])
+    }
     //tensionCtrlTimer->start(tensionIntervalTime);
 }
 
@@ -462,12 +525,12 @@ void motorcontrol::slotMdTeachStop()
 void motorcontrol::TeachRecord()
 {
     // 记录电机转过的圈数
-    MoRecord1[teachRecordCout] = Motor1Count[receive_count_mocount];
-    MoRecord2[teachRecordCout] = Motor2Count[receive_count_mocount];
-    MoRecord3[teachRecordCout] = Motor3Count[receive_count_mocount];
-    MoRecord4[teachRecordCout] = Motor4Count[receive_count_mocount];
-    MoRecord5[teachRecordCout] = Motor5Count[receive_count_mocount];
-    MoRecord6[teachRecordCout] = Motor6Count[receive_count_mocount];
+    MoRecord1[teachRecordCout] = Motor1Count[receive_count_mocount-1];
+    MoRecord2[teachRecordCout] = Motor2Count[receive_count_mocount-1];
+    MoRecord3[teachRecordCout] = Motor3Count[receive_count_mocount-1];
+    MoRecord4[teachRecordCout] = Motor4Count[receive_count_mocount-1];
+    MoRecord5[teachRecordCout] = Motor5Count[receive_count_mocount-1];
+    MoRecord6[teachRecordCout] = Motor6Count[receive_count_mocount-1];
     // 记录IMU数据
     elbowxRecord[teachRecordCout] = elbow_x[receive_count_angle];
     elbowyRecord[teachRecordCout] = elbow_y[receive_count_angle];
@@ -507,10 +570,13 @@ void motorcontrol::ReplayTeach()
         qDebug()<<"the speed is:"<<vel[5]<<"n/min";
         for(int i=0; i<6; i++)
         {
-            emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
+            qDebug()<<"The"<<i<<"speed is:"<<vel[i];
+            //emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
         }
         replayCount++;
     }
+    else
+        replayTimer->stop();
 }
 
 //---------------------------------------
