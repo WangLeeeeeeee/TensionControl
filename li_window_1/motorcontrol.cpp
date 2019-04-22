@@ -53,8 +53,8 @@ QVector<double> elbowxRecord(length),elbowyRecord(length),elbowzRecord(length);
 QVector<double> shouxRecord(length),shouyRecord(length),shouzRecord(length);
 unsigned int teachRecordCout = 0;
 unsigned int replayCount = 0;
-unsigned int teachIntervalTime = 150;
-unsigned int replayIntervalTime = 150;
+unsigned int teachIntervalTime = 100;
+unsigned int replayIntervalTime = 100;
 
 //---------------------------------------------------
 // 张力控制相关参数
@@ -538,6 +538,9 @@ void motorcontrol::TeachRecord()
     shoulder_x[teachRecordCout] = shoulder_x[receive_count_angle];
     shoulder_y[teachRecordCout] = shoulder_y[receive_count_angle];
     shoulder_z[teachRecordCout] = shoulder_z[receive_count_angle];
+
+    qDebug()<<"MoRecord is"<<MoRecord6[teachRecordCout];
+    qDebug()<<"teachRecordCout is:"<<
     teachRecordCout++;
 }
 
@@ -548,6 +551,8 @@ void motorcontrol::TeachRecord()
 //---------------------------------------
 void motorcontrol::slotMdReplayTeach()
 {
+    for(int i=0; i<6; i++)// 将驱动器设置为速度模式
+        emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);
     replayTimer->start(replayIntervalTime);
 }
 
@@ -561,17 +566,16 @@ void motorcontrol::ReplayTeach()
     double vel[6];
     if(replayCount<teachRecordCout-1)
     {
-        vel[0] = ((MoRecord1[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
-        vel[1] = ((MoRecord2[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
-        vel[2] = ((MoRecord3[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
-        vel[3] = ((MoRecord4[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
-        vel[4] = ((MoRecord5[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
-        vel[5] = ((MoRecord6[replayCount+1]-MoRecord1[replayCount])/10000)/(teachIntervalTime/(1000*60));
-        qDebug()<<"the speed is:"<<vel[5]<<"n/min";
+        vel[0] = ((MoRecord1[replayCount+1]-MoRecord1[replayCount])/10000)/(double(teachIntervalTime)/(1000*60));
+        vel[1] = ((MoRecord2[replayCount+1]-MoRecord2[replayCount])/10000)/(double(teachIntervalTime)/(1000*60));
+        vel[2] = ((MoRecord3[replayCount+1]-MoRecord3[replayCount])/10000)/(double(teachIntervalTime)/(1000*60));
+        vel[3] = ((MoRecord4[replayCount+1]-MoRecord4[replayCount])/10000)/(double(teachIntervalTime)/(1000*60));
+        vel[4] = ((MoRecord5[replayCount+1]-MoRecord5[replayCount])/10000)/(double(teachIntervalTime)/(1000*60));
+        vel[5] = ((MoRecord6[replayCount+1]-MoRecord6[replayCount])/10000)/(double(teachIntervalTime)/(1000*60));
         for(int i=0; i<6; i++)
         {
             qDebug()<<"The"<<i<<"speed is:"<<vel[i];
-            //emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
+            emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
         }
         replayCount++;
     }
