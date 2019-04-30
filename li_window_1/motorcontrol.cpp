@@ -1,7 +1,12 @@
 #include "motorcontrol.h"
 
+//IMU:
+// elbow_y对应肘关节前屈，前屈后减小
+// shoulder_y对应肩关节前屈，前屈后减小
+// shoulder_x对应肩关节内收外展，外展后减小
+// shoulder_z对应肩关节内旋外旋，内旋后角度增大
 // 走直线轨迹时的关节角度中间值
-// matlab: theta1:tempAngle[2] theta2:tempAngle[1] theta3:tempAngle[0] theta4:tempAngle[3]
+// matlab: theta1:tempAngle[2]：肩关节外旋角度增大  theta2:tempAngle[1]：肩关节前屈角度增大 theta3:tempAngle[0]：肩关节外展角度增大 theta4:tempAngle[3]：肘关节前屈角度增大
 //double Testq1[21] = {0, 0,	0.032,	0.037,	0.041,	0.045,	0.05,	0.056,	0.063,	0.072,	0.083,	0.095,	0.109,	0.125,	0.143,	0.163,	0.184,	0.208,	0.234,	0.254,	0.262};
 //double Testq2[21] = {0, 0,	-0.095,	-0.147,	-0.188,	-0.222,	-0.253,	-0.28,	-0.304,	-0.326,	-0.345,	-0.361,	-0.376,	-0.387,	-0.396,	-0.402,	-0.405,	-0.405,	-0.401,	-0.395,	-0.393};
 //double Testq3[21] = {0, 0,	0.017,	0.036,	0.055,	0.075,	0.095,	0.115,	0.136,	0.157,	0.179,	0.201,	0.224,	0.247,	0.27,	0.294,	0.318,	0.343,	0.368,	0.386,	0.393};
@@ -33,12 +38,12 @@ bool InverseJoint = 0; // 来回运行
 unsigned int jointCount = 0; // 关节角运动当前时间=jointCount*detaT
 unsigned int jointCycleCount = 0; // 关节角当前运行来回计数
 unsigned int setJointCirCount = 0; // 界面设定的关节角来回数
-double thetaTf = 7.0; // 关节角规划的整个时间（t = thetaTf*JointIntervalTime）
+double thetaTf = 8.0; // 关节角规划的整个时间（t = thetaTf*JointIntervalTime）
 
 //---------------------------------------------------
 // 末端走直线轨迹相关参数
 //---------------------------------------------------
-unsigned int lineIntervalTime = 50; // 关节角运动定时器周期ms（关节角规划的detaT）
+unsigned int lineIntervalTime = 100; // 关节角运动定时器周期ms（关节角规划的detaT）
 bool InverseLine = 0; // 角度三次规划，是否到达目标角度
 unsigned int linearCount = 0; // 走直线轨迹时读取关节角度计数
 unsigned int lineCycleCount = 0; // 直线来回走的次数
@@ -62,7 +67,7 @@ unsigned int replayIntervalTime = 100;
 double AimTension[6] = {300,300,300,300,300,300}; // 目标张力值
 double ModTensionSensor[6]; // 当前张力值
 ModTensionPID Modtension_pid[6] = {{0.7,0.4,0,0,0,0,0},{0.7,0.4,0,0,0,0,0},{0.7,0.4,0,0,0,0,0},{0.7,0.4,0,0,0,0,0},{0.70,0.4,0.001,0.01,0,0,0},{0.55,0.19,0.001,0.01,0,0,0}};
-unsigned int tensionIntervalTime = 50;
+unsigned int tensionIntervalTime = 100;
 
 //---------------------------------------------------
 // 张力控制相关参数
@@ -128,7 +133,7 @@ void motorcontrol::InitialMotor()
 void motorcontrol::slotMdSerialCtrl(uint tensionOrAngle, int *Data)
 {
     qDebug()<<"motorcontrol slotmdSerialCtrl: "<<QThread::currentThreadId();
-
+    InitialMotor();
     switch(tensionOrAngle){
     case TENSIONCONTROL:
         ControlMode = TENSIONCONTROL;
@@ -138,9 +143,14 @@ void motorcontrol::slotMdSerialCtrl(uint tensionOrAngle, int *Data)
         for(int i=0; i<6; i++) // 将驱动器设置为转矩模式
         {
             emit sigMotorControl(i+1,MODESELECT,TORQUEMODE,0);
+            //emit sigMotorControl(i+1,MODESELECT,VELOCITYMODE,0);
         }
         for(int i=0; i<6; i++) // 设置目标张力
             AimTension[i] = Data[i];
+        Modtension_pid[4].KPTight = Data[6];
+        Modtension_pid[4].KPLoose = Data[6];
+        Modtension_pid[4].KD = Data[7];
+        Modtension_pid[4].KI = Data[8];
         break;
     case JOINTANGLECONTROL:
         ControlMode = JOINTANGLECONTROL;
@@ -176,19 +186,19 @@ void motorcontrol::slotMdSerialCtrl(uint tensionOrAngle, int *Data)
         }
         else if((Data[2]>0)&&(Data[0]==0)&&(Data[1]==0)&&(Data[3]==0))// 肩关节内旋
             {
-            CableTensionOrSpeed[0] = TENSION;
+            CableTensionOrSpeed[0] = TENSION;//
             CableTensionOrSpeed[1] = SPEED;
-            CableTensionOrSpeed[2] = TENSION;
-            CableTensionOrSpeed[3] = SPEED;
+            CableTensionOrSpeed[2] = SPEED;
+            CableTensionOrSpeed[3] = TENSION;
             CableTensionOrSpeed[4] = SPEED;
             CableTensionOrSpeed[5] = TENSION;
         }
-        else if((Data[2]>0)&&(Data[0]==0)&&(Data[1]==0)&&(Data[3]==0))// 肩关节外旋
+        else if((Data[2]<0)&&(Data[0]==0)&&(Data[1]==0)&&(Data[3]==0))// 肩关节外旋
             {
-            CableTensionOrSpeed[0] = SPEED;
-            CableTensionOrSpeed[1] = TENSION;
+            CableTensionOrSpeed[0] = TENSION;
+            CableTensionOrSpeed[1] = SPEED;
             CableTensionOrSpeed[2] = SPEED;
-            CableTensionOrSpeed[3] = TENSION;
+            CableTensionOrSpeed[3] = TENSION;//
             CableTensionOrSpeed[4] = SPEED;
             CableTensionOrSpeed[5] = TENSION;
         }
@@ -272,15 +282,15 @@ void motorcontrol::ModTensionSet()    //信号来自slotModbusCtrl，QTimer的�
     float ThisError, pError, dError, iError, temp;
     for(int i=0; i<6; i++)
     {
-        /* PID闭环
-        ModTensionSensor[0] = ModTensionSensor[5];
+        /*
+        //PID闭环
         // it exceed the max tension motor must be stop
-        if(ModTensionSensor[i]>8000)
+        if(ModTensionSensor[i]>2000)
         {
             qDebug()<<"the tension is out of the max value, too dangerous";
             tensionCtrlTimer->stop();
             // motor must be stopped!!!
-            emit sigMotorControl(i+1,ENBLESET,DISABLE,0);// 失能电机
+            emit sigMotorControl(i+1,MODESELECT,DISABLE,0);// 失能电机
         }
         else
         {
@@ -294,26 +304,38 @@ void motorcontrol::ModTensionSet()    //信号来自slotModbusCtrl，QTimer的�
             {
                 temp = Modtension_pid[i].KPTight*pError+Modtension_pid[i].KI*iError+Modtension_pid[i].KD*dError;
                 Modtension_pid[i].Output = Modtension_pid[i].Output + temp;
+                //Modtension_pid[i].Output = Modtension_pid[i].Output -(temp/(ModTensionSensor[i]+100));
             }
             else if(ThisError < -50)
             {
                 temp = Modtension_pid[i].KPLoose*pError+Modtension_pid[i].KI*iError+Modtension_pid[i].KD*dError;
                 Modtension_pid[i].Output = Modtension_pid[i].Output + temp;
+                //Modtension_pid[i].Output = Modtension_pid[i].Output -(temp/(ModTensionSensor[i]+100));
             }
             else
             {
                 Modtension_pid[i].Output = Modtension_pid[i].Output;
             }
-            if(Modtension_pid[i].Output > 100)
-                Modtension_pid[i].Output = 100;
-            if(Modtension_pid[i].Output < -100)
-                Modtension_pid[i].Output = -100;
-            emit sigMotorControl(i+1,TORQUESET,int(Modtension_pid[i].Output),0);  //发送转矩信号 .Output PID的输出
+//            if(Modtension_pid[i].Output > 100)
+//                Modtension_pid[i].Output = 100;
+//            if(Modtension_pid[i].Output < -100)
+//                Modtension_pid[i].Output = -100;
+//            qDebug()<<"pError"<<pError;
+//            qDebug()<<"dError"<<dError;
+//            qDebug()<<"iError"<<iError;
+            double torqueOut;
+            torqueOut = -(Modtension_pid[i].Output/(0.001*ModTensionSensor[i]+0.2));
+            qDebug()<<"Modtension_pid"<<i<<"output is:"<<torqueOut;
+            if(torqueOut>20000)
+                torqueOut = 20000;
+            if(torqueOut<-20000)
+                torqueOut = -20000;
+            emit sigMotorControl(i+1,SPEEDSET,torqueOut,1);
+            //emit sigMotorControl(i+1,TORQUESET,int(Modtension_pid[i].Output),0);  //发送转矩信号 .Output PID的输出
         }
-        qDebug()<<Modtension_pid[0].Output;
         */
         // 开环
-        emit sigMotorControl(i+1,TORQUESET,-AimTension[i]*0.5,0);  //发送转矩信号 ([-300.0 300.0])
+        emit sigMotorControl(i+1,TORQUESET,-AimTension[i]*0.3,0);  //发送转矩信号 ([-300.0 300.0])
     }
 }
 
@@ -415,6 +437,9 @@ void motorcontrol::CirculJoint()
     double aimCircle[6];
     double vel[6];
     double inteTime;
+    // 闭环
+    double angleNow[4];
+    double cableLen_aim[6], cableLen_now[6];
     inteTime = double(jointIntervalTime)/1000; // detaT(s)
     // 关节角来回运动，需要判断运动过程
     if(jointCount == 0)
@@ -463,16 +488,39 @@ void motorcontrol::CirculJoint()
         }
         for(int i=0; i<6; i++)
         {
+
+            // 开环，计算理论值
             CalculateCabelLen(i,cableLen,theta); // 计算当前绳长
             cableLenDeta[i] = cableLen[i] - cableLenInit[i]; // 相邻时间间隔的绳长变化量
             cableLenInit[i] = cableLen[i];
             aimCircle[i] = cableLenDeta[i]/(2*pi*rollRadius); // 计算间隔的电机转动圈数
             vel[i] = double(60*aimCircle[i])/double(inteTime); // 计算电机转速
+
+
+            /*
+            // 闭环，通过IMU检测角度计算当前绳长，得到理论绳长与实际绳长的差值得到速度
+            angleNow[0] = -shoulder_x[receive_count_angle-1]*pi/180;
+            angleNow[1] = -shoulder_y[receive_count_angle-1]*pi/180;
+            angleNow[2] = -shoulder_z[receive_count_angle-1]*pi/180;
+            angleNow[3] = -elbow_y[receive_count_angle-1]*pi/180;
+            CalculateCabelLen(i,cableLen_now,angleNow); // 计算当前角度下实际绳长
+            CalculateCabelLen(i,cableLen_aim,theta); // 计算目标角度下绳长
+            cableLenDeta[i] = cableLen_aim[i] - cableLen_now[i]; // 相邻时间间隔的绳长变化量
+            aimCircle[i] = cableLenDeta[i]/(2*pi*rollRadius); // 计算间隔的电机转动圈数
+            vel[i] = double(60*aimCircle[i])/double(inteTime); // 计算电机转速
+            */
+
         }
         if(ControlMode == JOINTANGLECONTROL) // 如果是单纯的角度位置模式
         {
             for(int i=0; i<6; i++)
+            {
+                qDebug()<<"cableLen_aim"<<i<<"is:"<<cableLen_aim[i];
+                qDebug()<<"cableLen_now"<<i<<"is:"<<cableLen_now[i];
+                qDebug()<<"Speed"<<i<<"is:"<<vel[i]*1000;
                 emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
+            }
+            qDebug()<<"\n";
         }
         if(ControlMode == JOINTWITHTENSION)
         {
@@ -481,7 +529,7 @@ void motorcontrol::CirculJoint()
                 if(CableTensionOrSpeed[i] == SPEED)
                     emit sigMotorControl(i+1,SPEEDSET,qint32(vel[i]*1000),1); // 发送电机速度指令
                 else
-                    emit sigMotorControl(i+1,TORQUESET,-60,0); // 发送电机力矩指令
+                    emit sigMotorControl(i+1,TORQUESET,-40,0); // 发送电机力矩指令
             }
         }
     }
@@ -494,9 +542,11 @@ void motorcontrol::CirculJoint()
 //---------------------------------------
 void motorcontrol::slotMdTeachStart()
 {
+    teachRecordCout = 0;
+    tensionCtrlTimer->stop();
     teachTimer->start(teachIntervalTime);
     for(int i=0; i<6; i++)
-        AimTension[i] = 80;
+        AimTension[i] = 70;
     // 保持绳索上的张力一定
     for(int i=0; i<6; i++)
     {
@@ -580,7 +630,10 @@ void motorcontrol::ReplayTeach()
         replayCount++;
     }
     else
+    {
+        replayCount = 0;
         replayTimer->stop();
+    }
 }
 
 //---------------------------------------
@@ -659,49 +712,100 @@ void motorcontrol::CalculateCabelLen(uint i, double *cableLen, double* tempAngle
                         (343*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 + 37),2) +
                         qPow(((343*cos(tempAngle[2])*sin(tempAngle[0]))/2 - 125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
                          (343*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 - 137),2) +
-                        qPow((125*cos(tempAngle[1] - pi/2) + (343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 + 20),2)),0.5);break;
+                        qPow((125*cos(tempAngle[1] - pi/2) + (343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 + 20),2)),0.5);break;       
     case 3:
         cableLen[i] = qPow((qPow((30*cos(tempAngle[0])*sin(tempAngle[2]) -
-                        125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) - (343*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
-                        30*cos(tempAngle[2])*cos(tempAngle[1] - pi/2)*sin(tempAngle[0]) +
-                        (343*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 - 142),2) +
-                        qPow(((343*cos(tempAngle[2])*sin(tempAngle[0]))/2 - 30*cos(tempAngle[2])*cos(tempAngle[0]) -
-                         125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) + (343*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 +
-                         30*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])*sin(tempAngle[0]) + 30),2) +
-                        qPow((125*cos(tempAngle[1] - pi/2) + (343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 +
-                         30*sin(tempAngle[0])*sin(tempAngle[1] - pi/2) + 33),2)),0.5);break;
+                                  125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) -
+                                  (343*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
+                                  30*cos(tempAngle[2])*cos(tempAngle[1] - pi/2)*sin(tempAngle[0]) +
+                                  (343*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 - 142),2) +
+                                  qPow(((343*cos(tempAngle[2])*sin(tempAngle[0]))/2 - 30*cos(tempAngle[2])*cos(tempAngle[0]) -
+                                        125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
+                                   (343*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 +
+                                   30*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])*sin(tempAngle[0]) + 110),2) +
+                                  qPow((125*cos(tempAngle[1] - pi/2) +
+                                   (343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 +
+                                   30*sin(tempAngle[0])*sin(tempAngle[1] - pi/2) + 33),2)),0.5);break;
     case 4:
-        cableLen[i] = qPow((qPow((118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) + (607*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 +
-                        118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) + 118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) -
-                        118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) + 33),2) +
-                        qPow(((607*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
-                         118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
-                         118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
-                         118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
-                         118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
-                         (607*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 + 142),2) +
-                        qPow(((607*cos(tempAngle[2])*sin(tempAngle[0]))/2 +
-                         118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) -
-                         118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
-                         (607*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 - 118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
-                         118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
+        cableLen[i] = qPow((qPow((125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) + (343*sin(tempAngle[2])*sin(tempAngle[0]))/2 -
+                        (343*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 + 142),2) +
+                       qPow(((343*cos(tempAngle[2])*sin(tempAngle[0]))/2 - 125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
+                        (343*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2),2) +
+                       qPow((125*cos(tempAngle[1] - pi/2) + (343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 + 33),2)),0.5) +
+                qPow((qPow((118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) - 125*cos(tempAngle[1] - pi/2) +
+                  132*cos(tempAngle[0])*sin(tempAngle[1] - pi/2) + 118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) +
+                  118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) -
+                  118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2) +
+                 qPow((132*sin(tempAngle[2])*sin(tempAngle[0]) - 125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) +
+                  118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
+                  118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
+                  118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+                  118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
+                  132*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)),2) +
+                 qPow((132*cos(tempAngle[2])*sin(tempAngle[0]) + 125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
+                  118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) -
+                  118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+                  132*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]) -
+                  118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
+                  118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
+
+        // 肘关节绳索不经过肩部袖环
+//    case 4:
+//        cableLen[i] = qPow((qPow((118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) + (607*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 +
+//                        118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) + 118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) -
+//                        118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) + 33),2) +
+//                        qPow(((607*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
+//                         118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
+//                         118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
+//                         118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+//                         118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
+//                         (607*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 + 142),2) +
+//                        qPow(((607*cos(tempAngle[2])*sin(tempAngle[0]))/2 +
+//                         118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) -
+//                         118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+//                         (607*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 - 118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
+//                         118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
+//    case 5:
+//        cableLen[i] = qPow((qPow(((607*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 -
+//                        118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) +
+//                        118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) +
+//                        118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+//                        118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) + 33),2) +
+//                        qPow(((607*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
+//                         118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
+//                         118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
+//                         118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+//                         118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
+//                         (607*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 - 142),2) +
+//                        qPow(((607*cos(tempAngle[2])*sin(tempAngle[0]))/2 +
+//                         118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+//                         118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+//                         (607*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 + 118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
+//                         118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
     case 5:
-        cableLen[i] = qPow((qPow(((607*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 -
-                        118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) +
-                        118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) +
-                        118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
-                        118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) + 33),2) +
-                        qPow(((607*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
-                         118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
-                         118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
-                         118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
-                         118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
-                         (607*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 - 142),2) +
-                        qPow(((607*cos(tempAngle[2])*sin(tempAngle[0]))/2 +
-                         118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
-                         118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
-                         (607*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2 + 118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
-                         118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
+        cableLen[i] = qPow((qPow((125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) -
+                        (343*sin(tempAngle[2])*sin(tempAngle[0]))/2 +
+                        (343*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2))/2 + 142),2) +
+                        qPow(((343*cos(tempAngle[2])*sin(tempAngle[0]))/2 + 125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
+                         (343*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]))/2),2) +
+                        qPow(((343*cos(tempAngle[0])*sin(tempAngle[1] - pi/2))/2 - 125*cos(tempAngle[1] - pi/2) + 33),2)),0.5) +
+                        qPow((qPow((125*cos(tempAngle[1] - pi/2) - 118*cos(tempAngle[3])*cos(tempAngle[1] - pi/2) +
+                          132*cos(tempAngle[0])*sin(tempAngle[1] - pi/2) +
+                          118*cos(tempAngle[1] - pi/2)*sin(tempAngle[3]) +
+                          118*cos(tempAngle[0])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+                          118*cos(tempAngle[0])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2) +
+                         qPow((125*cos(tempAngle[2])*sin(tempAngle[1] - pi/2) + 132*sin(tempAngle[2])*sin(tempAngle[0]) +
+                          118*cos(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) +
+                          118*sin(tempAngle[3])*(sin(tempAngle[2])*sin(tempAngle[0]) - cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)) -
+                          118*cos(tempAngle[2])*cos(tempAngle[3])*sin(tempAngle[1] - pi/2) +
+                          118*cos(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2) -
+                          132*cos(tempAngle[2])*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)),2) +
+                         qPow((132*cos(tempAngle[2])*sin(tempAngle[0]) - 125*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) +
+                          118*cos(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+                          118*sin(tempAngle[3])*(cos(tempAngle[2])*sin(tempAngle[0]) + cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2])) +
+                          132*cos(tempAngle[0])*cos(tempAngle[1] - pi/2)*sin(tempAngle[2]) +
+                          118*cos(tempAngle[3])*sin(tempAngle[2])*sin(tempAngle[1] - pi/2) -
+                          118*sin(tempAngle[2])*sin(tempAngle[3])*sin(tempAngle[1] - pi/2)),2)),0.5);break;
     default:
         break;
     }

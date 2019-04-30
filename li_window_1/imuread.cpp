@@ -72,6 +72,12 @@ void IMURead::slotIMURead()
             shoulderXinit += ShoulderAngle[0];
             shoulderYinit += ShoulderAngle[1];
             shoulderZinit += ShoulderAngle[2];
+            qDebug()<<"the ElbowAngleX is"<<ElbowAngle[0];
+            qDebug()<<"the ElbowAngleY is"<<ElbowAngle[1];
+            qDebug()<<"the ElbowAngleZ is"<<ElbowAngle[2];
+            qDebug()<<"the ShoulderAngleX is"<<ShoulderAngle[0];
+            qDebug()<<"the ShoulderAngleY is"<<ShoulderAngle[1];
+            qDebug()<<"the ShoulderAngleZ is"<<ShoulderAngle[2];
         }
         else
         {
