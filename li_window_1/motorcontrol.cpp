@@ -78,8 +78,9 @@ bool CableTensionOrSpeed[6] = {SPEED,SPEED,SPEED,SPEED,SPEED,SPEED}; // 定义�
 //---------------------------------------------------
 // 关节力矩控制相关参数
 //---------------------------------------------------
-TorAnPID torAn_pid[4] = {{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{0.6,0,0,0,0,0},{1,0,0,0,0,0}};
-unsigned int torqueIntervalTime = 50;
+TorAnPID torAn_pid[4] = {{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0}};
+double aimTorqueAngle[4] = {0,0,0,0};
+unsigned int torqueIntervalTime = 100;
 
 motorcontrol::motorcontrol()
 {
@@ -247,6 +248,13 @@ void motorcontrol::slotMdSerialCtrl(uint tensionOrAngle, int *Data)
         ControlMode = JOINTTORQUECONTROL;
         for(int i=0; i<6; i++) // 将驱动器设置为转矩模式
             emit sigMotorControl(i+1,MODESELECT,TORQUEMODE,0);
+        for(int i=0; i<4; i++)
+        {
+            aimTorqueAngle[i] = Data[i];
+        }
+        torAn_pid[3].KP = Data[4];
+        torAn_pid[3].KD = Data[5];
+        torAn_pid[3].KI = Data[6];
         tensionCtrlTimer->stop();
         torqueTimer->start(50);
         break;
@@ -280,12 +288,13 @@ void motorcontrol::ModTensionSet()    //信号来自slotModbusCtrl，QTimer的�
     ModTensionValueUpdate();
     // Incremental PID
     float ThisError, pError, dError, iError, temp;
+
     for(int i=0; i<6; i++)
     {
-        /*
+/*
         //PID闭环
         // it exceed the max tension motor must be stop
-        if(ModTensionSensor[i]>2000)
+        if(ModTensionSensor[i]>3000)
         {
             qDebug()<<"the tension is out of the max value, too dangerous";
             tensionCtrlTimer->stop();
@@ -330,10 +339,11 @@ void motorcontrol::ModTensionSet()    //信号来自slotModbusCtrl，QTimer的�
                 torqueOut = 20000;
             if(torqueOut<-20000)
                 torqueOut = -20000;
-            emit sigMotorControl(i+1,SPEEDSET,torqueOut,1);
+            //emit sigMotorControl(5,SPEEDSET,torqueOut,1);
+            //emit sigMotorControl(i+1,SPEEDSET,torqueOut,1);
             //emit sigMotorControl(i+1,TORQUESET,int(Modtension_pid[i].Output),0);  //发送转矩信号 .Output PID的输出
         }
-        */
+*/
         // 开环
         emit sigMotorControl(i+1,TORQUESET,-AimTension[i]*0.3,0);  //发送转矩信号 ([-300.0 300.0])
     }
@@ -354,6 +364,20 @@ void motorcontrol::slotDisableMotor()
     for(int i=0; i<6; i++)
     {
         emit sigMotorControl(i+1,MODESELECT,DISABLE,0);
+    }
+}
+
+//---------------------------------------
+// Function: enable motor controller
+// Input parameter: no
+// Output parameter: no
+//---------------------------------------
+void motorcontrol::slotEnableMotor()
+{
+    // 使能电机驱动器设置成力矩模式
+    for(int i=0; i<6; i++)
+    {
+        emit sigMotorControl(i+1,MODESELECT,TORQUEMODE,0);
     }
 }
 
@@ -643,7 +667,47 @@ void motorcontrol::ReplayTeach()
 //---------------------------------------
 void motorcontrol::TorqueControl()
 {
+    double angleNow[4];
+    // Incremental PID
+    float ThisError, pError, dError, iError, temp;
+    // 得到当前角度
+    angleNow[0] = -shoulder_x[receive_count_angle-1]; // 肩关节外展
+    angleNow[1] = -shoulder_y[receive_count_angle-1]; // 肩关节前屈
+    angleNow[2] = -shoulder_x[receive_count_angle-1]; // 肩关节内旋
+    angleNow[3] = -1*(elbow_y[receive_count_angle-1]-shoulder_y[receive_count_angle-1]); // 肘关节前屈角度
+    qDebug()<<"Now, the elbow angle is:"<<angleNow[3];
 
+    for(int i=0; i<4; i++)
+        emit sigMotorControl(i+1,TORQUESET,-250*0.3,0);
+    emit sigMotorControl(6,TORQUESET,-200*0.3,0);  //发送转矩信号 ([-300.0 300.0])
+
+    if(tension_y5[receive_count_tension-1]>4000)
+    {
+        qDebug()<<"the tension is out of the max value, too dangerous";
+        emit sigMotorControl(5,MODESELECT,DISABLE,0);// 失能电机
+        torqueTimer->stop();
+    }
+    else
+    {
+        /*
+        ThisError = aimTorqueAngle[3] - angleNow[3]; //定义误差e=期望拉力-实际拉力
+        qDebug()<<"This error is:"<<ThisError;
+        pError = ThisError - torAn_pid[3].LastError; // e(k)-e(k-1)
+        iError = ThisError; // e(k)
+        dError = ThisError - 2*(torAn_pid[3].LastError) + torAn_pid[3].PreError; // e(k)-2e(k-1)+e(k-2)
+        torAn_pid[3].PreError = torAn_pid[3].LastError;
+        torAn_pid[3].LastError = ThisError;
+
+        temp = torAn_pid[3].KP*pError+torAn_pid[3].KI*iError+torAn_pid[3].KD*dError;
+        qDebug()<<"KP KI KD are:"<<torAn_pid[3].KP<<torAn_pid[3].KI<<torAn_pid[3].KD;
+        torAn_pid[3].Output = torAn_pid[3].Output + temp;
+        */
+    }
+    if(torAn_pid[3].Output < 0)
+        torAn_pid[3].Output = 0;
+    qDebug()<<"tension5 output is:"<<torAn_pid[3].Output;
+
+    emit sigMotorControl(5,TORQUESET,-1*int(torAn_pid[3].Output),0);
 }
 
 //---------------------------------------

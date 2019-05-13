@@ -41,12 +41,12 @@ typedef struct ModPID
 
 typedef struct TorqueAnglePID
 {
-    float KP;
-    float KI;
-    float KD;
-    float Error;
-    float LastError;
-    float integral;
+    double KP;           // proportion of loose
+    double KI;           // integral parameter
+    double KD;           // differential parameter
+    double PreError;     // e(k-2)
+    double LastError;    // e(k-1)
+    double Output;     // output
 }TorAnPID;
 
 
@@ -70,6 +70,7 @@ private:
 private slots:
     // from mainwindow signals
     void slotDisableMotor();
+    void slotEnableMotor();
     void slotMdBeforeTigh(unsigned int *Data);
     void slotMdSerialCtrl(uint tensionOrAngle, int *Data);
     void slotMdTeachStart();

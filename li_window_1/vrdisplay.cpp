@@ -124,7 +124,7 @@ QByteArray VRDisplay::QString2Hex(QString str)
         int len = str.length();
         senddata.resize(len/2);
         char lstr,hstr;
-        for(int i=0; i<len; )
+        for(int i=0; i<len; i++)
         {
             hstr=str[i].toLatin1();
             if(hstr == ' ')

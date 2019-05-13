@@ -21,8 +21,9 @@ private:
     LpmsSensorManagerI* manager1 = LpmsSensorManagerFactory();
     LpmsSensorManagerI* manager2 = LpmsSensorManagerFactory();
     // Connects to LPMS-CU sensor with address A1234567
-    LpmsSensorI* lpms1 = manager1->addSensor(DEVICE_LPMS_U, "A5022WAT");
-    LpmsSensorI* lpms2 = manager2->addSensor(DEVICE_LPMS_U, "A5022WCL");
+    LpmsSensorI* lpms2 = manager1->addSensor(DEVICE_LPMS_U, "A5022WAT");
+    LpmsSensorI* lpms1 = manager2->addSensor(DEVICE_LPMS_U, "A5022WCL");
+    //LpmsSensorI* lpms2 = manager1->addSensor(DEVICE_LPMS_RS232, "COM18");
 public slots:
     void slotIMUInit();
     void slotIMURead();

@@ -10,6 +10,7 @@
 extern QVector<double> EmgDataSave,AngleElbow_emg;
 extern unsigned int emgsaveLen;
 extern QVector<float> fiteffRecord;
+extern unsigned int imuRecordCout;
 
 class emgTension: public QObject
 {

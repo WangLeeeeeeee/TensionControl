@@ -324,7 +324,7 @@
              <x>10</x>
              <y>25</y>
              <width>271</width>
-             <height>116</height>
+             <height>141</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -332,8 +332,13 @@
              <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="2,10,1">
               <item>
                <widget class="QLabel" name="label_20">
+                <property name="font">
+                 <font>
+                  <family>黑体</family>
+                 </font>
+                </property>
                 <property name="text">
-                 <string>SHOUL_X</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;肩关节外展&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
@@ -356,8 +361,13 @@
              <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="2,10,1">
               <item>
                <widget class="QLabel" name="label_21">
+                <property name="font">
+                 <font>
+                  <family>黑体</family>
+                 </font>
+                </property>
                 <property name="text">
-                 <string>SHOUL_Y</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;肩关节前屈&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
@@ -380,8 +390,13 @@
              <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="2,10,1">
               <item>
                <widget class="QLabel" name="label_22">
+                <property name="font">
+                 <font>
+                  <family>黑体</family>
+                 </font>
+                </property>
                 <property name="text">
-                 <string>SHOUL_Z</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;肩关节内旋&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
@@ -401,11 +416,16 @@
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="2,10,1">
+             <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="0,10,1">
               <item>
                <widget class="QLabel" name="label_23">
+                <property name="font">
+                 <font>
+                  <family>黑体</family>
+                 </font>
+                </property>
                 <property name="text">
-                 <string>ELBOW_Y</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;肘关节前屈&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
@@ -423,28 +443,6 @@
                <widget class="QLineEdit" name="sendMsgLineEdit10"/>
               </item>
              </layout>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="layoutWidget">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>150</y>
-             <width>111</width>
-             <height>23</height>
-            </rect>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_17">
-            <item>
-             <widget class="QLabel" name="label_12">
-              <property name="text">
-               <string>CIRCLE</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="circlelineEdit"/>
             </item>
            </layout>
           </widget>
@@ -682,6 +680,33 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>320</x>
+            <y>270</y>
+            <width>125</width>
+            <height>23</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_13">
+           <item>
+            <widget class="QLabel" name="label_12">
+             <property name="font">
+              <font>
+               <family>黑体</family>
+              </font>
+             </property>
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;往复次数&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="circlelineEdit"/>
+           </item>
+          </layout>
+         </widget>
         </widget>
         <widget class="QWidget" name="tab_2">
          <attribute name="title">
@@ -845,6 +870,24 @@
           </layout>
          </item>
         </layout>
+       </widget>
+       <widget class="QPushButton" name="EnableMotorButton">
+        <property name="geometry">
+         <rect>
+          <x>1150</x>
+          <y>150</y>
+          <width>101</width>
+          <height>51</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>EnableMotor</string>
+        </property>
        </widget>
       </widget>
       <widget class="QWidget" name="tab_4">

@@ -87,6 +87,8 @@ private slots:
     // from emg control
     void slotEmgCtrlStop();
 
+    void on_EnableMotorButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     aboutdialog aboutdlg;
@@ -141,6 +143,7 @@ signals:
 
     // for motorcontrol
     void sigDisableMotor();
+    void sigEnableMotor();
     void sigMdBeforeTigh(unsigned int *Data);
     void sigMdSerialCtrl(unsigned int TensionOrAngle,int *Data);
     void sigMdTeachStart();

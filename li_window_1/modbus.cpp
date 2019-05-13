@@ -26,7 +26,7 @@ void modbus::slotMdSerialInit()
     if(!modbusDevice)
         return;
     if(modbusDevice->state() != QModbusDevice::ConnectedState){
-        modbusDevice->setConnectionParameter(QModbusDevice::SerialPortNameParameter,"COM13");
+        modbusDevice->setConnectionParameter(QModbusDevice::SerialPortNameParameter,"COM16");
         modbusDevice->setConnectionParameter(QModbusDevice::SerialBaudRateParameter,QSerialPort::Baud57600);
         modbusDevice->setConnectionParameter(QModbusDevice::SerialDataBitsParameter,QSerialPort::Data8);
         modbusDevice->setConnectionParameter(QModbusDevice::SerialParityParameter,QSerialPort::NoParity);
@@ -44,7 +44,6 @@ void modbus::slotMdSerialInit()
         modbusDevice->disconnectDevice();
     }
 }
-
 //---------------------------------------
 // Function: close modbus com
 // Input parameter: no

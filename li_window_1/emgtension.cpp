@@ -2,7 +2,7 @@
 
 #define PORT 8090
 
-unsigned int AimAngle = 60;
+unsigned int AimAngle = 50;
 
 // 运动轨迹改成三次,拟合曲线外平滑不跳动
 double theta0_aim = 0;
@@ -27,7 +27,7 @@ unsigned int imuRecordCout = 0;
 QVector<float> EMG_array;
 unsigned int emgRecordCout = 0;
 
-unsigned int emgAimTension[6] = {0,0,0,0,0,0};
+double emgAimTension[6] = {0,0,0,0,0,0};
 unsigned int emgdataLength=50;
 unsigned int polyRank=6;
 bool receiveFlag=0;
@@ -146,7 +146,7 @@ void emgTension::readEmgData()
         EMG_array.append(testEmg[i]);
         //EMG_array[i] = testEmg[i];
     }
-    imuRecordCout = sizeof(testImu) / sizeof(double);
+    //imuRecordCout = sizeof(testImu) / sizeof(double);
     emgRecordCout = sizeof(testEmg) / sizeof(double);
 
     // 拟合数据
@@ -200,8 +200,8 @@ void emgTension::readEmgData()
             for(unsigned int i=0; i<emgRecordCout; i++)
             {
                 // test IMU
-                BufferX[i] = testImu[imuRecordCout-emgRecordCout+i];
-                //BufferX[i] = elbYRecord_emg[imuRecordCout-emgRecordCout+i];
+                //BufferX[i] = testImu[imuRecordCout-emgRecordCout+i];
+                BufferX[i] = elbYRecord_emg[imuRecordCout-emgRecordCout+i];
                 BufferY[i] = 100*EMG_array[i];
 
                 // save the emg and the angle data
@@ -245,7 +245,7 @@ void emgTension::readEmgData()
 
 void emgTension::slotRecordWithCtrl()
 {
-    qDebug()<<"emgTension slotRecordWithCtrl:"<<QThread::currentThreadId();
+    //qDebug()<<"emgTension slotRecordWithCtrl:"<<QThread::currentThreadId();
     // RECORD THE ANGLE
     double a;
     a = -elbow_y[receive_count_angle];
@@ -257,24 +257,27 @@ void emgTension::slotRecordWithCtrl()
     shoZRecord_emg[imuRecordCout] = shoulder_z[receive_count_angle];
 
     // According the theta collected to calculate the emg value(based on the fit function)
-    // 更具当前角度计算对应的肌电信号值
+    // 根据当前角度计算对应的肌电信号值
     double fitTension=0;
     double theta;
+    double fitTheta;
     theta = elbYRecord_emg[imuRecordCout];
+    fitTheta = theta;
+    qDebug()<<"elbYRecord_emg is:"<<theta;
 
     if(theta == 0) // the result of qPow(0,n) seems infinite
         theta = 1;
 
     // when the theta is out of the range of last record, the fit result maybe strange, so set it to zero
     // the strategy mentioned up is not very well, so changed it to below(let the result be the same as the margin)
-    if(theta>elbowLastMax)
-        theta = elbowLastMax;
-    if(theta<elbowLastMin)
-        theta = elbowLastMin;
+    if(fitTheta>elbowLastMax)
+        fitTheta = elbowLastMax;
+    if(fitTheta<elbowLastMin)
+        fitTheta = elbowLastMin;
     for(int i=0; i<Dimension+1; i++)
     {
         // use the first and second data test
-        fitTension += fitEfficient[i]*qPow(theta,Dimension-i);
+        fitTension += fitEfficient[i]*qPow(fitTheta,Dimension-i);
         //qDebug()<<"the fitEfficiet"<<i<<"is:"<<fitEfficient[i];
     }
 
@@ -313,7 +316,7 @@ void emgTension::slotRecordWithCtrl()
     detaTheta = aimElbowAngle - theta;
     if(detaTheta < 0)
         detaTheta = -detaTheta;
-    fitTension = 100+1*fitTension*(detaTheta); // asist tension equal emg multiply deta theta
+    fitTension = 200+1*fitTension*(detaTheta); // asist tension equal emg multiply deta theta
     qDebug()<<"fitTension is:"<<fitTension;
     if(fitTension < 0)
     {
@@ -324,26 +327,30 @@ void emgTension::slotRecordWithCtrl()
     {
         emgAimTension[4] = fitTension;
     }
-    if(emgAimTension[4] > 500)
+    if(emgAimTension[4] > 600)
     {
         //qDebug()<<"the asist tension is exceed 3000";
-        emgAimTension[4] = 500;
+        emgAimTension[4] = 600;
     }
     imuRecordCout++;
     for(int i=0; i<6; i++) // 将驱动器设置为转矩模式
     {
         emit sigEmgTensionctrl(i+1,0x3100,1,0);
-        emit sigEmgTensionctrl(i+1,0x0703,-emgAimTension[i]*0.5,0);  //发送转矩信号 ([-300.0 300.0])
+        emit sigEmgTensionctrl(i+1,0x0703,-emgAimTension[i]*0.3,0);  //发送转矩信号 ([-300.0 300.0])
+        if((i==4)||(i==5))
+            qDebug()<<"emg asist tension"<<i<<"is:"<<-emgAimTension[i]*0.3;
     }
     // judge the angle if exceed the aim angle auto trigger
     if(theta > AimAngle)
     {
-        emgSendData("end");
+        qDebug()<<"Arrive the aim angle";
+        //emgSendData("end");
         emit sigStopEmgCtrl();
         for(int i=0; i<6; i++) // 将驱动器设置为转矩模式
             emit sigEmgTensionctrl(i+1,0x0703,-100,0);  //发送转矩信号 ([-300.0 300.0])
+        readEmgData();
     }
-    readEmgData();
+    //readEmgData();
 }
 
 void emgTension::socket_Disconnected()

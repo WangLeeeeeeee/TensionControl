@@ -108,11 +108,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // connect the mainwindow signals with motorcontrol
     connect(this, SIGNAL(sigDisableMotor()), motorctrl, SLOT(slotDisableMotor()));
+    connect(this, SIGNAL(sigEnableMotor()), motorctrl, SLOT(slotEnableMotor()));
     connect(this, SIGNAL(sigMdBeforeTigh(uint*)), motorctrl, SLOT(slotMdBeforeTigh(uint*)));
     connect(this, SIGNAL(sigMdSerialCtrl(uint,int*)), motorctrl, SLOT(slotMdSerialCtrl(uint,int*)));
     connect(this, SIGNAL(sigMdTeachStart()), motorctrl, SLOT(slotMdTeachStart()));
     connect(this, SIGNAL(sigMdTeachStop()), motorctrl, SLOT(slotMdTeachStop()));
     connect(this, SIGNAL(sigMdReplayTeach()), motorctrl, SLOT(slotMdReplayTeach()));
+
+    ui->TeachButton->setEnabled(true);
+    ui->ReplayButton->setEnabled(false);
+    ui->StopteachButton->setEnabled(false);
 
     qDebug()<<"mainwindow the trhead is"<<QThread::currentThreadId();
 
@@ -875,16 +880,22 @@ void MainWindow::on_BeforeTightenButton_clicked()
 
 void MainWindow::on_TeachButton_clicked()
 {
+    ui->StopteachButton->setEnabled(true);
+    ui->TeachButton->setEnabled(false);
     emit sigMdTeachStart();
 }
 
 void MainWindow::on_StopteachButton_clicked()
 {
+    ui->ReplayButton->setEnabled(true);
+    ui->StopteachButton->setEnabled(false);
     emit sigMdTeachStop();
 }
 
 void MainWindow::on_ReplayButton_clicked()
 {
+    ui->TeachButton->setEnabled(true);
+    ui->ReplayButton->setEnabled(false);
     emit sigMdReplayTeach();
 }
 
@@ -924,6 +935,7 @@ void MainWindow::on_pushButton_Start_clicked()
     qDebug() << "Start EMG!";
     //emgTen->emgSendData("start");
     emgTensionTimer->start(emgTensionInterval);
+    imuRecordCout = 0;
 }
 
 void MainWindow::on_pushButton_Trigger_clicked()
@@ -948,29 +960,34 @@ void MainWindow::slotEmgThetaFit(double *fiteff, double *bufferX, double *buffer
         qDebug()<<"y_dot"<<i<<"is:"<<y_dot[i];
     }
 
+    double Xmax,Xmin,Ymax,Ymin;
+    Xmax = bufferX[0];
+    Xmin = bufferX[0];
+    Ymax = bufferY[0];
+    Ymin = bufferY[0];
+    for(int i=0; i<sizenum; i++)
+    {
+        if(Ymin > bufferY[i])
+            Ymin = bufferY[i];
+        if(Ymax < bufferY[i])
+            Ymax = bufferY[i];
+        if(Xmax < bufferX[i])
+            Xmax = bufferX[i];
+        if(Xmin > bufferX[i])
+            Xmin = bufferX[i];
+    }
+
     QPen pen;
     ui->emgFitPlot->graph(0)->setPen(QPen(Qt::blue));
     ui->emgFitPlot->graph(0)->setLineStyle(QCPGraph::lsNone);
     ui->emgFitPlot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCross, 4));
     ui->emgFitPlot->graph(0)->setData(x_dot,y_dot);
-    ui->emgFitPlot->xAxis->setRange(-10,60);
-    ui->emgFitPlot->yAxis->setRange(-20,50);
+    ui->emgFitPlot->xAxis->setRange(-10,Xmax);
+    ui->emgFitPlot->yAxis->setRange(-20,Ymax);
 
-    double max,min;
-    max = bufferX[0];
-    min = bufferX[0];
-    for(int i=0; i<sizenum; i++)
-    {
-        if(min > bufferX[i])
-            min = bufferX[i];
-        if(max < bufferX[i])
-            max = bufferX[i];
-    }
-    qDebug()<<"min is:"<<min;
-    qDebug()<<"max is:"<<max;
     QVector<double> x(1000),y(1000);
     int k=0;
-    for(int j=10*min; j<10*max; j++)
+    for(int j=10*Xmin; j<10*Xmax; j++)
     {    
         x[k] = 0.1*j;
         for(unsigned int i=0; i<dimension+1; i++)
@@ -1220,4 +1237,9 @@ void MainWindow::slotReadData(int n, QString message)
 void MainWindow::slotEmgCtrlStop()
 {
     emgTensionTimer->stop();
+}
+
+void MainWindow::on_EnableMotorButton_clicked()
+{
+    emit sigEnableMotor();
 }

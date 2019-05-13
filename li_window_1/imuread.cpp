@@ -10,6 +10,12 @@ unsigned int receive_count_angle = 0;
 // Y-axis: six cable tension data(N), surface pressure, IMU data(rad), Four Motor encoder
 // X-axis: time(every 50ms)
 // Y-Range: MaxTension
+//IMU:
+// elbow_y对应肘关节前屈，前屈后减小
+// shoulder_y对应肩关节前屈，前屈后减小
+// shoulder_x对应肩关节内收外展，外展后减小
+// shoulder_z对应肩关节内旋外旋，内旋后角度增大
+// matlab: theta1:tempAngle[2]：肩关节外旋角度增大  theta2:tempAngle[1]：肩关节前屈角度增大 theta3:tempAngle[0]：肩关节外展角度增大 theta4:tempAngle[3]：肘关节前屈角度增大
 //----------------------------------------------------------------------------------
 unsigned int Datalength = 131072;
 QVector<double> time_x_angle(Datalength);
@@ -63,7 +69,7 @@ void IMURead::slotIMURead()
         Lpms2_Data = lpms2->getCurrentData();
 
         // Recors the first data
-        if(recordflag < 4)
+        if(recordflag < 10)
         {
             recordflag++;
             elbowXinit += ElbowAngle[0];
@@ -72,24 +78,27 @@ void IMURead::slotIMURead()
             shoulderXinit += ShoulderAngle[0];
             shoulderYinit += ShoulderAngle[1];
             shoulderZinit += ShoulderAngle[2];
-            qDebug()<<"the ElbowAngleX is"<<ElbowAngle[0];
-            qDebug()<<"the ElbowAngleY is"<<ElbowAngle[1];
-            qDebug()<<"the ElbowAngleZ is"<<ElbowAngle[2];
-            qDebug()<<"the ShoulderAngleX is"<<ShoulderAngle[0];
-            qDebug()<<"the ShoulderAngleY is"<<ShoulderAngle[1];
-            qDebug()<<"the ShoulderAngleZ is"<<ShoulderAngle[2];
+//            qDebug()<<"the ElbowAngleX is"<<ElbowAngle[0];
+//            qDebug()<<"the ElbowAngleY is"<<ElbowAngle[1];
+//            qDebug()<<"the ElbowAngleZ is"<<ElbowAngle[2];
+//            qDebug()<<"the ShoulderAngleX is"<<ShoulderAngle[0];
+//            qDebug()<<"the ShoulderAngleY is"<<ShoulderAngle[1];
+//            qDebug()<<"the ShoulderAngleZ is"<<ShoulderAngle[2];
         }
         else
         {
             receive_count_angle++;
-            elbow_x[receive_count_angle] = ElbowAngle[0]-elbowXinit/4;
-            elbow_y[receive_count_angle] = ElbowAngle[1]-elbowYinit/4;
-            elbow_z[receive_count_angle] = ElbowAngle[2]-elbowZinit/4;
-            shoulder_x[receive_count_angle] = ShoulderAngle[0]-shoulderXinit/4;
-            shoulder_y[receive_count_angle] = ShoulderAngle[1]-shoulderYinit/4;
-            shoulder_z[receive_count_angle] = ShoulderAngle[2]-shoulderZinit/4;
+            elbow_x[receive_count_angle] = ElbowAngle[0]-elbowXinit/10;
+            elbow_y[receive_count_angle] = ElbowAngle[1]-elbowYinit/10;
+            elbow_z[receive_count_angle] = ElbowAngle[2]-elbowZinit/10;
+            shoulder_x[receive_count_angle] = ShoulderAngle[0]-shoulderXinit/10;
+            shoulder_y[receive_count_angle] = ShoulderAngle[1]-shoulderYinit/10;
+            shoulder_z[receive_count_angle] = ShoulderAngle[2]-shoulderZinit/10;
+//            shoulder_x[receive_count_angle] = ShoulderAngle[1];
+//            shoulder_y[receive_count_angle] = ShoulderAngle[0];
+//            shoulder_z[receive_count_angle] = ShoulderAngle[2];
             time_x_angle[receive_count_angle] = receive_count_angle;
+            emit sigPlotIMU();
         }
-        emit sigPlotIMU();
     }
 }
